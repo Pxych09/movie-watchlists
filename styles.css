@@ -212,6 +212,41 @@ body {
 
 .feed-list {
   min-height: 200px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 0.35rem;
+}
+
+/* Scrollbar styling */
+.feed-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.feed-list::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.05);
+  border-radius: 999px;
+}
+
+.feed-list::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.18);
+  border-radius: 999px;
+}
+
+.feed-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.28);
+}
+.search-input {
+  padding-left: 2.8rem;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .post-card {

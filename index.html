@@ -138,10 +138,20 @@
 
           <div class="col-lg-8">
             <div class="glass-card p-4 mb-4">
-              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                 <h3 class="h5 fw-bold mb-0">Movie Feed</h3>
                 <span id="feedCountBadge" class="badge text-bg-light">0 posts</span>
-              </div>
+            </div>
+
+            <div class="position-relative">
+                <i class="bi bi-search search-icon"></i>
+                <input
+                id="feedSearch"
+                type="search"
+                class="form-control custom-input search-input"
+                placeholder="Search by movie, genre, caption, or user..."
+                >
+            </div>
             </div>
 
             <div id="emptyFeed" class="glass-card p-5 text-center d-none">

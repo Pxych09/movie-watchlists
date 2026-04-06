@@ -35,6 +35,7 @@ function bindEvents() {
   bind("logoutBtn", "click", handleLogout);
   bind("postForm", "submit", handleSavePost);
   bind("cancelEditBtn", "click", resetPostForm);
+  bind("feedSearch", "input", handleFeedSearch);
 }
 
 async function api(method, ...args) {
@@ -253,7 +254,7 @@ async function refreshFeed() {
   try {
     const feed = await withLoading(() => api("getFeed", getSessionToken()))();
     state.feed = Array.isArray(feed) ? feed : [];
-    renderFeed(state.feed);
+    applyFeedFilter();
   } catch (error) {
     showAlert(error.message, "danger");
     if (/Session expired/i.test(error.message)) {
@@ -524,6 +525,39 @@ function startEdit(post) {
   $("cancelEditBtn").classList.remove("d-none");
 
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function handleFeedSearch() {
+  applyFeedFilter();
+}
+
+function applyFeedFilter() {
+  const query = ($("feedSearch")?.value || "").trim().toLowerCase();
+
+  if (!query) {
+    renderFeed(state.feed);
+    return;
+  }
+
+  const filteredFeed = state.feed.filter((post) => {
+    const haystack = [
+      post.movieName,
+      post.genre,
+      post.caption,
+      post.username,
+      post.name,
+      post.duration,
+      ...(post.comments || []).map(
+        (c) => `${c.name} ${c.username} ${c.comment}`
+      )
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(query);
+  });
+
+  renderFeed(filteredFeed);
 }
 
 function resetPostForm() {
