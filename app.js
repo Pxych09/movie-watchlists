@@ -496,7 +496,7 @@ function renderPostCard(post) {
         }
         <div>
           <div class="fw-bold">${escapeHtml(post.name || post.username)}</div>
-          <div class="text-secondary-light small">@${escapeHtml(post.username)}</div>
+          <div class="text-secondary-light small" hidden>@${escapeHtml(post.username)}</div>
           <div class="text-secondary-light small mt-1">${formatDateTime(post.createdAt)}</div>
         </div>
       </div>
