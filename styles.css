@@ -208,6 +208,7 @@ body {
 .sticky-side {
   position: sticky;
   top: 1rem;
+  z-index: -1;
 }
 
 .feed-list {
@@ -462,9 +463,25 @@ textarea.custom-input {
   border: 1px solid var(--border);
   border-radius: 18px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
-  z-index: 1200;
+  z-index: 99999;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+.notif-wrap {
+  position: relative;
+  z-index: 100000;
+}
+
+.app-nav {
+  position: relative;
+  z-index: 1000;
+}
+
+.sticky-side {
+  position: sticky;
+  top: 1rem;
+  z-index: 1;
 }
 
 .notif-dropdown-header {
