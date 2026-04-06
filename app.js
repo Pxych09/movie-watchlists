@@ -378,7 +378,7 @@ function renderPostCard(post) {
         <span class="meta-pill">Watched: ${formatDate(post.dateWatched)}</span>
       </div>
 
-      ${post.caption ? `Note: <p class="post-caption mb-0 lobster-two-bold-italic">"${escapeHtml(post.caption)}"</p>` : ""}
+      ${post.caption ? `<p class="post-caption mb-0 lobster-two-bold-italic">"${escapeHtml(post.caption)}"</p>` : ""}
     </div>
 
     <hr class="custom-divider">
