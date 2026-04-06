@@ -9,6 +9,12 @@ const STORAGE_KEY = "movieFeedUser";
 const state = {
   currentUser: null,
   feed: [],
+  dashboard: {
+    topRated: [],
+    watchedByMonth: [],
+    userTotals: []
+  },
+  dashboardHidden: false,
   isEditing: false,
   alertTimers: new Map(),
   loadingCount: 0,
@@ -39,6 +45,7 @@ function bindEvents() {
   bind("cancelEditBtn", "click", resetPostForm);
   bind("feedSearch", "input", handleFeedSearch);
   bind("notifBtn", "click", toggleNotifications);
+  bind("toggleDashboardBtn", "click", toggleDashboard);
 
   document.addEventListener("click", (event) => {
     const wrap = document.querySelector(".notif-wrap");
@@ -203,6 +210,12 @@ async function handleLogout() {
 
   state.currentUser = null;
   state.feed = [];
+  state.dashboard = {
+    topRated: [],
+    watchedByMonth: [],
+    userTotals: []
+  };
+  state.dashboardHidden = false;
   state.isEditing = false;
   state.notifications = [];
   state.notifOpen = false;
@@ -215,6 +228,12 @@ async function handleLogout() {
   if ($("feedList")) $("feedList").innerHTML = "";
   if ($("feedCountBadge")) $("feedCountBadge").textContent = "0 posts";
   $("emptyFeed")?.classList.add("d-none");
+
+    if ($("topRatedList")) $("topRatedList").innerHTML = "";
+    if ($("watchedStatsList")) $("watchedStatsList").innerHTML = "";
+    if ($("userTotalsList")) $("userTotalsList").innerHTML = "";
+    if ($("dashboardContent")) $("dashboardContent").classList.remove("d-none");
+    if ($("toggleDashboardBtn")) $("toggleDashboardBtn").textContent = "Hide Dashboard";
 
   $("notifDropdown")?.classList.add("d-none");
   if ($("notifList")) {
@@ -272,14 +291,21 @@ async function refreshFeed() {
   if (!state.currentUser) return;
 
   try {
-    const [feed, notifications] = await Promise.all([
+    const [feed, notifications, dashboard] = await Promise.all([
       withLoading(() => api("getFeed", getSessionToken()))(),
-      withLoading(() => api("getNotifications", getSessionToken()))()
+      withLoading(() => api("getNotifications", getSessionToken()))(),
+      withLoading(() => api("getDashboardData", getSessionToken()))()
     ]);
 
     state.feed = Array.isArray(feed) ? feed : [];
     state.notifications = Array.isArray(notifications) ? notifications : [];
+    state.dashboard = dashboard || {
+        topRated: [],
+        watchedByMonth: [],
+        userTotals: []
+    };
 
+    renderDashboard();
     applyFeedFilter();
     renderNotifications();
   } catch (error) {
@@ -321,6 +347,191 @@ function applyFeedFilter() {
   });
 
   renderFeed(filteredFeed);
+}
+
+
+function renderDashboard() {
+  const topRatedList = $("topRatedList");
+  const watchedStatsList = $("watchedStatsList");
+  const userTotalsList = $("userTotalsList");
+
+  if (!topRatedList || !watchedStatsList || !userTotalsList) {
+    return;
+  }
+
+  const dashboard = state.dashboard || {};
+  const topRated = Array.isArray(dashboard.topRated) ? dashboard.topRated : [];
+  const watchedByMonth = Array.isArray(dashboard.watchedByMonth) ? dashboard.watchedByMonth : [];
+  const userTotals = Array.isArray(dashboard.userTotals) ? dashboard.userTotals : [];
+
+  topRatedList.innerHTML = renderTopRatedByStars(topRated);
+  watchedStatsList.innerHTML = renderWatchedStatsByYear(watchedByMonth);
+
+  userTotalsList.innerHTML = userTotals.length
+    ? userTotals.map((item) => `
+        <div class="dashboard-list-item">
+          <div class="dashboard-item-title">${escapeHtml(item.name)}</div>
+          <div class="dashboard-pill">${item.totalPosts} posts</div>
+        </div>
+      `).join("")
+    : `<div class="text-secondary-light small">No user post data yet.</div>`;
+
+  applyDashboardVisibility();
+}
+
+function renderTopRatedByStars(groups) {
+  if (!groups.length) {
+    return `<div class="text-secondary-light small">No rating data yet.</div>`;
+  }
+
+  return groups.map((group) => {
+    const label = `${numberToWord(group.stars)} Stars`;
+    const panelId = `rating-panel-${group.stars}`;
+
+    return `
+      <div class="dashboard-month-item">
+        <button
+          type="button"
+          class="dashboard-month-toggle"
+          data-rating-toggle="${group.stars}"
+          aria-expanded="false"
+          aria-controls="${panelId}"
+        >
+          <div class="dashboard-month-left">
+            <span class="dashboard-month-name">${renderStars(group.stars)} ${escapeHtml(label)}</span>
+            <span class="dashboard-month-count">(${group.total} post${group.total !== 1 ? "s" : ""})</span>
+          </div>
+          <i class="bi bi-chevron-down dashboard-month-icon"></i>
+        </button>
+
+        <div id="${panelId}" class="dashboard-month-panel">
+          ${
+            group.movies.length
+              ? `
+            <div class="dashboard-movie-list">
+              ${group.movies.map((movie) => `
+                <div class="dashboard-movie-entry">
+                  <div class="dashboard-movie-title">${escapeHtml(movie.movieName)}</div>
+                  <div class="dashboard-movie-meta">
+                    ${escapeHtml(movie.name || movie.username)} • ${escapeHtml(movie.genre || "-")} • ${escapeHtml(formatDate(movie.dateWatched))}
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          `
+              : `<div class="dashboard-empty-month">No movie posts in this rating.</div>`
+          }
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderWatchedStatsByYear(items) {
+  if (!items.length) {
+    return `<div class="text-secondary-light small">No monthly watched data yet.</div>`;
+  }
+
+  const grouped = groupWatchedStatsByYear(items);
+
+  return Object.keys(grouped)
+    .sort()
+    .map((year) => {
+      const months = grouped[year];
+
+      return `
+        <div class="dashboard-year-block">
+            <div class="dashboard-year-header">[${escapeHtml(year)}]</div>
+            <div class="dashboard-year-body">
+            ${months.map((monthItem) => {
+            const panelId = `month-panel-${escapeHtml(monthItem.month).replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+
+            return `
+              <div class="dashboard-month-item">
+                <button
+                  type="button"
+                  class="dashboard-month-toggle"
+                  data-month-toggle="${escapeHtml(monthItem.month)}"
+                  aria-expanded="false"
+                  aria-controls="${panelId}"
+                >
+                  <div class="dashboard-month-left">
+                    <span class="dashboard-month-name">${escapeHtml(formatMonthShortLabel(monthItem.month))}</span>
+                    <span class="dashboard-month-count">(${monthItem.total} post${monthItem.total !== 1 ? "s" : ""})</span>
+                  </div>
+                  <i class="bi bi-chevron-down dashboard-month-icon"></i>
+                </button>
+
+                <div id="${panelId}" class="dashboard-month-panel">
+                  <div class="dashboard-movie-list">
+                    ${monthItem.movies.map((movie) => `
+                      <div class="dashboard-movie-entry">
+                        <div class="dashboard-movie-title">${escapeHtml(movie.movieName)}</div>
+                        <div class="dashboard-movie-meta">
+                          ${escapeHtml(movie.name || movie.username)} • ${escapeHtml(movie.genre || "-")} • ⭐ ${movie.rating} • ${escapeHtml(formatDate(movie.dateWatched))}
+                        </div>
+                      </div>
+                    `).join("")}
+                  </div>
+                </div>
+              </div>
+            `;
+            }).join("")}
+            </div>
+        </div>
+        `;
+    })
+    .join("");
+}
+
+
+function groupWatchedStatsByYear(items) {
+  const byYear = {};
+
+  items.forEach((item) => {
+    const monthKey = String(item.month || "");
+    if (!/^\d{4}-\d{2}$/.test(monthKey)) return;
+
+    const [year] = monthKey.split("-");
+    if (!byYear[year]) {
+      byYear[year] = [];
+    }
+
+    byYear[year].push(item);
+  });
+
+  Object.keys(byYear).forEach((year) => {
+    byYear[year].sort((a, b) => a.month.localeCompare(b.month));
+  });
+
+  return byYear;
+}
+
+function toggleDashboard() {
+  state.dashboardHidden = !state.dashboardHidden;
+  applyDashboardVisibility();
+}
+
+function applyDashboardVisibility() {
+  const content = $("dashboardContent");
+  const btn = $("toggleDashboardBtn");
+
+  if (!content || !btn) return;
+
+  content.classList.toggle("d-none", state.dashboardHidden);
+  btn.textContent = state.dashboardHidden ? "Show Dashboard" : "Hide Dashboard";
+
+  bindDashboardMonthToggles();
+}
+
+function bindDashboardMonthToggles() {
+  document.querySelectorAll("[data-month-toggle], [data-rating-toggle]").forEach((btn) => {
+    btn.onclick = () => {
+      const item = btn.closest(".dashboard-month-item");
+      const isOpen = item.classList.toggle("open");
+      btn.setAttribute("aria-expanded", String(isOpen));
+    };
+  });
 }
 
 function toggleNotifications() {
@@ -697,6 +908,29 @@ function renderStars(rating) {
   return n > 0 ? "⭐".repeat(n) : "-";
 }
 
+function formatMonthShortLabel(value) {
+  if (!value || !/^\d{4}-\d{2}$/.test(String(value))) return value || "-";
+
+  const [year, month] = String(value).split("-").map(Number);
+  const d = new Date(year, month - 1, 1);
+
+  return d.toLocaleDateString("en-PH", {
+    month: "short"
+  });
+}
+
+function numberToWord(value) {
+  const map = {
+    1: "One",
+    2: "Two",
+    3: "Three",
+    4: "Four",
+    5: "Five"
+  };
+
+  return map[value] || String(value);
+}
+
 function formatDate(value) {
   if (!value) return "-";
 
@@ -731,6 +965,18 @@ function formatDateTime(value) {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit"
+  });
+}
+
+function formatMonthLabel(value) {
+  if (!value || !/^\d{4}-\d{2}$/.test(String(value))) return value || "-";
+
+  const [year, month] = String(value).split("-").map(Number);
+  const d = new Date(year, month - 1, 1);
+
+  return d.toLocaleDateString("en-PH", {
+    year: "numeric",
+    month: "long"
   });
 }
 

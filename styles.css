@@ -2,7 +2,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Cedarville+Cursive&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Cedarville+Cursive&family=Lobster+Two:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
-
 :root {
   --bg1: #1f1f1f;
   --bg2: #2e2e2e;
@@ -31,11 +30,13 @@
 }
 
 .smx-font {
-    font-size: .75rem !important;
+  font-size: .75rem !important;
 }
+
 .lgx-font {
-    font-size: 1.25rem !important;
-} 
+  font-size: 1.25rem !important;
+}
+
 .cedarville-cursive-regular {
   font-family: "Cedarville Cursive", cursive;
   font-weight: 400;
@@ -65,8 +66,6 @@
   font-weight: 700;
   font-style: italic;
 }
-
-
 
 html,
 body {
@@ -128,6 +127,8 @@ body {
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 1000;
 }
 
 .app-logo {
@@ -211,7 +212,7 @@ body {
 .sticky-side {
   position: sticky;
   top: 1rem;
-  z-index: -1;
+  z-index: 1;
 }
 
 .feed-list {
@@ -221,7 +222,6 @@ body {
   padding-right: 0.35rem;
 }
 
-/* Scrollbar styling */
 .feed-list::-webkit-scrollbar {
   width: 10px;
 }
@@ -239,6 +239,7 @@ body {
 .feed-list::-webkit-scrollbar-thumb:hover {
   background: rgba(255,255,255,0.28);
 }
+
 .search-input {
   padding-left: 2.8rem;
 }
@@ -251,6 +252,92 @@ body {
   color: var(--muted);
   pointer-events: none;
   z-index: 1;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.dashboard-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.dashboard-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.85rem;
+  color: var(--text);
+}
+
+.dashboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.dashboard-list-compact {
+  margin-top: 1rem;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+
+.dashboard-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.dashboard-item-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.dashboard-item-subtext {
+  font-size: 0.76rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+
+.dashboard-pill {
+  flex-shrink: 0;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(139, 92, 246, 0.14);
+  border: 1px solid rgba(139, 92, 246, 0.22);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.dashboard-highlight {
+  padding: 1rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(20, 184, 166, 0.18));
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.dashboard-highlight-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.dashboard-highlight-subtext {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.35rem;
 }
 
 .post-card {
@@ -372,42 +459,6 @@ textarea.custom-input {
   min-height: 110px;
 }
 
-@media (max-width: 991px) {
-  .sticky-side {
-    position: static;
-  }
-}
-
-@media (max-width: 768px) {
-  .auth-card {
-    padding: 1.5rem;
-  }
-
-  .app-nav {
-    padding: 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .auth-card {
-    padding: 1.25rem;
-  }
-
-  .app-logo {
-    width: 58px;
-    height: 58px;
-    font-size: 1.5rem;
-  }
-
-  .small-logo,
-  .profile-avatar,
-  .avatar-img,
-  .avatar-fallback {
-    width: 46px;
-    height: 46px;
-  }
-}
-
 .global-alert-wrap {
   position: fixed;
   top: 1rem;
@@ -430,6 +481,7 @@ textarea.custom-input {
 
 .notif-wrap {
   position: relative;
+  z-index: 100000;
 }
 
 .notif-btn {
@@ -469,22 +521,6 @@ textarea.custom-input {
   z-index: 99999;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-}
-
-.notif-wrap {
-  position: relative;
-  z-index: 100000;
-}
-
-.app-nav {
-  position: relative;
-  z-index: 1000;
-}
-
-.sticky-side {
-  position: sticky;
-  top: 1rem;
-  z-index: 1;
 }
 
 .notif-dropdown-header {
@@ -532,12 +568,6 @@ textarea.custom-input {
   margin-top: 0.35rem;
 }
 
-@media (max-width: 768px) {
-  .notif-dropdown {
-    right: -40px;
-  }
-}
-
 .post-highlight {
   animation: postPulse 1.8s ease;
 }
@@ -546,4 +576,207 @@ textarea.custom-input {
   0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.55); }
   70% { box-shadow: 0 0 0 16px rgba(139, 92, 246, 0); }
   100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+}
+
+@media (max-width: 991px) {
+  .sticky-side {
+    position: static;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .auth-card {
+    padding: 1.5rem;
+  }
+
+  .app-nav {
+    padding: 1rem;
+  }
+
+  .notif-dropdown {
+    right: -40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 1.25rem;
+  }
+
+  .app-logo {
+    width: 58px;
+    height: 58px;
+    font-size: 1.5rem;
+  }
+
+  .small-logo,
+  .profile-avatar,
+  .avatar-img,
+  .avatar-fallback {
+    width: 46px;
+    height: 46px;
+  }
+}
+
+.dashboard-content.d-none {
+  display: none;
+}
+
+.dashboard-year-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+.dashboard-month-panel {
+  display: none;
+  padding: 0 0.95rem 0.9rem 0.95rem;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.dashboard-year-block {
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  overflow: hidden;
+  max-height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+.dashboard-year-body {
+  overflow-y: auto;
+  max-height: 260px;
+}
+.dashboard-year-header {
+  padding: 0.8rem 0.95rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.04);
+}
+
+.dashboard-month-item {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.dashboard-month-item:last-child {
+  border-bottom: none;
+}
+
+.dashboard-month-toggle {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.8rem 0.95rem;
+  text-align: left;
+}
+
+.dashboard-month-toggle:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.dashboard-month-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.dashboard-month-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.dashboard-month-count {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.dashboard-month-icon {
+  font-size: 0.85rem;
+  color: var(--muted);
+  transition: transform 0.2s ease;
+}
+
+.dashboard-month-item.open .dashboard-month-icon {
+  transform: rotate(180deg);
+}
+
+.dashboard-month-panel {
+  display: none;
+  padding: 0 0.95rem 0.9rem 0.95rem;
+}
+
+.dashboard-month-item.open .dashboard-month-panel {
+  display: block;
+}
+
+.dashboard-movie-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dashboard-movie-entry {
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.dashboard-movie-title {
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.dashboard-movie-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+
+.dashboard-empty-month {
+  font-size: 0.78rem;
+  color: var(--muted);
+  padding-top: 0.15rem;
+}
+
+#topRatedList .dashboard-month-item,
+#watchedStatsList .dashboard-month-item {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+#topRatedList .dashboard-month-item:last-child,
+#watchedStatsList .dashboard-month-item:last-child {
+  border-bottom: none;
+}
+
+.dashboard-month-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dashboard-month-panel::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.05);
+  border-radius: 999px;
+}
+
+.dashboard-month-panel::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.18);
+  border-radius: 999px;
+}
+
+.dashboard-month-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.28);
 }

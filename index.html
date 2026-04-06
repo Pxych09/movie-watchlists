@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -61,25 +60,25 @@
 
           <div class="d-flex align-items-center gap-2">
             <div class="notif-wrap">
-                <button id="notifBtn" class="btn btn-outline-light custom-outline-btn notif-btn" type="button">
+              <button id="notifBtn" class="btn btn-outline-light custom-outline-btn notif-btn" type="button">
                 <i class="bi bi-bell"></i>
                 <span id="notifBadge" class="notif-badge d-none">0</span>
-                </button>
+              </button>
 
-                <div id="notifDropdown" class="notif-dropdown d-none">
+              <div id="notifDropdown" class="notif-dropdown d-none">
                 <div class="notif-dropdown-header">
-                    <span class="fw-bold">Notifications</span>
+                  <span class="fw-bold">Notifications</span>
                 </div>
                 <div id="notifList" class="notif-list">
-                    <div class="text-secondary-light small">No notifications yet.</div>
+                  <div class="text-secondary-light small">No notifications yet.</div>
                 </div>
-                </div>
+              </div>
             </div>
 
             <button id="logoutBtn" class="btn btn-outline-light custom-outline-btn" type="button">
-                <i class="bi bi-box-arrow-right"></i>
+              <i class="bi bi-box-arrow-right"></i>
             </button>
-            </div>
+          </div>
         </nav>
 
         <section class="row g-4">
@@ -155,21 +154,56 @@
           </div>
 
           <div class="col-lg-8">
+
             <div class="glass-card p-4 mb-4">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                    <h3 class="h5 fw-bold mb-0">Dashboard</h3>
+                    <button id="toggleDashboardBtn" class="btn btn-sm btn-outline-light custom-outline-btn" type="button">
+                    Hide Dashboard
+                    </button>
+                </div>
+
+                <div id="dashboardContent" class="dashboard-content">
+                    <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-title">Top Rated by Stars</div>
+                        <div id="topRatedList" class="dashboard-list">
+                        <div class="text-secondary-light small">No rating data yet.</div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-title">Watched by Month</div>
+                        <div id="watchedStatsList" class="dashboard-year-groups">
+                        <div class="text-secondary-light small">No monthly watched data yet.</div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-title">User Total Posts</div>
+                        <div id="userTotalsList" class="dashboard-list">
+                        <div class="text-secondary-light small">No user post data yet.</div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                </div>
+
+            <div class="glass-card p-4 mb-4">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                 <h3 class="h5 fw-bold mb-0">Movie Feed</h3>
                 <span id="feedCountBadge" class="badge text-bg-light">0 posts</span>
-            </div>
+              </div>
 
-            <div class="position-relative">
+              <div class="position-relative">
                 <i class="bi bi-search search-icon"></i>
                 <input
-                id="feedSearch"
-                type="search"
-                class="form-control custom-input search-input"
-                placeholder="Search by movie, genre, or user"
+                  id="feedSearch"
+                  type="search"
+                  class="form-control custom-input search-input"
+                  placeholder="Search by movie, genre, or user"
                 >
-            </div>
+              </div>
             </div>
 
             <div id="emptyFeed" class="glass-card p-5 text-center d-none">
@@ -186,4 +220,3 @@
     <script src="./app.js"></script>
   </body>
 </html>
-
