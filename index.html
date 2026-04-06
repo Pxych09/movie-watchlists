@@ -59,9 +59,27 @@
             </div>
           </div>
 
-          <button id="logoutBtn" class="btn btn-outline-light custom-outline-btn" type="button" title="Logout">
-            <i class="bi bi-box-arrow-right"></i>
-          </button>
+          <div class="d-flex align-items-center gap-2">
+            <div class="notif-wrap">
+                <button id="notifBtn" class="btn btn-outline-light custom-outline-btn notif-btn" type="button">
+                <i class="bi bi-bell"></i>
+                <span id="notifBadge" class="notif-badge d-none">0</span>
+                </button>
+
+                <div id="notifDropdown" class="notif-dropdown d-none">
+                <div class="notif-dropdown-header">
+                    <span class="fw-bold">Notifications</span>
+                </div>
+                <div id="notifList" class="notif-list">
+                    <div class="text-secondary-light small">No notifications yet.</div>
+                </div>
+                </div>
+            </div>
+
+            <button id="logoutBtn" class="btn btn-outline-light custom-outline-btn" type="button">
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
+            </div>
         </nav>
 
         <section class="row g-4">

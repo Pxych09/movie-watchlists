@@ -11,7 +11,9 @@ const state = {
   feed: [],
   isEditing: false,
   alertTimers: new Map(),
-  loadingCount: 0
+  loadingCount: 0,
+  notifications: [],
+  notifOpen: false
 };
 
 document.addEventListener("DOMContentLoaded", bootstrap);
@@ -36,6 +38,16 @@ function bindEvents() {
   bind("postForm", "submit", handleSavePost);
   bind("cancelEditBtn", "click", resetPostForm);
   bind("feedSearch", "input", handleFeedSearch);
+  bind("notifBtn", "click", toggleNotifications);
+
+  document.addEventListener("click", (event) => {
+    const wrap = document.querySelector(".notif-wrap");
+    if (!wrap) return;
+
+    if (!wrap.contains(event.target)) {
+      closeNotifications();
+    }
+  });
 }
 
 async function api(method, ...args) {
@@ -192,6 +204,8 @@ async function handleLogout() {
   state.currentUser = null;
   state.feed = [];
   state.isEditing = false;
+  state.notifications = [];
+  state.notifOpen = false;
 
   clearSession();
   $("loginForm")?.reset();
@@ -201,6 +215,12 @@ async function handleLogout() {
   if ($("feedList")) $("feedList").innerHTML = "";
   if ($("feedCountBadge")) $("feedCountBadge").textContent = "0 posts";
   $("emptyFeed")?.classList.add("d-none");
+
+  $("notifDropdown")?.classList.add("d-none");
+  if ($("notifList")) {
+    $("notifList").innerHTML = `<div class="p-3 text-secondary-light small">No notifications yet.</div>`;
+  }
+  $("notifBadge")?.classList.add("d-none");
 
   hideAlerts();
   showSection(false);
@@ -252,15 +272,141 @@ async function refreshFeed() {
   if (!state.currentUser) return;
 
   try {
-    const feed = await withLoading(() => api("getFeed", getSessionToken()))();
+    const [feed, notifications] = await Promise.all([
+      withLoading(() => api("getFeed", getSessionToken()))(),
+      withLoading(() => api("getNotifications", getSessionToken()))()
+    ]);
+
     state.feed = Array.isArray(feed) ? feed : [];
+    state.notifications = Array.isArray(notifications) ? notifications : [];
+
     applyFeedFilter();
+    renderNotifications();
   } catch (error) {
     showAlert(error.message, "danger");
     if (/Session expired/i.test(error.message)) {
       await handleLogout();
     }
   }
+}
+
+function handleFeedSearch() {
+  applyFeedFilter();
+}
+
+function applyFeedFilter() {
+  const query = ($("feedSearch")?.value || "").trim().toLowerCase();
+
+  if (!query) {
+    renderFeed(state.feed);
+    return;
+  }
+
+  const filteredFeed = state.feed.filter((post) => {
+    const haystack = [
+      post.movieName,
+      post.genre,
+      post.caption,
+      post.username,
+      post.name,
+      post.duration,
+      ...(post.comments || []).map(
+        (comment) => `${comment.name} ${comment.username} ${comment.comment}`
+      )
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(query);
+  });
+
+  renderFeed(filteredFeed);
+}
+
+function toggleNotifications() {
+  state.notifOpen = !state.notifOpen;
+  $("notifDropdown")?.classList.toggle("d-none", !state.notifOpen);
+
+  if (state.notifOpen) {
+    markNotificationsRead();
+  }
+}
+
+function closeNotifications() {
+  state.notifOpen = false;
+  $("notifDropdown")?.classList.add("d-none");
+}
+
+function renderNotifications() {
+  const notifList = $("notifList");
+  const notifBadge = $("notifBadge");
+
+  if (!notifList || !notifBadge) return;
+
+  const items = Array.isArray(state.notifications) ? state.notifications : [];
+  const unreadCount = items.filter((item) => !item.isRead).length;
+
+  notifBadge.textContent = String(unreadCount);
+  notifBadge.classList.toggle("d-none", unreadCount === 0);
+
+  if (!items.length) {
+    notifList.innerHTML = `<div class="p-3 text-secondary-light small">No notifications yet.</div>`;
+    return;
+  }
+
+  notifList.innerHTML = "";
+
+  items.forEach((item) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `notif-item ${item.isRead ? "" : "unread"}`;
+
+    btn.innerHTML = `
+      <div class="notif-item-title">${escapeHtml(item.message || "")}</div>
+      <div class="notif-item-time">${formatDateTime(item.createdAt)}</div>
+    `;
+
+    btn.addEventListener("click", () => {
+      closeNotifications();
+      if (item.postId) {
+        scrollToPost(item.postId);
+      }
+    });
+
+    notifList.appendChild(btn);
+  });
+}
+
+async function markNotificationsRead() {
+  const unread = state.notifications.filter((item) => !item.isRead);
+  if (!unread.length) return;
+
+  try {
+    await api("markNotificationsRead", getSessionToken());
+
+    state.notifications = state.notifications.map((item) => ({
+      ...item,
+      isRead: true
+    }));
+
+    renderNotifications();
+  } catch (error) {
+    console.error("Failed to mark notifications as read:", error);
+  }
+}
+
+function scrollToPost(postId) {
+  const selector = `[data-post-id="${cssEscape(postId)}"]`;
+  const postEl = document.querySelector(selector);
+  if (!postEl) return;
+
+  postEl.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+
+  postEl.classList.add("post-highlight");
+  setTimeout(() => postEl.classList.remove("post-highlight"), 1800);
 }
 
 async function handleSavePost(event) {
@@ -278,6 +424,7 @@ async function handleSavePost(event) {
 
   try {
     toggleButton(submitBtn, true);
+
     await withLoading(async () => {
       if (state.isEditing && postId) {
         await api(
@@ -335,6 +482,7 @@ function renderFeed(feed) {
 function renderPostCard(post) {
   const card = document.createElement("div");
   card.className = "glass-card post-card p-4 mb-4";
+  card.setAttribute("data-post-id", post.postId);
 
   const canEditPost = state.currentUser && state.currentUser.username === post.username;
 
@@ -357,10 +505,10 @@ function renderPostCard(post) {
         canEditPost
           ? `
         <div class="d-flex gap-2">
-          <button class="align-self-start btn btn-sm btn-warning-soft edit-post-btn" type="button">
+          <button class="btn btn-sm btn-warning-soft edit-post-btn" type="button">
             <i class="bi bi-pencil-square"></i>
           </button>
-          <button class="align-self-start btn btn-sm btn-danger-soft delete-post-btn" type="button">
+          <button class="btn btn-sm btn-danger-soft delete-post-btn" type="button">
             <i class="bi bi-trash"></i>
           </button>
         </div>
@@ -379,7 +527,7 @@ function renderPostCard(post) {
         <span class="meta-pill">Watched: ${formatDate(post.dateWatched)}</span>
       </div>
 
-      ${post.caption ? `<p class="post-caption mb-0 lobster-two-bold-italic">"${escapeHtml(post.caption)}"</p>` : ""}
+      ${post.caption ? `<p class="post-caption mb-0">${escapeHtml(post.caption)}</p>` : ""}
     </div>
 
     <hr class="custom-divider">
@@ -403,7 +551,7 @@ function renderPostCard(post) {
   const commentsList = card.querySelector(".comments-list");
 
   if (!post.comments.length) {
-    commentsList.innerHTML = `<div class="text-secondary small">| No comments yet.</div>`;
+    commentsList.innerHTML = `<div class="text-secondary-light small">No comments yet.</div>`;
   } else {
     post.comments.forEach((comment) => {
       commentsList.appendChild(renderCommentItem(comment));
@@ -430,15 +578,15 @@ function renderCommentItem(comment) {
         }
         <div>
           <div class="small fw-semibold">${escapeHtml(comment.name || comment.username)}</div>
-          <div class="small text-secondary-light smx-font">${escapeHtml(comment.comment)}</div>
-          <div class="small text-secondary mt-1 smx-font">${formatDateTime(comment.createdAt)}</div>
+          <div class="small text-secondary-light">${escapeHtml(comment.comment)}</div>
+          <div class="small text-secondary-light mt-1">${formatDateTime(comment.createdAt)}</div>
         </div>
       </div>
       ${
         canDeleteComment
           ? `
-        <button class="btn btn-sm btn-link text-danger delete-comment-btn p-3 align-self-center" type="button" data-comment-id="${escapeHtml(comment.commentId)}">
-          <i class="bi bi-x-circle" style="font-size: 1.25rem;"></i>
+        <button class="btn btn-sm btn-link text-danger delete-comment-btn p-0" type="button" data-comment-id="${escapeHtml(comment.commentId)}">
+          <i class="bi bi-x-circle"></i>
         </button>
       `
           : ""
@@ -475,6 +623,7 @@ function bindPostCardEvents(card, post, canEditPost) {
   card.querySelectorAll(".delete-comment-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const commentId = btn.dataset.commentId;
+
       try {
         toggleButton(btn, true);
         await withLoading(() => api("deleteComment", getSessionToken(), commentId))();
@@ -496,6 +645,7 @@ function bindPostCardEvents(card, post, canEditPost) {
     if (!confirm(`Delete post for "${post.movieName}"?`)) return;
 
     const btn = event.currentTarget;
+
     try {
       toggleButton(btn, true);
       await withLoading(() => api("deletePost", getSessionToken(), post.postId))();
@@ -525,33 +675,6 @@ function startEdit(post) {
   $("cancelEditBtn").classList.remove("d-none");
 
   window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function handleFeedSearch() {
-  applyFeedFilter();
-}
-
-function applyFeedFilter() {
-  const query = ($("feedSearch")?.value || "").trim().toLowerCase();
-
-  if (!query) {
-    renderFeed(state.feed);
-    return;
-  }
-
-  const filteredFeed = state.feed.filter((post) => {
-    const haystack = [
-      post.movieName,
-      post.genre,
-      post.username,
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(query);
-  });
-
-  renderFeed(filteredFeed);
 }
 
 function resetPostForm() {
@@ -631,4 +754,12 @@ function escapeHtml(str) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function cssEscape(value) {
+  if (window.CSS && typeof window.CSS.escape === "function") {
+    return window.CSS.escape(value);
+  }
+
+  return String(value).replace(/["\\]/g, "\\$&");
 }
