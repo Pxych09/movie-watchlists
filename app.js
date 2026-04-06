@@ -505,10 +505,10 @@ function renderPostCard(post) {
         canEditPost
           ? `
         <div class="d-flex gap-2">
-          <button class="btn btn-sm btn-warning-soft edit-post-btn" type="button">
+          <button class="btn btn-sm btn-warning-soft edit-post-btn align-self-start" type="button">
             <i class="bi bi-pencil-square"></i>
           </button>
-          <button class="btn btn-sm btn-danger-soft delete-post-btn" type="button">
+          <button class="btn btn-sm btn-danger-soft delete-post-btn align-self-start" type="button">
             <i class="bi bi-trash"></i>
           </button>
         </div>
@@ -578,15 +578,15 @@ function renderCommentItem(comment) {
         }
         <div>
           <div class="small fw-semibold">${escapeHtml(comment.name || comment.username)}</div>
-          <div class="small text-secondary-light">${escapeHtml(comment.comment)}</div>
-          <div class="small text-secondary-light mt-1">${formatDateTime(comment.createdAt)}</div>
+          <div class="small text-secondary-light smx-font">${escapeHtml(comment.comment)}</div>
+          <div class="small text-secondary smx-font mt-1">${formatDateTime(comment.createdAt)}</div>
         </div>
       </div>
       ${
         canDeleteComment
           ? `
-        <button class="btn btn-sm btn-link text-danger delete-comment-btn p-0" type="button" data-comment-id="${escapeHtml(comment.commentId)}">
-          <i class="bi bi-x-circle"></i>
+        <button class="btn btn-sm btn-link text-danger delete-comment-btn p-3 align-self-center" type="button" data-comment-id="${escapeHtml(comment.commentId)}">
+          <i class="bi bi-x-circle lgx-font"></i>
         </button>
       `
           : ""

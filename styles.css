@@ -33,6 +33,9 @@
 .smx-font {
     font-size: .75rem !important;
 }
+.lgx-font {
+    font-size: 1.25rem !important;
+} 
 .cedarville-cursive-regular {
   font-family: "Cedarville Cursive", cursive;
   font-weight: 400;
