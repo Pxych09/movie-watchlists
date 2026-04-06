@@ -543,7 +543,6 @@ function applyFeedFilter() {
     const haystack = [
       post.movieName,
       post.genre,
-      post.caption,
       post.username,
       post.name,
       post.duration,
