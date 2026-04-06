@@ -544,11 +544,6 @@ function applyFeedFilter() {
       post.movieName,
       post.genre,
       post.username,
-      post.name,
-      post.duration,
-      ...(post.comments || []).map(
-        (c) => `${c.name} ${c.username} ${c.comment}`
-      )
     ]
       .join(" ")
       .toLowerCase();
