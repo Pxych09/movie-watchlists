@@ -10,6 +10,7 @@ const state = {
   currentUser: null,
   feed: [],
   dashboard: {
+    genres: [],
     topRated: [],
     watchedByMonth: [],
     userTotals: []
@@ -234,6 +235,7 @@ async function handleLogout() {
     if ($("userTotalsList")) $("userTotalsList").innerHTML = "";
     if ($("dashboardContent")) $("dashboardContent").classList.remove("d-none");
     if ($("toggleDashboardBtn")) $("toggleDashboardBtn").textContent = "Hide Dashboard";
+    if ($("genreStatsList")) $("genreStatsList").innerHTML = "";
 
   $("notifDropdown")?.classList.add("d-none");
   if ($("notifList")) {
@@ -351,19 +353,22 @@ function applyFeedFilter() {
 
 
 function renderDashboard() {
+  const genreStatsList = $("genreStatsList");
   const topRatedList = $("topRatedList");
   const watchedStatsList = $("watchedStatsList");
   const userTotalsList = $("userTotalsList");
 
-  if (!topRatedList || !watchedStatsList || !userTotalsList) {
+  if (!genreStatsList || !topRatedList || !watchedStatsList || !userTotalsList) {
     return;
   }
 
   const dashboard = state.dashboard || {};
+  const genres = Array.isArray(dashboard.genres) ? dashboard.genres : [];
   const topRated = Array.isArray(dashboard.topRated) ? dashboard.topRated : [];
   const watchedByMonth = Array.isArray(dashboard.watchedByMonth) ? dashboard.watchedByMonth : [];
   const userTotals = Array.isArray(dashboard.userTotals) ? dashboard.userTotals : [];
 
+  genreStatsList.innerHTML = renderGenreStats(genres);
   topRatedList.innerHTML = renderTopRatedByStars(topRated);
   watchedStatsList.innerHTML = renderWatchedStatsByYear(watchedByMonth);
 
@@ -377,6 +382,30 @@ function renderDashboard() {
     : `<div class="text-secondary-light small">No user post data yet.</div>`;
 
   applyDashboardVisibility();
+}
+
+function renderGenreStats(genres) {
+  if (!genres.length) {
+    return `<div class="text-secondary-light small">No genre data yet.</div>`;
+  }
+
+  const max = Math.max(...genres.map((item) => item.total), 1);
+
+  return genres.map((item) => {
+    const width = (item.total / max) * 100;
+
+    return `
+      <div class="genre-stat-item">
+        <div class="genre-stat-top">
+          <div class="genre-stat-name">${escapeHtml(item.genre)}</div>
+          <div class="genre-stat-count">${item.total} post${item.total !== 1 ? "s" : ""}</div>
+        </div>
+        <div class="genre-stat-bar">
+          <div class="genre-stat-bar-fill" style="width: ${width}%;"></div>
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
 function renderTopRatedByStars(groups) {
