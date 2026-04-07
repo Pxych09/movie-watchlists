@@ -83,73 +83,111 @@
 
         <section class="row g-4">
           <div class="col-lg-4">
-            <div class="glass-card p-4 sticky-side">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3 id="formTitle" class="h5 fw-bold mb-0">Create Post</h3>
-                <button id="cancelEditBtn" type="button" class="btn btn-sm btn-secondary d-none">Cancel</button>
+            <div class="sticky-side left-stack">
+              <div class="glass-card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h3 class="h5 fw-bold mb-0">Saved To-Do Watchlists</h3>
+                  <span id="savedTodoCount" class="badge text-bg-light">0 items</span>
+                </div>
+
+                <div id="savedTodoList" class="todo-saved-list">
+                  <div class="text-secondary-light small">No saved watchlists yet.</div>
+                </div>
               </div>
 
-              <form id="postForm" class="row g-3">
-                <input type="hidden" id="postId">
-
-                <div class="col-12">
-                  <label for="movieName" class="form-label">Movie Name</label>
-                  <input id="movieName" type="text" class="form-control custom-input" required>
+              <div class="glass-card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h3 class="h5 fw-bold mb-0">To-Do Watchlists</h3>
+                  <span id="draftTodoCount" class="badge text-bg-light">0 draft</span>
                 </div>
 
-                <div class="col-12">
-                  <label for="genre" class="form-label">Genre</label>
-                  <select id="genre" class="form-select custom-input" required>
-                    <option value="">Select genre</option>
-                    <option>Action</option>
-                    <option>Adventure</option>
-                    <option>Animation</option>
-                    <option>Comedy</option>
-                    <option>Crime</option>
-                    <option>Documentary</option>
-                    <option>Drama</option>
-                    <option>Fantasy</option>
-                    <option>Horror</option>
-                    <option>Mystery</option>
-                    <option>Romance</option>
-                    <option>Sci-Fi</option>
-                    <option>Thriller</option>
-                  </select>
+                <div class="d-flex gap-2 mb-3">
+                  <input
+                    id="todoInput"
+                    type="text"
+                    class="form-control custom-input"
+                    placeholder="Add movie title or number..."
+                  >
+                  <button id="addTodoBtn" type="button" class="btn btn-primary custom-btn todo-add-btn">+</button>
                 </div>
 
-                <div class="col-md-6">
-                  <label for="rating" class="form-label">Rating</label>
-                  <select id="rating" class="form-select custom-input" required>
-                    <option value="">Select rating</option>
-                    <option value="1">1 ⭐</option>
-                    <option value="2">2 ⭐⭐</option>
-                    <option value="3">3 ⭐⭐⭐</option>
-                    <option value="4">4 ⭐⭐⭐⭐</option>
-                    <option value="5">5 ⭐⭐⭐⭐⭐</option>
-                  </select>
+                <div id="draftTodoList" class="todo-draft-list mb-3">
+                  <div class="text-secondary small text-center">|&nbsp;No draft items yet.</div>
                 </div>
 
-                <div class="col-md-6">
-                  <label for="duration" class="form-label">Duration</label>
-                  <input id="duration" type="text" class="form-control custom-input" placeholder="e.g. 2h 15m" required>
+                <button id="saveTodoBtn" type="button" class="btn btn-outline-light custom-outline-btn w-100">
+                  Save
+                </button>
+              </div>
+
+              <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h3 id="formTitle" class="h5 fw-bold mb-0">Create Post</h3>
+                  <button id="cancelEditBtn" type="button" class="btn btn-sm btn-secondary d-none">Cancel</button>
                 </div>
 
-                <div class="col-12">
-                  <label for="dateWatched" class="form-label">Date Watched</label>
-                  <input id="dateWatched" type="date" class="form-control custom-input" required>
-                </div>
+                <form id="postForm" class="row g-3">
+                  <input type="hidden" id="postId">
 
-                <div class="col-12">
-                  <label for="caption" class="form-label">Caption</label>
-                  <textarea id="caption" class="form-control custom-input" rows="4" placeholder="Share your thoughts about the movie..."></textarea>
-                </div>
+                  <div class="col-12">
+                    <label for="movieName" class="form-label">Movie Name</label>
+                    <input id="movieName" type="text" class="form-control custom-input" placeholder="E.g. 'Piranha 3D'" required>
+                  </div>
 
-                <div class="col-12">
-                  <button id="submitBtn" type="submit" class="btn btn-primary custom-btn w-100">
-                    <i class="bi bi-send me-2"></i>Post Movie
-                  </button>
-                </div>
-              </form>
+                  <div class="col-12">
+                    <label for="genre" class="form-label">Genre</label>
+                    <select id="genre" class="form-select custom-input" required>
+                      <option value="">Select genre</option>
+                      <option>Action</option>
+                      <option>Adventure</option>
+                      <option>Animation</option>
+                      <option>Comedy</option>
+                      <option>Crime</option>
+                      <option>Documentary</option>
+                      <option>Drama</option>
+                      <option>Fantasy</option>
+                      <option>Horror</option>
+                      <option>Mystery</option>
+                      <option>Romance</option>
+                      <option>Sci-Fi</option>
+                      <option>Thriller</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="rating" class="form-label">Rating</label>
+                    <select id="rating" class="form-select custom-input" required>
+                      <option value="">Select rating</option>
+                      <option value="1">1 ⭐</option>
+                      <option value="2">2 ⭐⭐</option>
+                      <option value="3">3 ⭐⭐⭐</option>
+                      <option value="4">4 ⭐⭐⭐⭐</option>
+                      <option value="5">5 ⭐⭐⭐⭐⭐</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="duration" class="form-label">Duration</label>
+                    <input id="duration" type="text" class="form-control custom-input" placeholder="E.g. 2h 15m" required>
+                  </div>
+
+                  <div class="col-12">
+                    <label for="dateWatched" class="form-label">Date Watched</label>
+                    <input id="dateWatched" type="date" class="form-control custom-input" required>
+                  </div>
+
+                  <div class="col-12">
+                    <label for="caption" class="form-label">Caption</label>
+                    <textarea id="caption" class="form-control custom-input" rows="4" placeholder="Share your thoughts about the movie..."></textarea>
+                  </div>
+
+                  <div class="col-12">
+                    <button id="submitBtn" type="submit" class="btn btn-primary custom-btn w-100">
+                      <i class="bi bi-send me-2"></i>Post Movie
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
 
