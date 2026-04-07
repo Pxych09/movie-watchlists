@@ -821,3 +821,76 @@ textarea.custom-input {
 .dashboard-month-panel::-webkit-scrollbar-thumb:hover {
   background: rgba(255,255,255,0.28);
 }
+
+.left-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.todo-add-btn {
+  min-width: 54px;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.todo-saved-list,
+.todo-draft-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+
+.todo-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.8rem;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.todo-item-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.todo-item-check {
+  margin-top: 0.15rem;
+}
+
+.todo-item-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.todo-item-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+
+.todo-remove-btn {
+  border: 0;
+  background: transparent;
+  color: #ffb3bd;
+  padding: 0;
+  line-height: 1;
+}
+
+.todo-remove-btn:hover {
+  color: white;
+}
+
+.todo-linked {
+  border-color: rgba(20, 184, 166, 0.45);
+  background: rgba(20, 184, 166, 0.08);
+}
