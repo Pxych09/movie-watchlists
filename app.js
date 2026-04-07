@@ -9,6 +9,9 @@ const STORAGE_KEY = "movieFeedUser";
 const state = {
   currentUser: null,
   feed: [],
+  todos: [],
+  todoDrafts: [],
+  selectedTodoId: "",
   dashboard: {
     genres: [],
     topRated: [],
@@ -47,6 +50,9 @@ function bindEvents() {
   bind("feedSearch", "input", handleFeedSearch);
   bind("notifBtn", "click", toggleNotifications);
   bind("toggleDashboardBtn", "click", toggleDashboard);
+  bind("addTodoBtn", "click", handleAddTodoDraft);
+  bind("saveTodoBtn", "click", handleSaveTodoDrafts);
+  bind("todoInput", "keydown", handleTodoInputKeydown);
 
   document.addEventListener("click", (event) => {
     const wrap = document.querySelector(".notif-wrap");
@@ -220,6 +226,9 @@ async function handleLogout() {
   state.isEditing = false;
   state.notifications = [];
   state.notifOpen = false;
+  state.todos = [];
+  state.todoDrafts = [];
+  state.selectedTodoId = "";
 
   clearSession();
   $("loginForm")?.reset();
@@ -236,6 +245,11 @@ async function handleLogout() {
     if ($("dashboardContent")) $("dashboardContent").classList.remove("d-none");
     if ($("toggleDashboardBtn")) $("toggleDashboardBtn").textContent = "Hide Dashboard";
     if ($("genreStatsList")) $("genreStatsList").innerHTML = "";
+    if ($("savedTodoList")) $("savedTodoList").innerHTML = `<div class="text-secondary-light small">No saved watchlists yet.</div>`;
+    if ($("draftTodoList")) $("draftTodoList").innerHTML = `<div class="text-secondary-light small">|&nbsp;No draft items yet.</div>`;
+    if ($("savedTodoCount")) $("savedTodoCount").textContent = "0 items";
+    if ($("draftTodoCount")) $("draftTodoCount").textContent = "0 draft";
+    if ($("todoInput")) $("todoInput").value = "";
 
   $("notifDropdown")?.classList.add("d-none");
   if ($("notifList")) {
@@ -293,20 +307,25 @@ async function refreshFeed() {
   if (!state.currentUser) return;
 
   try {
-    const [feed, notifications, dashboard] = await Promise.all([
+    const [feed, notifications, dashboard, todos] = await Promise.all([
       withLoading(() => api("getFeed", getSessionToken()))(),
       withLoading(() => api("getNotifications", getSessionToken()))(),
-      withLoading(() => api("getDashboardData", getSessionToken()))()
+      withLoading(() => api("getDashboardData", getSessionToken()))(),
+      withLoading(() => api("getTodos", getSessionToken()))()
     ]);
 
     state.feed = Array.isArray(feed) ? feed : [];
     state.notifications = Array.isArray(notifications) ? notifications : [];
+    state.todos = Array.isArray(todos) ? todos : [];
     state.dashboard = dashboard || {
-        topRated: [],
-        watchedByMonth: [],
-        userTotals: []
+      genres: [],
+      topRated: [],
+      watchedByMonth: [],
+      userTotals: []
     };
 
+    renderSavedTodos();
+    renderDraftTodos();
     renderDashboard();
     applyFeedFilter();
     renderNotifications();
@@ -317,6 +336,7 @@ async function refreshFeed() {
     }
   }
 }
+
 
 function handleFeedSearch() {
   applyFeedFilter();
@@ -349,6 +369,137 @@ function applyFeedFilter() {
   });
 
   renderFeed(filteredFeed);
+}
+
+function handleTodoInputKeydown(event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    handleAddTodoDraft();
+  }
+}
+
+function handleAddTodoDraft() {
+  const input = $("todoInput");
+  const value = input?.value.trim() || "";
+
+  if (!value) return;
+
+  state.todoDrafts.push(value);
+  input.value = "";
+  renderDraftTodos();
+}
+
+async function handleSaveTodoDrafts() {
+  if (!state.todoDrafts.length) {
+    showAlert("Add at least one to-do item first.", "danger");
+    return;
+  }
+
+  try {
+    await withLoading(() => api("saveTodos", getSessionToken(), state.todoDrafts))();
+    state.todoDrafts = [];
+    renderDraftTodos();
+    await refreshFeed();
+    showAlert("To-do watchlists saved successfully.", "success");
+  } catch (error) {
+    showAlert(error.message, "danger");
+  }
+}
+
+function renderDraftTodos() {
+  const list = $("draftTodoList");
+  const count = $("draftTodoCount");
+
+  if (!list || !count) return;
+
+  count.textContent = `${state.todoDrafts.length} draft${state.todoDrafts.length !== 1 ? "s" : ""}`;
+
+  if (!state.todoDrafts.length) {
+    list.innerHTML = `<div class="text-secondary small">|&nbsp;No draft items yet.</div>`;
+    return;
+  }
+
+  list.innerHTML = "";
+
+  state.todoDrafts.forEach((movieName, index) => {
+    const item = document.createElement("div");
+    item.className = "todo-item";
+
+    item.innerHTML = `
+      <div class="todo-item-left">
+        <div>
+          <div class="todo-item-title">${escapeHtml(movieName)}</div>
+          <div class="todo-item-meta">Draft item</div>
+        </div>
+      </div>
+      <button type="button" class="todo-remove-btn align-self-center" data-draft-index="${index}">
+        <i class="bi bi-x-circle"></i>
+      </button>
+    `;
+
+    item.querySelector(".todo-remove-btn")?.addEventListener("click", () => {
+      state.todoDrafts.splice(index, 1);
+      renderDraftTodos();
+    });
+
+    list.appendChild(item);
+  });
+}
+
+function renderSavedTodos() {
+  const list = $("savedTodoList");
+  const count = $("savedTodoCount");
+
+  if (!list || !count) return;
+
+  count.textContent = `${state.todos.length} item${state.todos.length !== 1 ? "s" : ""}`;
+
+  if (!state.todos.length) {
+    list.innerHTML = `<div class="text-secondary-light small">No saved watchlists yet.</div>`;
+    return;
+  }
+
+  list.innerHTML = "";
+
+  state.todos.forEach((todo) => {
+    const checked = state.selectedTodoId === todo.todoId;
+
+    const item = document.createElement("div");
+    item.className = `todo-item ${checked ? "todo-linked" : ""}`;
+
+    item.innerHTML = `
+      <div class="todo-item-left">
+        <input
+          class="align-self-center form-check-input todo-item-check"
+          type="checkbox"
+          ${checked ? "checked" : ""}
+        >
+        <div class="ms-2">
+          <div class="todo-item-title">${escapeHtml(todo.movieName)}</div>
+          <div class="todo-item-meta">added by: ${escapeHtml(todo.createdBy || "-")}</div>
+        </div>
+      </div>
+    `;
+
+    const checkbox = item.querySelector(".todo-item-check");
+    checkbox?.addEventListener("change", () => {
+      handleSavedTodoToggle(todo, checkbox.checked);
+    });
+
+    list.appendChild(item);
+  });
+}
+
+function handleSavedTodoToggle(todo, checked) {
+  if (checked) {
+    state.selectedTodoId = todo.todoId;
+    $("movieName").value = todo.movieName || "";
+  } else if (state.selectedTodoId === todo.todoId) {
+    state.selectedTodoId = "";
+    $("movieName").value = "";
+  }
+
+  renderSavedTodos();
 }
 
 
@@ -690,6 +841,17 @@ async function handleSavePost(event) {
           duration,
           caption
         );
+
+        const linkedTodo = state.todos.find((todo) => todo.todoId === state.selectedTodoId);
+
+        if (
+          linkedTodo &&
+          linkedTodo.movieName.trim().toLowerCase() === movieName.trim().toLowerCase()
+        ) {
+          await api("deleteTodo", getSessionToken(), linkedTodo.todoId);
+          state.selectedTodoId = "";
+        }
+
         showAlert("Movie posted successfully.", "success");
       }
     })();
@@ -702,6 +864,7 @@ async function handleSavePost(event) {
     toggleButton(submitBtn, false);
   }
 }
+
 
 function renderFeed(feed) {
   const feedList = $("feedList");
@@ -924,6 +1087,8 @@ function resetPostForm() {
   $("formTitle").textContent = "Create Post";
   $("submitBtn").innerHTML = `<i class="bi bi-send me-2"></i>Post Movie`;
   $("cancelEditBtn").classList.add("d-none");
+  state.selectedTodoId = "";
+  renderSavedTodos(); 
 }
 
 function toggleButton(button, disabled) {
