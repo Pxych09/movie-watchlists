@@ -23,7 +23,8 @@ const state = {
   alertTimers: new Map(),
   loadingCount: 0,
   notifications: [],
-  notifOpen: false
+  notifOpen: false,
+  subGenres: [],
 };
 
 document.addEventListener("DOMContentLoaded", bootstrap);
@@ -53,6 +54,8 @@ function bindEvents() {
   bind("addTodoBtn", "click", handleAddTodoDraft);
   bind("saveTodoBtn", "click", handleSaveTodoDrafts);
   bind("todoInput", "keydown", handleTodoInputKeydown);
+  bind("addSubGenreBtn", "click", handleAddSubGenre);
+  bind("subGenreInput", "keydown", handleSubGenreInputKeydown);
 
   document.addEventListener("click", (event) => {
     const wrap = document.querySelector(".notif-wrap");
@@ -229,6 +232,7 @@ async function handleLogout() {
   state.todos = [];
   state.todoDrafts = [];
   state.selectedTodoId = "";
+  state.subGenres = [];
 
   clearSession();
   $("loginForm")?.reset();
@@ -238,6 +242,16 @@ async function handleLogout() {
   if ($("feedList")) $("feedList").innerHTML = "";
   if ($("feedCountBadge")) $("feedCountBadge").textContent = "0 posts";
   $("emptyFeed")?.classList.add("d-none");
+
+  if ($("subGenrePreviewList")) {
+    $("subGenrePreviewList").innerHTML = `<div class="text-secondary-light small">No sub-genres yet.</div>`;
+  }
+  if ($("subGenreCount")) {
+    $("subGenreCount").textContent = "0 items";
+  }
+  if ($("subGenreInput")) {
+    $("subGenreInput").value = "";
+  }
 
     if ($("topRatedList")) $("topRatedList").innerHTML = "";
     if ($("watchedStatsList")) $("watchedStatsList").innerHTML = "";
@@ -307,16 +321,18 @@ async function refreshFeed() {
   if (!state.currentUser) return;
 
   try {
-    const [feed, notifications, dashboard, todos] = await Promise.all([
+    const [feed, notifications, dashboard, todos, subGenres] = await Promise.all([
       withLoading(() => api("getFeed", getSessionToken()))(),
       withLoading(() => api("getNotifications", getSessionToken()))(),
       withLoading(() => api("getDashboardData", getSessionToken()))(),
-      withLoading(() => api("getTodos", getSessionToken()))()
+      withLoading(() => api("getTodos", getSessionToken()))(),
+      withLoading(() => api("getSubGenres", getSessionToken()))()
     ]);
 
     state.feed = Array.isArray(feed) ? feed : [];
     state.notifications = Array.isArray(notifications) ? notifications : [];
     state.todos = Array.isArray(todos) ? todos : [];
+    state.subGenres = Array.isArray(subGenres) ? subGenres : [];
     state.dashboard = dashboard || {
       genres: [],
       topRated: [],
@@ -326,6 +342,8 @@ async function refreshFeed() {
 
     renderSavedTodos();
     renderDraftTodos();
+    renderSubGenrePreview();
+    renderSubGenreCheckboxes();
     renderDashboard();
     applyFeedFilter();
     renderNotifications();
@@ -351,19 +369,20 @@ function applyFeedFilter() {
   }
 
   const filteredFeed = state.feed.filter((post) => {
-    const haystack = [
-      post.movieName,
-      post.genre,
-      post.caption,
-      post.username,
-      post.name,
-      post.duration,
-      ...(post.comments || []).map(
-        (comment) => `${comment.name} ${comment.username} ${comment.comment}`
-      )
-    ]
-      .join(" ")
-      .toLowerCase();
+  const haystack = [
+    post.movieName,
+    post.genre,
+    ...(post.subGenres || []),
+    post.caption,
+    post.username,
+    post.name,
+    post.duration,
+    ...(post.comments || []).map(
+      (comment) => `${comment.name} ${comment.username} ${comment.comment}`
+    )
+  ]
+    .join(" ")
+    .toLowerCase();
 
     return haystack.includes(query);
   });
@@ -687,6 +706,29 @@ function groupWatchedStatsByYear(items) {
   return byYear;
 }
 
+function handleSubGenreInputKeydown(event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    handleAddSubGenre();
+  }
+}
+
+async function handleAddSubGenre() {
+  const input = $("subGenreInput");
+  const value = input?.value.trim() || "";
+
+  if (!value) return;
+
+  try {
+    await withLoading(() => api("addSubGenre", getSessionToken(), value))();
+    input.value = "";
+    await refreshFeed();
+    showAlert("Sub-genre added successfully.", "success");
+  } catch (error) {
+    showAlert(error.message, "danger");
+  }
+}
+
 function toggleDashboard() {
   state.dashboardHidden = !state.dashboardHidden;
   applyDashboardVisibility();
@@ -807,6 +849,7 @@ async function handleSavePost(event) {
   const postId = $("postId")?.value.trim() || "";
   const movieName = $("movieName")?.value.trim() || "";
   const genre = $("genre")?.value || "";
+  const subGenres = getSelectedSubGenres();
   const rating = $("rating")?.value || "";
   const dateWatched = $("dateWatched")?.value || "";
   const duration = $("duration")?.value.trim() || "";
@@ -824,6 +867,7 @@ async function handleSavePost(event) {
           postId,
           movieName,
           genre,
+          subGenres,
           rating,
           dateWatched,
           duration,
@@ -836,6 +880,7 @@ async function handleSavePost(event) {
           getSessionToken(),
           movieName,
           genre,
+          subGenres,
           rating,
           dateWatched,
           duration,
@@ -865,7 +910,6 @@ async function handleSavePost(event) {
   }
 }
 
-
 function renderFeed(feed) {
   const feedList = $("feedList");
   const emptyFeed = $("emptyFeed");
@@ -888,6 +932,9 @@ function renderPostCard(post) {
   card.setAttribute("data-post-id", post.postId);
 
   const canEditPost = state.currentUser && state.currentUser.username === post.username;
+  const subGenrePills = (post.subGenres || [])
+    .map((subGenre) => `<span class="meta-pill">${escapeHtml(subGenre)}</span>`)
+    .join("");
 
   card.innerHTML = `
     <div class="d-flex justify-content-between gap-3 flex-wrap">
@@ -924,7 +971,8 @@ function renderPostCard(post) {
       <h3 class="h4 fw-bold mb-2">${escapeHtml(post.movieName)}</h3>
 
       <div class="post-meta mb-3">
-        <span class="meta-pill">${escapeHtml(post.genre || "-")}</span>
+        <span class="meta-pill meta-pill-genre">${escapeHtml(post.genre || "-")}</span>
+        ${subGenrePills}
         <span class="meta-pill">${renderStars(post.rating)}</span>
         <span class="meta-pill">${escapeHtml(post.duration || "-")}</span>
         <span class="meta-pill">Watched: ${formatDate(post.dateWatched)}</span>
@@ -1062,12 +1110,71 @@ function bindPostCardEvents(card, post, canEditPost) {
   });
 }
 
+function getSelectedSubGenres() {
+  return Array.from(document.querySelectorAll('input[name="subGenre"]:checked'))
+    .map((input) => input.value.trim())
+    .filter(Boolean);
+}
+
+function setSelectedSubGenres(values) {
+  const selected = new Set(Array.isArray(values) ? values : []);
+
+  document.querySelectorAll('input[name="subGenre"]').forEach((input) => {
+    input.checked = selected.has(input.value);
+  });
+}
+
+function renderSubGenrePreview() {
+  const list = $("subGenrePreviewList");
+  const count = $("subGenreCount");
+
+  if (!list || !count) return;
+
+  count.textContent = `${state.subGenres.length} item${state.subGenres.length !== 1 ? "s" : ""}`;
+
+  if (!state.subGenres.length) {
+    list.innerHTML = `<div class="text-secondary-light small">No sub-genres yet.</div>`;
+    return;
+  }
+
+  list.innerHTML = state.subGenres
+    .map((item) => `
+      <span class="subgenre-preview-pill">${escapeHtml(item.name)}</span>
+    `)
+    .join("");
+}
+
+function renderSubGenreCheckboxes() {
+  const group = $("subGenreGroup");
+  if (!group) return;
+
+  const selected = new Set(getSelectedSubGenres());
+
+  if (!state.subGenres.length) {
+    group.innerHTML = `<div class="text-secondary-light small">No sub-genres available yet.</div>`;
+    return;
+  }
+
+  group.innerHTML = state.subGenres.map((item) => `
+    <label class="subgenre-chip">
+      <input
+        type="checkbox"
+        name="subGenre"
+        value="${escapeHtml(item.name)}"
+        ${selected.has(item.name) ? "checked" : ""}
+      >
+      <span>${escapeHtml(item.name)}</span>
+    </label>
+  `).join("");
+}
+
 function startEdit(post) {
   state.isEditing = true;
 
   $("postId").value = post.postId || "";
   $("movieName").value = post.movieName || "";
   $("genre").value = post.genre || "";
+  setSelectedSubGenres(post.subGenres || []);
   $("rating").value = String(post.rating || "");
   $("dateWatched").value = normalizeDateForInput(post.dateWatched);
   $("duration").value = post.duration || "";
@@ -1084,11 +1191,12 @@ function resetPostForm() {
   state.isEditing = false;
   $("postForm")?.reset();
   $("postId").value = "";
+  setSelectedSubGenres([]);
   $("formTitle").textContent = "Create Post";
   $("submitBtn").innerHTML = `<i class="bi bi-send me-2"></i>Post Movie`;
   $("cancelEditBtn").classList.add("d-none");
   state.selectedTodoId = "";
-  renderSavedTodos(); 
+  renderSavedTodos();
 }
 
 function toggleButton(button, disabled) {
