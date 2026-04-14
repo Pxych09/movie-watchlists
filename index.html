@@ -23,7 +23,7 @@
       <section id="loginSection" class="auth-wrap">
         <div class="auth-card">
           <div class="text-center mb-4">
-            <h1 class="h3 fw-bold mb-2">Our Movie Watchlists</h1>
+            <h1 class="h3 fw-bold mb-2">Our Movie Watchlists &nbsp;<i class="bi bi-film"></i></h1>
             <p class="text-secondary-light mb-0">Share movie posts and comments with everyone.</p>
           </div>
 
@@ -54,7 +54,7 @@
             </div>
             <div>
               <h2 class="h4 mb-0 fw-bold">Our Movies</h2>
-              <small class="text-secondary-light">Hi, <span id="displayName">User</span></small>
+              <small class="text-secondary-light">@<span id="displayName">User</span></small>
             </div>
           </div>
 
@@ -120,6 +120,27 @@
                 </button>
               </div>
 
+              <div class="glass-card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h3 class="h5 fw-bold mb-0">Sub-Genres</h3>
+                  <span id="subGenreCount" class="badge text-bg-light">0 items</span>
+                </div>
+
+                <div class="d-flex gap-2 mb-3">
+                  <input
+                    id="subGenreInput"
+                    type="text"
+                    class="form-control custom-input"
+                    placeholder="Add sub-genre..."
+                  >
+                  <button id="addSubGenreBtn" type="button" class="btn btn-primary custom-btn todo-add-btn">+</button>
+                </div>
+
+                <div id="subGenrePreviewList" class="subgenre-preview-list">
+                  <div class="text-secondary-light small">No sub-genres yet.</div>
+                </div>
+              </div>
+
               <div class="glass-card p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <h3 id="formTitle" class="h5 fw-bold mb-0">Create Post</h3>
@@ -137,7 +158,7 @@
                   <div class="col-12">
                     <label for="genre" class="form-label">Genre</label>
                     <select id="genre" class="form-select custom-input" required>
-                      <option value="">Select genre</option>
+                      <option value="">Select Genre</option>
                       <option>Action</option>
                       <option>Adventure</option>
                       <option>Animation</option>
@@ -154,10 +175,17 @@
                     </select>
                   </div>
 
+                  <div class="col-12">
+                    <label class="form-label d-block mb-2">Sub-Genre</label>
+                    <div id="subGenreGroup" class="subgenre-group">
+                      <div class="text-secondary-light small">No sub-genres available yet.</div>
+                    </div>
+                  </div>
+
                   <div class="col-md-6">
                     <label for="rating" class="form-label">Rating</label>
                     <select id="rating" class="form-select custom-input" required>
-                      <option value="">Select rating</option>
+                      <option value="">Select Rating</option>
                       <option value="1">1 ⭐</option>
                       <option value="2">2 ⭐⭐</option>
                       <option value="3">3 ⭐⭐⭐</option>
