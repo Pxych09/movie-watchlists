@@ -25,6 +25,11 @@ const state = {
   notifications: [],
   notifOpen: false,
   subGenres: [],
+  todoRouletteTimer: null,
+  todoRouletteSpinning: false,
+  todoRouletteValue: "",
+  todoRouletteTrackOffset: 0,
+  todoRouletteTrackIndex: 0,
 };
 
 document.addEventListener("DOMContentLoaded", bootstrap);
@@ -58,6 +63,7 @@ function bindEvents() {
   bind("subGenreInput", "keydown", handleSubGenreInputKeydown);
   bind("subGenreSearch", "input", handleSubGenreSearch);
   bind("savedTodoSearch", "input", handleSavedTodoSearch);
+  bind("spinTodoBtn", "click", handleSpinTodoRoulette);
 
   document.addEventListener("click", (event) => {
     const wrap = document.querySelector(".notif-wrap");
@@ -240,6 +246,15 @@ async function handleLogout() {
   $("loginForm")?.reset();
   resetPostForm();
   setProfile(null);
+  
+  if (state.todoRouletteTimer) {
+    clearTimeout(state.todoRouletteTimer);
+    state.todoRouletteTimer = null;
+  }
+  state.todoRouletteSpinning = false;
+  state.todoRouletteValue = "";
+  state.todoRouletteTrackOffset = 0;
+  state.todoRouletteTrackIndex = 0;
 
   if ($("feedList")) $("feedList").innerHTML = "";
   if ($("feedCountBadge")) $("feedCountBadge").textContent = "0 posts";
@@ -268,16 +283,23 @@ async function handleLogout() {
     if ($("todoInput")) $("todoInput").value = "";
     if ($("savedTodoSearch")) $("savedTodoSearch").value = "";
 
-  $("notifDropdown")?.classList.add("d-none");
-  if ($("notifList")) {
-    $("notifList").innerHTML = `<div class="p-3 text-secondary-light small">No notifications yet.</div>`;
-  }
-  $("notifBadge")?.classList.add("d-none");
+    if ($("todoSlotTrack")) {
+      $("todoSlotTrack").innerHTML = `<div class="todo-slot-item is-empty">No candidates yet.</div>`;
+      $("todoSlotTrack").style.transform = `translateX(0px)`;
+    }
+    if ($("todoRouletteResult")) $("todoRouletteResult").classList.add("d-none");
+    if ($("todoRouletteResultText")) $("todoRouletteResultText").textContent = "";
 
-  if ($("subGenreSearch")) {
-    $("subGenreSearch").value = "";
-  }
+    $("notifDropdown")?.classList.add("d-none");
+    if ($("notifList")) {
+      $("notifList").innerHTML = `<div class="p-3 text-secondary-light small">No notifications yet.</div>`;
+    }
+    $("notifBadge")?.classList.add("d-none");
 
+    if ($("subGenreSearch")) {
+      $("subGenreSearch").value = "";
+    }
+    
   hideAlerts();
   showSection(false);
 }
@@ -372,6 +394,129 @@ function handleSubGenreSearch() {
 }
 function handleFeedSearch() {
   applyFeedFilter();
+}
+
+function getTodoRouletteCandidates() {
+  return (state.todos || [])
+    .map((todo) => (todo.movieName || "").trim())
+    .filter(Boolean);
+}
+
+function buildTodoSlotItems(candidates, repeatCount = 12) {
+  if (!candidates.length) {
+    return [`No candidates yet.`];
+  }
+
+  const items = [];
+  for (let i = 0; i < repeatCount; i++) {
+    items.push(...candidates);
+  }
+  return items;
+}
+
+function renderTodoSlotMachine() {
+  const track = $("todoSlotTrack");
+  if (!track) return;
+
+  const candidates = getTodoRouletteCandidates();
+
+  if (!candidates.length) {
+    track.innerHTML = `<div class="todo-slot-item is-empty">No candidates yet.</div>`;
+    track.style.transform = `translateX(0px)`;
+    renderTodoRouletteResult("");
+    return;
+  }
+
+  const repeated = buildTodoSlotItems(candidates, 12);
+
+  track.innerHTML = repeated
+    .map((title) => `
+      <div class="todo-slot-item">${escapeHtml(title)}</div>
+    `)
+    .join("");
+
+  track.style.transform = `translateX(-${state.todoRouletteTrackOffset}px)`;
+}
+
+function renderTodoRouletteResult(text) {
+  const resultWrap = $("todoRouletteResult");
+  const resultText = $("todoRouletteResultText");
+
+  if (!resultWrap || !resultText) return;
+
+  if (!text) {
+    resultWrap.classList.add("d-none");
+    resultText.textContent = "";
+    return;
+  }
+
+  resultText.textContent = text;
+  resultWrap.classList.remove("d-none");
+}
+
+function resetTodoSlotMachine() {
+  state.todoRouletteTrackOffset = 0;
+  state.todoRouletteTrackIndex = 0;
+  state.todoRouletteValue = "";
+  renderTodoSlotMachine();
+  renderTodoRouletteResult("");
+}
+
+function handleSpinTodoRoulette() {
+  const candidates = getTodoRouletteCandidates();
+  const spinBtn = $("spinTodoBtn");
+  const track = $("todoSlotTrack");
+
+  if (!candidates.length) {
+    showAlert("No saved watchlists available to spin.", "danger");
+    resetTodoSlotMachine();
+    return;
+  }
+
+  if (state.todoRouletteSpinning || !track) return;
+
+  state.todoRouletteSpinning = true;
+  renderTodoRouletteResult("");
+  toggleButton(spinBtn, true);
+
+  const itemWidth = 220;
+  const totalSteps = 30 + Math.floor(Math.random() * 12);
+  const chosenIndex = Math.floor(Math.random() * candidates.length);
+
+  let step = 0;
+  let delay = 45;
+
+  const spinStep = () => {
+    state.todoRouletteTrackIndex += 1;
+    state.todoRouletteTrackOffset = state.todoRouletteTrackIndex * itemWidth;
+    track.style.transform = `translateX(-${state.todoRouletteTrackOffset}px)`;
+
+    step++;
+
+    if (step < totalSteps) {
+      if (step > totalSteps * 0.55) {
+        delay += 12;
+      }
+
+      state.todoRouletteTimer = setTimeout(spinStep, delay);
+      return;
+    }
+
+    const remainder = state.todoRouletteTrackIndex % candidates.length;
+    const extraOffset = (chosenIndex - remainder + candidates.length) % candidates.length;
+    state.todoRouletteTrackIndex += extraOffset;
+
+    state.todoRouletteTrackOffset = state.todoRouletteTrackIndex * itemWidth;
+    track.style.transform = `translateX(-${state.todoRouletteTrackOffset}px)`;
+
+    state.todoRouletteValue = candidates[chosenIndex];
+    state.todoRouletteSpinning = false;
+    state.todoRouletteTimer = null;
+    toggleButton(spinBtn, false);
+    renderTodoRouletteResult(state.todoRouletteValue);
+  };
+
+  spinStep();
 }
 
 function applyFeedFilter() {
@@ -542,6 +687,17 @@ function renderSavedTodos() {
 
     list.appendChild(item);
   });
+
+  const candidates = getTodoRouletteCandidates();
+  if (!candidates.length) {
+    resetTodoSlotMachine();
+  } else if (!state.todoRouletteSpinning) {
+    if (state.todoRouletteValue && !candidates.includes(state.todoRouletteValue)) {
+      state.todoRouletteValue = "";
+      renderTodoRouletteResult("");
+    }
+    renderTodoSlotMachine();
+  }
 }
 
 function handleSavedTodoToggle(todo, checked) {
