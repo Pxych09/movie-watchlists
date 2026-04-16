@@ -216,8 +216,8 @@ body {
 }
 
 .feed-list {
-  min-height: 200px;
-  max-height: 70vh;
+  min-height: 500px;
+  max-height: 75vh;
   overflow-y: auto;
   padding-right: 0.35rem;
 }
@@ -994,4 +994,101 @@ textarea.custom-input {
     width: 46px;
     height: 46px;
   }
+}
+
+
+/* ROULETTE */
+.todo-roulette-card {
+  padding: 0.9rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.todo-slot-shell {
+  position: relative;
+}
+
+.todo-slot-pointer {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 12px solid rgba(255, 255, 255, 0.92);
+  z-index: 3;
+}
+
+.todo-slot-window {
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(139, 92, 246, 0.22);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.16), rgba(20, 184, 166, 0.12));
+  padding: 0.85rem 0;
+  position: relative;
+}
+
+.todo-slot-window::before,
+.todo-slot-window::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 52px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.todo-slot-window::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(31, 31, 31, 0.8), rgba(31, 31, 31, 0));
+}
+
+.todo-slot-window::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(31, 31, 31, 0.8), rgba(31, 31, 31, 0));
+}
+
+.todo-slot-track {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  will-change: transform;
+  transition: transform 0.08s linear;
+}
+
+.todo-slot-item {
+  flex: 0 0 220px;
+  width: 220px;
+  text-align: center;
+  padding: 0.8rem 1rem;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--text);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.todo-slot-item.is-empty {
+  width: 100%;
+  flex: 0 0 100%;
+  border-right: 0;
+  color: var(--muted);
+}
+
+.todo-roulette-result {
+  margin-top: 0.7rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.todo-roulette-result span {
+  color: var(--text);
+  font-weight: 700;
 }
