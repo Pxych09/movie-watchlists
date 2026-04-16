@@ -56,6 +56,8 @@ function bindEvents() {
   bind("todoInput", "keydown", handleTodoInputKeydown);
   bind("addSubGenreBtn", "click", handleAddSubGenre);
   bind("subGenreInput", "keydown", handleSubGenreInputKeydown);
+  bind("subGenreSearch", "input", handleSubGenreSearch);
+  bind("savedTodoSearch", "input", handleSavedTodoSearch);
 
   document.addEventListener("click", (event) => {
     const wrap = document.querySelector(".notif-wrap");
@@ -264,12 +266,17 @@ async function handleLogout() {
     if ($("savedTodoCount")) $("savedTodoCount").textContent = "0 items";
     if ($("draftTodoCount")) $("draftTodoCount").textContent = "0 draft";
     if ($("todoInput")) $("todoInput").value = "";
+    if ($("savedTodoSearch")) $("savedTodoSearch").value = "";
 
   $("notifDropdown")?.classList.add("d-none");
   if ($("notifList")) {
     $("notifList").innerHTML = `<div class="p-3 text-secondary-light small">No notifications yet.</div>`;
   }
   $("notifBadge")?.classList.add("d-none");
+
+  if ($("subGenreSearch")) {
+    $("subGenreSearch").value = "";
+  }
 
   hideAlerts();
   showSection(false);
@@ -355,7 +362,14 @@ async function refreshFeed() {
   }
 }
 
+// HANDLE SEARCH
 
+function handleSavedTodoSearch() {
+  renderSavedTodos();
+}
+function handleSubGenreSearch() {
+  renderSubGenrePreview();
+}
 function handleFeedSearch() {
   applyFeedFilter();
 }
@@ -468,19 +482,40 @@ function renderDraftTodos() {
 function renderSavedTodos() {
   const list = $("savedTodoList");
   const count = $("savedTodoCount");
+  const query = ($("savedTodoSearch")?.value || "").trim().toLowerCase();
 
   if (!list || !count) return;
 
-  count.textContent = `${state.todos.length} item${state.todos.length !== 1 ? "s" : ""}`;
+  const allTodos = Array.isArray(state.todos) ? state.todos : [];
+  const filteredTodos = query
+    ? allTodos.filter((todo) => {
+        const haystack = [
+          todo.movieName,
+          todo.createdBy,
+          todo.createdAt
+        ]
+          .join(" ")
+          .toLowerCase();
 
-  if (!state.todos.length) {
+        return haystack.includes(query);
+      })
+    : allTodos;
+
+  count.textContent = `${filteredTodos.length} item${filteredTodos.length !== 1 ? "s" : ""}`;
+
+  if (!allTodos.length) {
     list.innerHTML = `<div class="text-secondary-light small">No saved watchlists yet.</div>`;
+    return;
+  }
+
+  if (!filteredTodos.length) {
+    list.innerHTML = `<div class="text-secondary-light small">No matching saved watchlists found.</div>`;
     return;
   }
 
   list.innerHTML = "";
 
-  state.todos.forEach((todo) => {
+  filteredTodos.forEach((todo) => {
     const checked = state.selectedTodoId === todo.todoId;
 
     const item = document.createElement("div");
@@ -719,9 +754,19 @@ async function handleAddSubGenre() {
 
   if (!value) return;
 
+  const exists = (state.subGenres || []).some(
+    (item) => (item.name || "").trim().toLowerCase() === value.toLowerCase()
+  );
+
+  if (exists) {
+    showAlert(`"${value}" already exists in sub-genres.`, "warning");
+    return;
+  }
+
   try {
     await withLoading(() => api("addSubGenre", getSessionToken(), value))();
     input.value = "";
+    if ($("subGenreSearch")) $("subGenreSearch").value = "";
     await refreshFeed();
     showAlert("Sub-genre added successfully.", "success");
   } catch (error) {
@@ -948,6 +993,15 @@ function renderPostCard(post) {
           <div class="fw-bold">${escapeHtml(post.name || post.username)}</div>
           <div class="text-secondary-light small" hidden>@${escapeHtml(post.username)}</div>
           <div class="text-secondary-light small mt-1">${formatDateTime(post.createdAt)}</div>
+
+          ${
+            post.updatedAt && post.updatedAt !== post.createdAt
+              ? `<div class="text-secondary-light small mt-1" style="color: wheat; font-size: .70rem !important;">
+                  Last edited ${formatDateTime(post.updatedAt)}
+                </div>`
+              : ``
+          }
+          
         </div>
       </div>
 
@@ -1127,23 +1181,33 @@ function setSelectedSubGenres(values) {
 function renderSubGenrePreview() {
   const list = $("subGenrePreviewList");
   const count = $("subGenreCount");
+  const query = ($("subGenreSearch")?.value || "").trim().toLowerCase();
 
   if (!list || !count) return;
 
-  count.textContent = `${state.subGenres.length} item${state.subGenres.length !== 1 ? "s" : ""}`;
+  const allItems = Array.isArray(state.subGenres) ? state.subGenres : [];
+  const filteredItems = query
+    ? allItems.filter((item) => (item.name || "").toLowerCase().includes(query))
+    : allItems;
 
-  if (!state.subGenres.length) {
+  count.textContent = `${filteredItems.length} item${filteredItems.length !== 1 ? "s" : ""}`;
+
+  if (!allItems.length) {
     list.innerHTML = `<div class="text-secondary-light small">No sub-genres yet.</div>`;
     return;
   }
 
-  list.innerHTML = state.subGenres
+  if (!filteredItems.length) {
+    list.innerHTML = `<div class="text-secondary-light small">No matching sub-genres found.</div>`;
+    return;
+  }
+
+  list.innerHTML = filteredItems
     .map((item) => `
       <span class="subgenre-preview-pill">${escapeHtml(item.name)}</span>
     `)
     .join("");
 }
-
 function renderSubGenreCheckboxes() {
   const group = $("subGenreGroup");
   if (!group) return;
