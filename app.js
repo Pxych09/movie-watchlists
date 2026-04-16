@@ -18,7 +18,7 @@ const state = {
     watchedByMonth: [],
     userTotals: []
   },
-  dashboardHidden: false,
+  dashboardHidden: true,
   isEditing: false,
   alertTimers: new Map(),
   loadingCount: 0,
