@@ -167,6 +167,29 @@
                   <h3 class="h5 fw-bold mb-0">Saved To-Do Watchlists</h3>
                   <span id="savedTodoCount" class="badge text-bg-light">0 items</span>
                 </div>
+
+                <div class="todo-roulette-card mb-3">
+                  <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                    <div class="small fw-semibold">Spin the Wheel</div>
+                    <button id="spinTodoBtn" type="button" class="btn btn-sm btn-primary custom-btn px-3 py-2">
+                      <i class="bi bi-arrow-repeat me-1"></i>Spin
+                    </button>
+                  </div>
+
+                  <div class="todo-slot-shell">
+                    <div class="todo-slot-pointer"></div>
+
+                    <div class="todo-slot-window">
+                      <div id="todoSlotTrack" class="todo-slot-track">
+                        <div class="todo-slot-item is-empty">No candidates yet.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="todoRouletteResult" class="todo-roulette-result d-none">
+                    Selected: <span id="todoRouletteResultText"></span>
+                  </div>
+                </div>
                 
                 <div class="position-relative mb-3">
                   <i class="bi bi-search search-icon"></i>
