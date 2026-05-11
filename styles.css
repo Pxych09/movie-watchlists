@@ -1436,3 +1436,48 @@ textarea.custom-input {
   background: rgba(139, 92, 246, 0.35);
   border-color: rgba(139, 92, 246, 0.55);
 }
+.db-chart-160 { height: 160px; }
+
+@media (max-width: 480px) {
+  .db-chart-160 { height: 140px; }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  /* remove .dashboard-card { border: 1px solid red; } */
+}
+@media (max-width: 480px) {
+  .db-chart-wrap canvas {
+    max-width: 100% !important;
+    height: 140px !important;
+  }
+
+  .db-chart-wrap[style*="height:160px"],
+  .db-chart-wrap[style] {
+    height: 140px !important;
+  }
+}
+@media (max-width: 480px) {
+  /* remove this debug line completely: */
+  /* .dashboard-card { border: 1px solid red; } */
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;  /* stack cards vertically */
+  }
+
+  .db-metric-row {
+    grid-template-columns: repeat(2, 1fr);  /* keep 2-col for metrics, they're small */
+  }
+
+  .subgenre-group, .post-meta {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 0.4rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .subgenre-group::-webkit-scrollbar, .post-meta::-webkit-scrollbar {
+    display: none;
+  }
+  .subgenre-chip, .meta-pill {
+    flex-shrink: 0;
+  }
+}
