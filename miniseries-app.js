@@ -717,18 +717,17 @@ function buildEpisodeCard(seriesId, season, ep, savedData) {
 
 function initDurationPicker(wrap, savedValue) {
   const ITEM_H = 34;
-  const PAD    = 2;
+  const PAD    = 1.5; // spacer items prepended
 
-  const trigger  = wrap.querySelector(".dp-trigger");
-  const panel    = wrap.querySelector(".dp-panel");
-  const display  = wrap.querySelector(".dp-display");
-  const chevron  = wrap.querySelector(".dp-chevron");
+  const trigger   = wrap.querySelector(".dp-trigger");
+  const panel     = wrap.querySelector(".dp-panel");
+  const display   = wrap.querySelector(".dp-display");
+  const chevron   = wrap.querySelector(".dp-chevron");
   const minScroll = wrap.querySelector(".dp-min");
   const secScroll = wrap.querySelector(".dp-sec");
-  const okBtn    = wrap.querySelector(".dp-ok-btn");
+  const okBtn     = wrap.querySelector(".dp-ok-btn");
   const cancelBtn = wrap.querySelector(".dp-cancel-btn");
 
-  // Parse existing saved value e.g. "25m 35s" → {m:25, s:35}
   function parseValue(str) {
     const mMatch = String(str || "").match(/(\d+)m/);
     const sMatch = String(str || "").match(/(\d+)s/);
@@ -739,12 +738,13 @@ function initDurationPicker(wrap, savedValue) {
   }
 
   function buildList(el, count) {
-    const spacer = (h) => {
+    // Leading spacer — exactly PAD items tall so item 0 can center
+    const makeSpace = () => {
       const d = document.createElement("div");
-      d.style.cssText = `height:${h}px;flex-shrink:0`;
+      d.style.cssText = `height:${PAD * ITEM_H}px;flex-shrink:0`;
       el.appendChild(d);
     };
-    spacer(PAD * ITEM_H);
+    makeSpace();
     for (let i = 0; i < count; i++) {
       const div = document.createElement("div");
       div.className = "dp-item";
@@ -752,23 +752,33 @@ function initDurationPicker(wrap, savedValue) {
       div.textContent = String(i).padStart(2, "0");
       el.appendChild(div);
     }
-    spacer(PAD * ITEM_H);
+    makeSpace();
   }
 
-  function getSelected(scrollEl) {
-    const idx   = Math.round(scrollEl.scrollTop / ITEM_H);
+  // scrollTop when item N is centered = N * ITEM_H  (spacer already offsets it)
+  function valueToScrollTop(value) {
+    return value * ITEM_H;
+  }
+
+  function scrollTopToValue(scrollTop) {
+    // Round to nearest item, then clamp
+    return Math.max(0, Math.round(scrollTop / ITEM_H));
+  }
+
+  function highlightCurrent(scrollEl) {
+    const val   = scrollTopToValue(scrollEl.scrollTop);
     const items = scrollEl.querySelectorAll(".dp-item");
-    let val = 0;
-    items.forEach((item, i) => {
-      const sel = i === idx;
-      item.classList.toggle("dp-item-sel", sel);
-      if (sel) val = parseInt(item.dataset.val, 10);
+    items.forEach(item => {
+      item.classList.toggle("dp-item-sel", parseInt(item.dataset.val, 10) === val);
     });
     return val;
   }
 
-  function scrollTo(scrollEl, value, animate) {
-    scrollEl.scrollTo({ top: value * ITEM_H, behavior: animate ? "smooth" : "auto" });
+  function scrollToValue(scrollEl, value, animate) {
+    scrollEl.scrollTo({
+      top: valueToScrollTop(value),
+      behavior: animate ? "smooth" : "auto",
+    });
   }
 
   buildList(minScroll, 60);
@@ -781,9 +791,13 @@ function initDurationPicker(wrap, savedValue) {
     isOpen = true;
     panel.style.display = "block";
     chevron.style.transform = "rotate(180deg)";
-    scrollTo(minScroll, committed.m, false);
-    scrollTo(secScroll, committed.s, false);
-    setTimeout(() => { getSelected(minScroll); getSelected(secScroll); }, 30);
+    // Instant jump to committed values — no animation so it's exact
+    scrollToValue(minScroll, committed.m, false);
+    scrollToValue(secScroll, committed.s, false);
+    setTimeout(() => {
+      highlightCurrent(minScroll);
+      highlightCurrent(secScroll);
+    }, 30);
   }
 
   function close() {
@@ -793,13 +807,15 @@ function initDurationPicker(wrap, savedValue) {
   }
 
   function commit() {
-    const m = getSelected(minScroll);
-    const s = getSelected(secScroll);
+    // Snap both scrollers to exact positions before reading
+    const m = scrollTopToValue(minScroll.scrollTop);
+    const s = scrollTopToValue(secScroll.scrollTop);
+    scrollToValue(minScroll, m, false);
+    scrollToValue(secScroll, s, false);
     committed = { m, s };
     const txt = m + "m " + String(s).padStart(2, "0") + "s";
     trigger.dataset.value = txt;
     display.textContent   = txt;
-    // Trigger change event so the season save bar appears
     trigger.dispatchEvent(new Event("change", { bubbles: true }));
     close();
   }
@@ -808,28 +824,34 @@ function initDurationPicker(wrap, savedValue) {
     e.stopPropagation();
     isOpen ? close() : open();
   });
-  okBtn.addEventListener("click", (e) => { e.stopPropagation(); commit(); });
+  okBtn.addEventListener("click",     (e) => { e.stopPropagation(); commit(); });
   cancelBtn.addEventListener("click", (e) => { e.stopPropagation(); close(); });
 
-  // Snap-on-scroll-stop
-  let minT, secT;
-  minScroll.addEventListener("scroll", () => {
-    clearTimeout(minT);
-    minT = setTimeout(() => { const v = getSelected(minScroll); scrollTo(minScroll, v, true); }, 80);
-  });
-  secScroll.addEventListener("scroll", () => {
-    clearTimeout(secT);
-    secT = setTimeout(() => { const v = getSelected(secScroll); scrollTo(secScroll, v, true); }, 80);
-  });
+  // Snap-on-scroll-stop: wait for finger/wheel to settle, then snap to nearest item
+  function attachSnap(scrollEl) {
+    let t;
+    scrollEl.addEventListener("scroll", () => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        const v = scrollTopToValue(scrollEl.scrollTop);
+        scrollToValue(scrollEl, v, true);
+        highlightCurrent(scrollEl);
+      }, 80);
+    });
+  }
+  attachSnap(minScroll);
+  attachSnap(secScroll);
 
-  // Close when clicking outside
   document.addEventListener("click", (e) => {
     if (isOpen && !wrap.contains(e.target)) close();
   });
 
-  // Pre-select saved value
+  // Pre-highlight saved value without animation
   if (committed.m || committed.s) {
-    setTimeout(() => { getSelected(minScroll); getSelected(secScroll); }, 60);
+    setTimeout(() => {
+      highlightCurrent(minScroll);
+      highlightCurrent(secScroll);
+    }, 60);
   }
 }
 
