@@ -15,7 +15,7 @@
     <div id="loadingOverlay" class="loading-overlay d-none" aria-hidden="true">
       <div class="text-center">
         <div class="spinner-border text-light mb-3" style="width:3rem;height:3rem;" role="status"></div>
-        <div class="fw-semibold">Loading your movie feed. Please wait...</div>
+        <div class="fw-semibold">Please wait...</div>
       </div>
     </div>
 
@@ -85,7 +85,6 @@
           <div class="col-lg-4">
             <div class="sticky-side left-stack">
 
-              
               <div class="glass-card p-4 mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <h3 id="formTitle" class="h5 fw-bold mb-0">Create Post</h3>
@@ -180,7 +179,6 @@
 
                   <div class="todo-slot-shell">
                     <div class="todo-slot-pointer"></div>
-
                     <div class="todo-slot-window">
                       <div id="todoSlotTrack" class="todo-slot-track">
                         <div class="todo-slot-item is-empty">No candidates yet.</div>
@@ -192,7 +190,7 @@
                     Selected: <span id="todoRouletteResultText"></span>
                   </div>
                 </div>
-                
+
                 <div class="position-relative mb-3">
                   <i class="bi bi-search search-icon"></i>
                   <input
@@ -269,46 +267,138 @@
 
           <div class="col-lg-8">
 
+            <!-- ─── DASHBOARD ─── -->
             <div class="glass-card p-4 mb-4">
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-                    <h3 class="h5 fw-bold mb-0">Dashboard</h3>
-                    <button id="toggleDashboardBtn" class="btn btn-sm btn-outline-light custom-outline-btn" type="button">
-                    Hide Dashboard
-                    </button>
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                <h3 class="h5 fw-bold mb-0">Dashboard</h3>
+                <button id="toggleDashboardBtn" class="btn btn-sm btn-outline-light custom-outline-btn" type="button">
+                  Hide Dashboard
+                </button>
+              </div>
+
+              <div id="dashboardContent" class="dashboard-content">
+
+                <!-- Row 1: At-a-glance metric cards -->
+                <div class="db-metric-row mb-4">
+                  <div class="db-metric-card">
+                    <div class="db-metric-label">Total Posts</div>
+                    <div class="db-metric-val" id="dbMetricPosts">—</div>
+                    <div class="db-metric-sub">all users</div>
+                  </div>
+                  <div class="db-metric-card">
+                    <div class="db-metric-label">Hours Watched</div>
+                    <div class="db-metric-val" id="dbMetricHours">—</div>
+                    <div class="db-metric-sub">est. from durations</div>
+                  </div>
+                  <div class="db-metric-card">
+                    <div class="db-metric-label">Avg Rating</div>
+                    <div class="db-metric-val" id="dbMetricAvgRating">—</div>
+                    <div class="db-metric-sub">out of 5 stars</div>
+                  </div>
+                  <div class="db-metric-card">
+                    <div class="db-metric-label">Active Users</div>
+                    <div class="db-metric-val" id="dbMetricUsers">—</div>
+                    <div class="db-metric-sub">with posts</div>
+                  </div>
                 </div>
 
-                <div id="dashboardContent" class="dashboard-content">
-                    <div class="dashboard-grid">
-                      <div class="dashboard-card">
-                        <div class="dashboard-card-title">Genre Overview</div>
-                        <div id="genreStatsList" class="dashboard-list">
-                          <div class="text-secondary-light small">No genre data yet.</div>
-                        </div>
-                      </div>
-                    <div class="dashboard-card">
-                        <div class="dashboard-card-title">Top Rated by Stars</div>
-                        <div id="topRatedList" class="dashboard-list">
-                        <div class="text-secondary-light small">No rating data yet.</div>
-                        </div>
+                <!-- Row 2: Genre bars + Rating donut -->
+                <div class="dashboard-grid mb-4">
+                  <div class="dashboard-card">
+                    <div class="dashboard-card-title">Genre Overview</div>
+                    <div id="genreStatsList" class="dashboard-list">
+                      <div class="text-secondary-light small">No genre data yet.</div>
                     </div>
-
-                    <div class="dashboard-card">
-                        <div class="dashboard-card-title">Watched by Month</div>
-                        <div id="watchedStatsList" class="dashboard-year-groups">
-                        <div class="text-secondary-light small">No monthly watched data yet.</div>
-                        </div>
+                  </div>
+                  <div class="dashboard-card">
+                    <div class="dashboard-card-title">Rating Distribution</div>
+                    <div id="ratingLegend" class="db-chart-legend mb-2"></div>
+                    <div class="db-chart-wrap" style="height:160px;">
+                      <canvas id="dbRatingChart"
+                        role="img"
+                        aria-label="Donut chart showing how many posts fall into each star rating from 1 to 5">
+                        Rating data will appear here.
+                      </canvas>
                     </div>
-
-                    <div class="dashboard-card">
-                        <div class="dashboard-card-title">User Total Posts</div>
-                        <div id="userTotalsList" class="dashboard-list">
-                        <div class="text-secondary-light small">No user post data yet.</div>
-                        </div>
-                    </div>
-                    </div>
-                </div>
+                  </div>
                 </div>
 
+                <!-- Row 3: Monthly watch chart (full width) -->
+                <div class="dashboard-card mb-4">
+                  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div class="dashboard-card-title mb-0">Movies Watched by Month</div>
+                    <div class="db-tab-group">
+                      <button class="db-tab active" id="tabCount"  onclick="switchDashboardTab('count')">Count</button>
+                      <button class="db-tab"        id="tabRating" onclick="switchDashboardTab('rating')">Avg Rating</button>
+                    </div>
+                  </div>
+                  <div class="db-chart-wrap" style="height:160px;">
+                    <canvas id="dbMonthChart"
+                      role="img"
+                      aria-label="Bar chart showing number of movies watched each month">
+                      Monthly watch data will appear here.
+                    </canvas>
+                  </div>
+                </div>
+
+                <!-- Row 4: User posts + Streaks -->
+                <div class="dashboard-grid mb-4">
+                  <div class="dashboard-card">
+                    <div class="dashboard-card-title">User Total Posts</div>
+                    <div id="userTotalsList" class="dashboard-list">
+                      <div class="text-secondary-light small">No user post data yet.</div>
+                    </div>
+                  </div>
+                  <div class="dashboard-card">
+                    <div class="dashboard-card-title">Watching Streaks &amp; Gaps</div>
+                    <div id="dbStreakList" class="dashboard-list">
+                      <div class="text-secondary-light small">No streak data yet.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Row 5: Top rated accordion (unchanged) -->
+                <div class="dashboard-grid mb-4">
+                  <div class="dashboard-card">
+                    <div class="dashboard-card-title">Top Rated by Stars</div>
+                    <div id="topRatedList" class="dashboard-list">
+                      <div class="text-secondary-light small">No rating data yet.</div>
+                    </div>
+                  </div>
+
+                  <!-- Row 5b: Rating trend line -->
+                  <div class="dashboard-card">
+                    <div class="dashboard-card-title">Avg Rating Trend</div>
+                    <div class="db-chart-wrap" style="height:160px;">
+                      <canvas id="dbTrendChart"
+                        role="img"
+                        aria-label="Line chart showing average rating per month over time">
+                        Trend data will appear here.
+                      </canvas>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Row 6: Watched by month accordion + Sub-genre cloud -->
+                <div class="dashboard-grid mb-2">
+                  <div class="dashboard-card">
+                    <div class="dashboard-card-title">Watched by Month (Detail)</div>
+                    <div id="watchedStatsList" class="dashboard-year-groups">
+                      <div class="text-secondary-light small">No monthly watched data yet.</div>
+                    </div>
+                  </div>
+                  <div class="dashboard-card">
+                    <div class="dashboard-card-title">Sub-Genre Cloud</div>
+                    <div id="dbSubGenreCloud" class="db-sg-cloud">
+                      <div class="text-secondary-light small">No sub-genre data yet.</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div><!-- /dashboardContent -->
+            </div><!-- /dashboard glass-card -->
+
+            <!-- ─── FEED ─── -->
             <div class="glass-card p-4 mb-4">
               <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                 <h3 class="h5 fw-bold mb-0">Movie Feed</h3>
@@ -337,6 +427,8 @@
       </main>
     </div>
 
+    <!-- Chart.js — loaded before app.js so the global is available -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>
