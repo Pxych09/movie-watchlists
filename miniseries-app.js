@@ -36,6 +36,18 @@ function bindEvents() {
 
   // Step 1: wire the "Set Episodes" button
   $("buildSeasonsBtn")?.addEventListener("click", handleBuildSeasons);
+
+    // Scroll to top
+  const scrollBtn = $("scrollTopBtn");
+  if (scrollBtn) {
+    window.addEventListener("scroll", () => {
+      scrollBtn.classList.toggle("visible", window.scrollY > 300);
+    }, { passive: true });
+
+    scrollBtn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    });
+  }
 }
 
 // ─────────────────────────────────────────
