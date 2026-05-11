@@ -1003,3 +1003,25 @@ function formatDate(value) {
   const dt = new Date(value);
   return isNaN(dt.getTime()) ? value : dt.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" });
 }
+
+// ─────────────────────────────────────────
+// PROFILE
+// ─────────────────────────────────────────
+function setProfile(user) {
+  const displayName    = $("displayName");
+  const profileAvatar  = $("profileAvatar");
+  const fallbackAvatar = $("fallbackAvatar");
+
+  if (displayName) displayName.textContent = user?.name || user?.username || "User";
+  if (!profileAvatar || !fallbackAvatar) return;
+
+  if (user?.avatar) {
+    profileAvatar.src = user.avatar;
+    profileAvatar.classList.remove("d-none");
+    fallbackAvatar.classList.add("d-none");
+  } else {
+    profileAvatar.removeAttribute("src");
+    profileAvatar.classList.add("d-none");
+    fallbackAvatar.classList.remove("d-none");
+  }
+}
