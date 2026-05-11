@@ -286,7 +286,7 @@ function updateStats() {
 
   if ($("statTotalSeries"))   $("statTotalSeries").textContent   = totalSeries;
   if ($("statTotalEpisodes")) $("statTotalEpisodes").textContent = totalLogged;
-  if ($("statAvgRating"))     $("statAvgRating").textContent     = avgRating !== "—" ? avgRating + "★" : "—";
+  if ($("statAvgRating"))     $("statAvgRating").textContent     = avgRating !== "—" ? avgRating + " ★" : "—";
 }
 
 // ─────────────────────────────────────────
