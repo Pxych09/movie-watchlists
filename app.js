@@ -83,6 +83,7 @@ function bindEvents() {
   bind("feedSearch",     "input",   handleFeedSearch);
   bind("notifBtn",       "click",   toggleNotifications);
   bind("toggleDashboardBtn", "click", toggleDashboard);
+  bind("toggleSidebarBtn",   "click", toggleSidebar);
   bind("addTodoBtn",     "click",   handleAddTodoDraft);
   bind("saveTodoBtn",    "click",   handleSaveTodoDrafts);
   bind("todoInput",      "keydown", handleTodoInputKeydown);
@@ -91,6 +92,18 @@ function bindEvents() {
   bind("subGenreSearch", "input",   handleSubGenreSearch);
   bind("savedTodoSearch","input",   handleSavedTodoSearch);
   bind("spinTodoBtn",    "click",   handleSpinTodoRoulette);
+  
+    // Scroll to top
+  const scrollBtn = $("scrollTopBtn");
+  if (scrollBtn) {
+    window.addEventListener("scroll", () => {
+      scrollBtn.classList.toggle("visible", window.scrollY > 300);
+    }, { passive: true });
+
+    scrollBtn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    });
+  }
 
   document.addEventListener("click", (event) => {
     const wrap = document.querySelector(".notif-wrap");
@@ -392,6 +405,8 @@ async function handleLogout() {
   if ($("userTotalsList"))   $("userTotalsList").innerHTML = "";
   if ($("dashboardContent")) $("dashboardContent").classList.remove("d-none");
   if ($("toggleDashboardBtn")) $("toggleDashboardBtn").textContent = "Hide Dashboard";
+  if ($("sidebarContent")) $("sidebarContent").classList.add("d-none");
+  if ($("toggleSidebarBtn")) $("toggleSidebarBtn").textContent = "Show Tools";
   if ($("genreStatsList"))   $("genreStatsList").innerHTML = "";
   if ($("savedTodoList"))    $("savedTodoList").innerHTML = `<div class="text-secondary-light small">No saved watchlists yet.</div>`;
   if ($("draftTodoList"))    $("draftTodoList").innerHTML = `<div class="text-secondary-light small">|&nbsp;No draft items yet.</div>`;
@@ -1297,6 +1312,13 @@ async function handleAddSubGenre() {
 function toggleDashboard() {
   state.dashboardHidden = !state.dashboardHidden;
   applyDashboardVisibility();
+}
+function toggleSidebar() {
+  const content = $("sidebarContent");
+  const btn     = $("toggleSidebarBtn");
+  if (!content || !btn) return;
+  const isHidden = content.classList.toggle("d-none");
+  btn.textContent = isHidden ? "Show Tools" : "Hide Tools";
 }
 
 function applyDashboardVisibility() {
