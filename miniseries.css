@@ -1340,3 +1340,23 @@ textarea.ep-input { resize: vertical; min-height: 60px; }
 .season-ep-row:has(.season-ep-input[disabled]):hover {
   border-color: rgba(255, 255, 255, 0.04);
 }
+@media (max-width: 480px) {
+  .auth-card {
+        padding: 1.25rem;
+        background-image: url('https://img.freepik.com/free-vector/shiny-film-negative-cinema-background-with-text-space_1017-52787.jpg?semt=ais_hybrid&w=740&q=80');
+        background-size: cover;
+        align-self: self-start;
+    } 
+  h1.h3 { font-size: 1.25rem; }
+  .auth-card p { font-size: .85rem; }
+  .app-logo { width: 58px; height: 58px; font-size: 1.5rem; }
+  .small-logo,
+  .profile-avatar,
+  .avatar-img,
+  .avatar-fallback { width: 46px; height: 46px; }
+  .db-metric-row { grid-template-columns: repeat(2, 1fr); }
+  .app-nav > div:last-child {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
