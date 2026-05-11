@@ -611,6 +611,12 @@ function ensureEpisodeInputsWired(seasonItem, series) {
   }
   panel.appendChild(grid);
 
+  // Init duration pickers
+    grid.querySelectorAll(".dp-wrap").forEach(wrap => {
+        const saved = wrap.querySelector(".dp-trigger")?.dataset.value || "";
+        initDurationPicker(wrap, saved);
+    });
+
   // Save bar
   const saveBar = document.createElement("div");
   saveBar.className = "season-save-bar";
@@ -659,18 +665,47 @@ function buildEpisodeCard(seriesId, season, ep, savedData) {
       <div class="ep-field-label">Remarks / Notes</div>
       <textarea class="ep-input ep-remarks" data-field="remarks" placeholder="Your thoughts on this episode...">${val("remarks")}</textarea>
     </div>
-    <div class="ep-row mt-2">
+    <div class="ep-field mt-2 mb-2">
       <div class="ep-field">
         <div class="ep-field-label">Duration</div>
-        <input type="text" class="ep-input ep-duration" data-field="duration" placeholder="e.g. 45m" value="${val("duration")}">
-      </div>
-      <div class="ep-field">
+        <div class="dp-wrap">
+            <button type="button" class="ep-input dp-trigger" data-field="duration" data-value="${val("duration")}">
+            <i class="bi bi-clock" style="font-size:13px;opacity:.6"></i>
+            <span class="dp-display">${val("duration") || "Select duration"}</span>
+            <i class="bi bi-chevron-down dp-chevron" style="font-size:11px;opacity:.5;margin-left:auto"></i>
+            </button>
+            <div class="dp-panel">
+            <div class="dp-cols">
+                <div class="dp-col">
+                <div class="dp-col-label">Min</div>
+                <div class="dp-scroll-wrap">
+                    <div class="dp-highlight"></div>
+                    <div class="dp-scroll dp-min"></div>
+                </div>
+                </div>
+                <div class="dp-sep">:</div>
+                <div class="dp-col">
+                <div class="dp-col-label">Sec</div>
+                <div class="dp-scroll-wrap">
+                    <div class="dp-highlight"></div>
+                    <div class="dp-scroll dp-sec"></div>
+                </div>
+                </div>
+            </div>
+            <div class="dp-footer">
+                <button type="button" class="dp-cancel-btn">Cancel</button>
+                <button type="button" class="dp-ok-btn ms-btn-save" style="font-size:0.78rem;padding:0.4rem 0.85rem">Set</button>
+            </div>
+            </div>
+        </div>
+        </div>
+    </div>
+    <div class="ep-field">
         <div class="ep-field-label">Rating</div>
-        <select class="ep-input ep-rating" data-field="rating">
-          <option value="">—</option>
-          ${[1,2,3,4,5].map(n => `<option value="${n}" ${ratingVal == n ? "selected" : ""}>${n} ${"⭐".repeat(n)}</option>`).join("")}
-        </select>
-      </div>
+            <select class="ep-input ep-rating" data-field="rating">
+            <option value="">—</option>
+            ${[1,2,3,4,5].map(n => `<option value="${n}" ${ratingVal == n ? "selected" : ""}>${n} ${"⭐".repeat(n)}</option>`).join("")}
+            </select>
     </div>
     <div class="ep-field mt-2">
       <div class="ep-field-label">Date Watched</div>
@@ -678,6 +713,124 @@ function buildEpisodeCard(seriesId, season, ep, savedData) {
     </div>
   `;
   return card;
+}
+
+function initDurationPicker(wrap, savedValue) {
+  const ITEM_H = 34;
+  const PAD    = 2;
+
+  const trigger  = wrap.querySelector(".dp-trigger");
+  const panel    = wrap.querySelector(".dp-panel");
+  const display  = wrap.querySelector(".dp-display");
+  const chevron  = wrap.querySelector(".dp-chevron");
+  const minScroll = wrap.querySelector(".dp-min");
+  const secScroll = wrap.querySelector(".dp-sec");
+  const okBtn    = wrap.querySelector(".dp-ok-btn");
+  const cancelBtn = wrap.querySelector(".dp-cancel-btn");
+
+  // Parse existing saved value e.g. "25m 35s" → {m:25, s:35}
+  function parseValue(str) {
+    const mMatch = String(str || "").match(/(\d+)m/);
+    const sMatch = String(str || "").match(/(\d+)s/);
+    return {
+      m: mMatch ? parseInt(mMatch[1], 10) : 0,
+      s: sMatch ? parseInt(sMatch[1], 10) : 0,
+    };
+  }
+
+  function buildList(el, count) {
+    const spacer = (h) => {
+      const d = document.createElement("div");
+      d.style.cssText = `height:${h}px;flex-shrink:0`;
+      el.appendChild(d);
+    };
+    spacer(PAD * ITEM_H);
+    for (let i = 0; i < count; i++) {
+      const div = document.createElement("div");
+      div.className = "dp-item";
+      div.dataset.val = i;
+      div.textContent = String(i).padStart(2, "0");
+      el.appendChild(div);
+    }
+    spacer(PAD * ITEM_H);
+  }
+
+  function getSelected(scrollEl) {
+    const idx   = Math.round(scrollEl.scrollTop / ITEM_H);
+    const items = scrollEl.querySelectorAll(".dp-item");
+    let val = 0;
+    items.forEach((item, i) => {
+      const sel = i === idx;
+      item.classList.toggle("dp-item-sel", sel);
+      if (sel) val = parseInt(item.dataset.val, 10);
+    });
+    return val;
+  }
+
+  function scrollTo(scrollEl, value, animate) {
+    scrollEl.scrollTo({ top: value * ITEM_H, behavior: animate ? "smooth" : "auto" });
+  }
+
+  buildList(minScroll, 60);
+  buildList(secScroll, 60);
+
+  let committed = parseValue(savedValue);
+  let isOpen = false;
+
+  function open() {
+    isOpen = true;
+    panel.style.display = "block";
+    chevron.style.transform = "rotate(180deg)";
+    scrollTo(minScroll, committed.m, false);
+    scrollTo(secScroll, committed.s, false);
+    setTimeout(() => { getSelected(minScroll); getSelected(secScroll); }, 30);
+  }
+
+  function close() {
+    isOpen = false;
+    panel.style.display = "none";
+    chevron.style.transform = "";
+  }
+
+  function commit() {
+    const m = getSelected(minScroll);
+    const s = getSelected(secScroll);
+    committed = { m, s };
+    const txt = m + "m " + String(s).padStart(2, "0") + "s";
+    trigger.dataset.value = txt;
+    display.textContent   = txt;
+    // Trigger change event so the season save bar appears
+    trigger.dispatchEvent(new Event("change", { bubbles: true }));
+    close();
+  }
+
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    isOpen ? close() : open();
+  });
+  okBtn.addEventListener("click", (e) => { e.stopPropagation(); commit(); });
+  cancelBtn.addEventListener("click", (e) => { e.stopPropagation(); close(); });
+
+  // Snap-on-scroll-stop
+  let minT, secT;
+  minScroll.addEventListener("scroll", () => {
+    clearTimeout(minT);
+    minT = setTimeout(() => { const v = getSelected(minScroll); scrollTo(minScroll, v, true); }, 80);
+  });
+  secScroll.addEventListener("scroll", () => {
+    clearTimeout(secT);
+    secT = setTimeout(() => { const v = getSelected(secScroll); scrollTo(secScroll, v, true); }, 80);
+  });
+
+  // Close when clicking outside
+  document.addEventListener("click", (e) => {
+    if (isOpen && !wrap.contains(e.target)) close();
+  });
+
+  // Pre-select saved value
+  if (committed.m || committed.s) {
+    setTimeout(() => { getSelected(minScroll); getSelected(secScroll); }, 60);
+  }
 }
 
 // ─────────────────────────────────────────
@@ -708,7 +861,8 @@ async function handleSaveSeason(seriesId, season, numEpisodes, seasonItem) {
     if (!card) continue;
 
     const remarks     = card.querySelector(".ep-remarks")?.value.trim()  || "";
-    const duration    = card.querySelector(".ep-duration")?.value.trim() || "";
+    // const duration    = card.querySelector(".ep-duration")?.value.trim() || "";
+    const duration = card.querySelector(".dp-trigger")?.dataset.value || "";
     const rating      = card.querySelector(".ep-rating")?.value          || "";
     const dateWatched = card.querySelector(".ep-date")?.value            || "";
 
