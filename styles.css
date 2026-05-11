@@ -1050,20 +1050,6 @@ textarea.custom-input {
 /* ─────────────────────────────────────────
    RESPONSIVE
 ───────────────────────────────────────── */
-@media (max-width: 991px) {
-  .sticky-side { position: static; }
-  .dashboard-grid { grid-template-columns: 1fr; }
-  .skel-dashboard-grid { grid-template-columns: 1fr; }
-  .db-metric-row { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 768px) {
-  .auth-card { padding: 1.5rem; }
-  .app-nav { padding: 1rem; }
-  .notif-dropdown { right: -40px; }
-  .db-metric-row { grid-template-columns: repeat(2, 1fr); }
-}
-
 @media (max-width: 480px) {
   .auth-card {
     padding: 1.25rem;
@@ -1079,7 +1065,37 @@ textarea.custom-input {
   .avatar-img,
   .avatar-fallback { width: 46px; height: 46px; }
   .db-metric-row { grid-template-columns: repeat(2, 1fr); }
+  .app-nav > div:last-child {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  #notifDropdown {
+    scale: .86;
+    top: 1.5rem;
+  }
 }
+@media (max-width: 991px) {
+  .sticky-side { position: static; }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .skel-dashboard-grid { grid-template-columns: 1fr; }
+  .db-metric-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .auth-card { padding: 1.5rem; }
+  .app-nav { padding: 1rem; }
+  .notif-dropdown { right: -40px; }
+  .db-metric-row { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 481px) {
+  .app-nav {
+    justify-content: flex-end;
+  }
+  .app-nav > div:first-child {
+    width: 100%;
+  }
+}
+
 
 /* ─────────────────────────────────────────
    DASHBOARD TOGGLES
