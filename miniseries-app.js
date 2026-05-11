@@ -787,8 +787,22 @@ function updateSeriesCard(seriesId) {
     badge?.classList.toggle("is-locked", isLocked);
 
     if (toggle) {
-      toggle.classList.toggle("is-locked", isLocked);
-      toggle.disabled = isLocked;
+        toggle.classList.toggle("is-locked", isLocked);
+        toggle.disabled = isLocked;
+        toggle.removeAttribute("title");
+    if (isLocked) {
+        toggle.setAttribute("title", "Complete the previous season first");
+    }
+
+    // Swap the chevron ↔ lock icon
+    var chevron = toggle.querySelector(".season-chevron");
+    if (chevron) {
+        if (isLocked) {
+        chevron.className = "bi bi-lock season-chevron";
+        } else {
+        chevron.className = "bi bi-chevron-down season-chevron";
+        }
+    }
     }
 
     if (pill) {
