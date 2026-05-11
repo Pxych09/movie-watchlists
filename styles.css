@@ -397,9 +397,9 @@ body {
   z-index: 1;
 }
 
-.feed-list {
+/* .feed-list {
   min-height: 500px;
-  max-height: 75vh;
+  max-height: 80vh;
   overflow-y: auto;
   padding-right: 0.35rem;
 }
@@ -418,7 +418,7 @@ body {
 
 .feed-list::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.28);
-}
+} */
 
 .search-input { padding-left: 2.8rem; }
 
@@ -1355,7 +1355,7 @@ textarea.custom-input {
 }
 
 @media (max-width: 480px) {
-  .subgenre-group {
+  .subgenre-group, .post-meta {
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
@@ -1363,10 +1363,76 @@ textarea.custom-input {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
-  .subgenre-group::-webkit-scrollbar {
+  .subgenre-group::-webkit-scrollbar, .post-meta::-webkit-scrollbar {
     display: none;
   }
-  .subgenre-chip {
+  .subgenre-chip, .meta-pill {
     flex-shrink: 0;
   }
+}
+.border-double-primary {
+  border: 2px double var(--bg2);
+  box-shadow: 1px 1px 2px .35px var(--primary);
+
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.border-double-primary:hover {
+  box-shadow: -1px -1px 2px .35px var(--primary);
+
+  transform: translate(1px, 1px);
+}
+.border-double-secondary {
+  border: 2px double var(--bg2);
+  box-shadow:
+    0 0 0 0 transparent,
+    -2px -2px 6px 0 var(--primary);
+  transition: all 0.35s ease;
+}
+
+.border-double-secondary:hover {
+  box-shadow:
+    0 0 0 0 transparent,
+    2px 2px 6px 0 var(--primary);
+  transform: translate(-2px, -2px);
+}
+.con-tools {
+  padding: 1rem 1.65rem;
+}
+.col-lg-8 {
+  margin-top: .5rem !important;
+}
+/* ── SCROLL TO TOP ── */
+#scrollTopBtn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 999;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: rgba(30, 30, 30, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text);
+  font-size: 1.1rem;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease, background 0.2s;
+}
+
+#scrollTopBtn.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+#scrollTopBtn:hover {
+  background: rgba(139, 92, 246, 0.35);
+  border-color: rgba(139, 92, 246, 0.55);
 }
