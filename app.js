@@ -92,7 +92,7 @@ function bindEvents() {
   bind("subGenreSearch", "input",   handleSubGenreSearch);
   bind("savedTodoSearch","input",   handleSavedTodoSearch);
   bind("spinTodoBtn",    "click",   handleSpinTodoRoulette);
-  
+
     // Scroll to top
   const scrollBtn = $("scrollTopBtn");
   if (scrollBtn) {
@@ -1564,7 +1564,7 @@ function renderCommentItem(comment) {
         <div>
           <div class="small fw-semibold">${escapeHtml(comment.name || comment.username)}</div>
           <div class="small text-secondary-light smx-font">${escapeHtml(comment.comment)}</div>
-          <div class="small text-secondary smx-font mt-1">${formatDateTime(comment.createdAt)}</div>
+          <div class="small smx-font mt-1">${formatDateTime(comment.createdAt)}</div>
         </div>
       </div>
       ${canDeleteComment
