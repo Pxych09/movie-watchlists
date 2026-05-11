@@ -1,0 +1,653 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lobster+Two:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+:root {
+  --bg1: #1f1f1f;
+  --bg2: #2e2e2e;
+  --card: rgba(255, 255, 255, 0.08);
+  --card-hover: rgba(255, 255, 255, 0.11);
+  --border: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.22);
+  --text: #f2f2f2;
+  --muted: rgba(255, 255, 255, 0.6);
+  --surface-1: rgba(255, 255, 255, 0.05);
+  --surface-2: rgba(255, 255, 255, 0.07);
+  --primary: #8b5cf6;
+  --primary-2: #14b8a6;
+  --accent-season: rgba(139, 92, 246, 0.18);
+  --accent-season-border: rgba(139, 92, 246, 0.35);
+  --accent-done: rgba(20, 184, 166, 0.15);
+  --accent-done-border: rgba(20, 184, 166, 0.35);
+  --accent-locked: rgba(255, 255, 255, 0.03);
+  --accent-locked-border: rgba(255, 255, 255, 0.06);
+  --danger-soft: rgba(220, 53, 69, 0.15);
+  --danger-border: rgba(220, 53, 69, 0.35);
+  --warning-soft: rgba(255, 193, 7, 0.15);
+  --warning-border: rgba(255, 193, 7, 0.35);
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+  --radius-xs: 8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+html, body { margin: 0; padding: 0; overflow-x: hidden; }
+
+body {
+  background:
+    radial-gradient(circle at top left, #4c1d95 0%, transparent 30%),
+    radial-gradient(circle at bottom right, #0f766e 0%, transparent 25%),
+    linear-gradient(135deg, var(--bg1), var(--bg2));
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── LOADING OVERLAY ── */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── AUTH ── */
+.auth-wrap {
+  min-height: 100vh;
+  display: grid; place-items: center;
+}
+
+.auth-card {
+  width: 100%; max-width: 440px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+}
+
+.auth-logo {
+  width: 64px; height: 64px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  display: grid; place-items: center;
+  font-size: 1.8rem; color: white;
+}
+
+.back-link {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.back-link:hover { color: var(--text); }
+
+/* ── NAV ── */
+.ms-nav {
+  background: var(--card);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.nav-logo {
+  width: 46px; height: 46px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  display: grid; place-items: center;
+  font-size: 1.2rem; color: white;
+  flex-shrink: 0;
+}
+
+/* ── CARDS ── */
+.ms-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+
+.sticky-panel {
+  position: sticky;
+  top: 1rem;
+}
+
+/* ── FORM CONTROLS ── */
+.ms-input {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+  transition: all 0.2s;
+}
+.ms-input:focus {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: rgba(255,255,255,0.25);
+  box-shadow: 0 0 0 0.2rem rgba(139,92,246,0.18);
+}
+.ms-input::placeholder { color: rgba(255,255,255,0.4); }
+select.ms-input option { color: #111; }
+
+.ms-btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  border: none;
+  border-radius: 14px;
+  padding: 0.8rem 1rem;
+  font-weight: 600;
+  color: white;
+  transition: opacity 0.2s;
+}
+.ms-btn-primary:hover { opacity: 0.88; color: white; }
+.ms-btn-primary:disabled { opacity: 0.5; }
+
+.ms-btn-outline {
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--border);
+  color: var(--text);
+  background: transparent;
+  transition: all 0.2s;
+}
+.ms-btn-outline:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+
+.ms-btn-danger {
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-border);
+  color: #ffb3bd;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+.ms-btn-danger:hover { background: rgba(220,53,69,0.25); color: white; }
+
+.ms-btn-save {
+  background: linear-gradient(135deg, rgba(20,184,166,0.25), rgba(139,92,246,0.2));
+  border: 1px solid var(--accent-done-border);
+  color: #6ee7df;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 0.45rem 0.9rem;
+  transition: all 0.2s;
+}
+.ms-btn-save:hover { background: rgba(20,184,166,0.35); color: white; }
+
+.form-label { color: var(--muted); font-weight: 500; font-size: 0.88rem; }
+.text-muted-light { color: var(--muted); }
+
+/* ── SEARCH / FILTER BAR ── */
+.ms-search-icon {
+  position: absolute;
+  top: 50%; left: 1rem;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+  z-index: 1;
+}
+.ms-search-input { padding-left: 2.75rem; }
+.ms-filter-select { max-width: 140px; }
+
+.ms-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--border);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+/* ── STATS ROW ── */
+.ms-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 0.65rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.ms-stat-box {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+}
+.ms-stat-val {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.ms-stat-label { font-size: 0.68rem; color: var(--muted); margin-top: 0.2rem; text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* ── EMPTY STATE ── */
+.empty-icon-wrap {
+  width: 70px; height: 70px;
+  border-radius: 20px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  display: grid; place-items: center;
+  font-size: 1.9rem;
+  color: var(--muted);
+}
+
+/* ── SECTION TITLE ── */
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+/* ── SERIES CARD ── */
+.series-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.series-card:hover { border-color: var(--border-strong); }
+
+.series-card-header {
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.series-title-wrap { flex: 1; min-width: 0; }
+.series-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 0.35rem;
+}
+
+.series-meta-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.ms-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--border);
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.ms-pill-genre {
+  background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(20,184,166,0.15));
+  border-color: rgba(139,92,246,0.35);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.series-progress-bar-wrap {
+  margin: 0 1.4rem 1.1rem 1.4rem;
+}
+
+.series-progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+
+.series-progress-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+
+.series-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-2));
+  transition: width 0.4s ease;
+}
+
+/* ── SEASONS ACCORDION ── */
+.seasons-wrap {
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.season-item { border-bottom: 1px solid rgba(255,255,255,0.05); }
+.season-item:last-child { border-bottom: none; }
+
+.season-toggle {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.95rem 1.4rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.season-toggle:hover { background: rgba(255,255,255,0.04); }
+
+.season-toggle.is-locked {
+  cursor: not-allowed;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.season-number-badge {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  border-radius: 10px;
+  display: grid; place-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: var(--accent-season);
+  border: 1px solid var(--accent-season-border);
+  color: var(--text);
+}
+
+.season-number-badge.is-done {
+  background: var(--accent-done);
+  border-color: var(--accent-done-border);
+}
+
+.season-number-badge.is-locked {
+  background: var(--accent-locked);
+  border-color: var(--accent-locked-border);
+  color: var(--muted);
+}
+
+.season-label { font-size: 0.92rem; font-weight: 600; flex: 1; }
+.season-sub   { font-size: 0.75rem; color: var(--muted); }
+
+.season-status-pill {
+  font-size: 0.68rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.season-status-pill.done    { background: var(--accent-done); border: 1px solid var(--accent-done-border); color: #6ee7df; }
+.season-status-pill.partial { background: rgba(255,193,7,0.13); border: 1px solid rgba(255,193,7,0.3); color: #fde68a; }
+.season-status-pill.empty   { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--muted); }
+.season-status-pill.locked  { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: rgba(255,255,255,0.25); }
+
+.season-chevron {
+  font-size: 0.82rem;
+  color: var(--muted);
+  transition: transform 0.22s ease;
+  flex-shrink: 0;
+}
+.season-item.open .season-chevron { transform: rotate(180deg); }
+
+/* ── SEASON PANEL (episodes) ── */
+.season-panel {
+  display: none;
+  padding: 0.25rem 1.4rem 1.2rem 1.4rem;
+  background: rgba(255,255,255,0.02);
+}
+.season-item.open .season-panel { display: block; }
+
+.episode-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.85rem;
+  padding-top: 0.5rem;
+}
+
+/* ── EPISODE CARD ── */
+.episode-card {
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.035);
+  transition: border-color 0.18s, background 0.18s;
+}
+.episode-card.is-saved {
+  border-color: rgba(20,184,166,0.3);
+  background: rgba(20,184,166,0.05);
+}
+.episode-card.has-changes {
+  border-color: rgba(255,193,7,0.35);
+  background: rgba(255,193,7,0.04);
+}
+
+.ep-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 0.6rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ep-saved-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #14b8a6;
+  flex-shrink: 0;
+}
+
+.ep-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 0;
+}
+
+.ep-input {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.82rem;
+  width: 100%;
+  transition: border-color 0.18s;
+  font-family: 'Poppins', sans-serif;
+}
+.ep-input:focus {
+  outline: none;
+  border-color: rgba(139,92,246,0.4);
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+}
+.ep-input::placeholder { color: rgba(255,255,255,0.3); }
+.ep-input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
+select.ep-input option { color: #111; }
+textarea.ep-input { resize: vertical; min-height: 60px; }
+
+.ep-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+
+.ep-field-label {
+  font-size: 0.68rem;
+  color: var(--muted);
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+
+/* ── SEASON SAVE BUTTON ── */
+.season-save-bar {
+  display: none;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.season-save-bar.visible { display: flex; }
+
+.season-save-hint {
+  font-size: 0.78rem;
+  color: rgba(255,193,7,0.8);
+}
+
+/* ── SEASON EPISODE BUILDER ── */
+.season-ep-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139,92,246,0.4) transparent;
+}
+.season-ep-builder::-webkit-scrollbar { width: 4px; }
+.season-ep-builder::-webkit-scrollbar-track { background: transparent; }
+.season-ep-builder::-webkit-scrollbar-thumb {
+  background: rgba(139,92,246,0.4);
+  border-radius: 999px;
+}
+
+.season-ep-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.65rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: var(--radius-xs);
+  transition: border-color 0.15s;
+}
+.season-ep-row:hover {
+  border-color: rgba(139,92,246,0.3);
+}
+
+.season-ep-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  font-size: 0.82rem;
+  color: var(--text);
+  font-weight: 500;
+  min-width: 0;
+}
+
+.season-ep-badge {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  display: grid; place-items: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--accent-season);
+  border: 1px solid var(--accent-season-border);
+  color: var(--text);
+}
+
+.season-ep-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.season-ep-input-wrap .ep-input {
+  width: 72px;
+  text-align: center;
+  padding: 0.38rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Hide number spinners for cleaner look */
+.season-ep-input-wrap .ep-input::-webkit-outer-spin-button,
+.season-ep-input-wrap .ep-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.season-ep-input-wrap .ep-input[type=number] { -moz-appearance: textfield; }
+
+.season-ep-unit {
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ── ALERTS ── */
+.global-alert-wrap {
+  position: fixed;
+  top: 1rem; left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  width: min(92%, 700px);
+  display: flex; flex-direction: column; gap: 0.75rem;
+  pointer-events: none;
+}
+.global-alert-wrap .alert {
+  pointer-events: auto;
+  margin: 0;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+}
+
+/* ── SKELETON ── */
+@keyframes skeletonShimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+.skel {
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.11) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 600px 100%;
+  animation: skeletonShimmer 1.5s infinite linear;
+  display: block;
+}
+.skel-series-card {
+  height: 120px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.25rem;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 991px) {
+  .sticky-panel { position: static; }
+}
+@media (max-width: 576px) {
+  .series-card-header { flex-direction: column; }
+  .ms-filter-select { max-width: 100%; }
+  .episode-grid { grid-template-columns: 1fr; }
+  .season-ep-builder { max-height: 220px; }
+}
