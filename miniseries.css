@@ -308,6 +308,9 @@ select.ms-input option { color: #111; }
   color: var(--muted);
   white-space: nowrap;
 }
+.series-meta-pillsspan[title="my-tooltip"] {
+  font-weight: bold;
+}
 
 .ms-pill-genre {
   background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(20,184,166,0.15));
@@ -832,4 +835,12 @@ textarea.ep-input { resize: vertical; min-height: 60px; }
 #scrollTopBtn:hover {
   background: rgba(139, 92, 246, 0.35);
   border-color: rgba(139, 92, 246, 0.55);
+}
+.ellipsis {
+  display: inline-block;
+  max-width: 250px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
