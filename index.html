@@ -10,6 +10,11 @@
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
+
+    <button id="scrollTopBtn" aria-label="Scroll to top">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+    
     <div id="globalAlertWrap" class="global-alert-wrap" aria-live="polite" aria-atomic="true"></div>
 
     <div id="loadingOverlay" class="loading-overlay d-none" aria-hidden="true">
@@ -46,7 +51,7 @@
       </section>
 
       <main id="appSection" class="d-none">
-        <nav class="app-nav mb-4 mt-2">
+        <nav class="app-nav mb-4 mt-2 border-double-secondary">
           <div class="d-flex align-items-center gap-3">
             <img id="profileAvatar" class="profile-avatar d-none" alt="avatar">
             <div class="app-logo small-logo" id="fallbackAvatar">
@@ -88,6 +93,13 @@
         <section class="row g-4">
           <div class="col-lg-4">
             <div class="sticky-side left-stack">
+                <div class="glass-card d-flex justify-content-between align-items-center mb-3 con-tools border-double-primary">
+                   <span class="fw-bold">Tools</span>
+                   <button id="toggleSidebarBtn" class="btn btn-sm btn-outline-light custom-outline-btn" type="button">
+                     Show Tools
+                   </button>
+                </div>
+            <div id="sidebarContent" class="left-stack d-none">
 
               <div class="glass-card p-4 mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -266,15 +278,16 @@
                 </div>
               </div>
 
+                </div>  <!-- end #sidebarContent -->
             </div>
           </div>
 
           <div class="col-lg-8">
 
             <!-- ─── DASHBOARD ─── -->
-            <div class="glass-card p-4 mb-4">
-              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-                <h3 class="h5 fw-bold mb-0">Dashboard</h3>
+            <div class="glass-card p-4 mb-4 border-double-primary">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <span class="fw-bold">Dashboard</span>
                 <button id="toggleDashboardBtn" class="btn btn-sm btn-outline-light custom-outline-btn" type="button">
                   Hide Dashboard
                 </button>
@@ -283,7 +296,7 @@
               <div id="dashboardContent" class="dashboard-content">
 
                 <!-- Row 1: At-a-glance metric cards -->
-                <div class="db-metric-row mb-4">
+                <div class="db-metric-row mb-4 mt-4">
                   <div class="db-metric-card">
                     <div class="db-metric-label">Total Posts</div>
                     <div class="db-metric-val" id="dbMetricPosts">—</div>
@@ -403,9 +416,10 @@
             </div><!-- /dashboard glass-card -->
 
             <!-- ─── FEED ─── -->
-            <div class="glass-card p-4 mb-4">
+            <div class="glass-card p-4 mb-4 border-double-primary">
               <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                <h3 class="h5 fw-bold mb-0">Movie Feed</h3>
+                <!-- <h3 class="h5 fw-bold mb-0">Movie Feed</h3> -->
+                <span class="fw-bold">Movie Feed</span>
                 <span id="feedCountBadge" class="badge text-bg-light">0 posts</span>
               </div>
 
