@@ -801,17 +801,58 @@ function parseDurationToMinutes(str) {
 }
 
 /** Group feed posts by YYYY-MM key */
+// function groupFeedByMonth(feed) {
+//   const byMonth = {};
+//   feed.forEach((post) => {
+//     const raw = post.dateWatched || "";
+//     const key = String(raw).slice(0, 7); // "YYYY-MM"
+//     if (!/^\d{4}-\d{2}$/.test(key)) return;
+//     if (!byMonth[key]) byMonth[key] = [];
+//     byMonth[key].push(post);
+//   });
+//   return byMonth;
+// }
 function groupFeedByMonth(feed) {
   const byMonth = {};
   feed.forEach((post) => {
-    const raw = post.dateWatched || "";
-    const key = String(raw).slice(0, 7); // "YYYY-MM"
+    const iso = normalizeDateWatched(post.dateWatched); // "YYYY-MM-DD"
+    const key = iso.slice(0, 7); // "YYYY-MM"
     if (!/^\d{4}-\d{2}$/.test(key)) return;
     if (!byMonth[key]) byMonth[key] = [];
     byMonth[key].push(post);
   });
   return byMonth;
 }
+// function groupFeedByMonth(feed) {
+//   const byMonth = {};
+//   feed.forEach((post) => {
+//     const raw = post.dateWatched;
+//     if (!raw) return;
+
+//     let key;
+//     if (raw instanceof Date || (typeof raw === "object" && raw !== null)) {
+//       // Already a Date object
+//       const d = new Date(raw);
+//       if (isNaN(d.getTime())) return;
+//       key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+//     } else {
+//       const s = String(raw);
+//       // Full date string like "Mon May 11 2026 00:00:00 GMT+0800..."
+//       if (!/^\d{4}-\d{2}/.test(s)) {
+//         const d = new Date(s);
+//         if (isNaN(d.getTime())) return;
+//         key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+//       } else {
+//         key = s.slice(0, 7);
+//       }
+//     }
+
+//     if (!/^\d{4}-\d{2}$/.test(key)) return;
+//     if (!byMonth[key]) byMonth[key] = [];
+//     byMonth[key].push(post);
+//   });
+//   return byMonth;
+// }
 
 /** Compute watching streaks and longest gap per user from the full feed */
 function computeStreakData(feed) {
@@ -887,7 +928,10 @@ function renderDashboard() {
   const userTotals    = Array.isArray(dashboard.userTotals)    ? dashboard.userTotals    : [];
   const feed          = Array.isArray(state.feed)              ? state.feed              : [];
 
-  console.log(feed)
+  //console.log(feed)
+  console.log("feed length:", feed.length);
+  console.log("sample dateWatched values:", feed.slice(0, 5).map(p => p.dateWatched));
+  console.log("groupFeedByMonth result:", groupFeedByMonth(feed));
 
   // ── Metric cards (computed client-side from feed) ──
   const totalPosts  = feed.length;
@@ -1773,13 +1817,22 @@ function formatDateTime(value) {
   if (Number.isNaN(d.getTime())) return value;
   return d.toLocaleString("en-PH", { year:"numeric", month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
 }
-
+function normalizeDateWatched(raw) {
+  if (!raw) return "";
+  const d = new Date(raw); // handles Date objects, ISO strings, and full date strings
+  if (isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+// function normalizeDateForInput(value) {
+//   if (!value) return "";
+//   if (/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return String(value);
+//   const d = new Date(value);
+//   if (Number.isNaN(d.getTime())) return "";
+//   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+// }
 function normalizeDateForInput(value) {
   if (!value) return "";
-  if (/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return String(value);
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "";
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  return normalizeDateWatched(value); // reuse the same logic
 }
 
 function escapeHtml(str) {
