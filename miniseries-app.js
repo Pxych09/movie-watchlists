@@ -461,7 +461,7 @@ function buildSeriesCard(series) {
         <div class="series-meta-pills">
           <span class="ms-pill ms-pill-genre">${escapeHtml(genre)}</span>
           <span class="ms-pill">${numSeasons} Season${numSeasons !== 1 ? "s" : ""}</span>
-          <span class="ms-pill" title="${epSummary}">${epSummary}</span>
+          <span class="ms-pill ellipsis" title="${epSummary}">${epSummary}</span>
           <span class="ms-pill">by ${escapeHtml(name || username)}</span>
         </div>
       </div>
