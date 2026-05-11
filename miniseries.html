@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Your Mini Series</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/4831/4831192.png" type="image/png">
+    <link rel="stylesheet" href="./miniseries.css">
+  </head>
+  <body>
+
+    <div id="globalAlertWrap" class="global-alert-wrap" aria-live="polite" aria-atomic="true"></div>
+
+    <div id="loadingOverlay" class="loading-overlay d-none" aria-hidden="true">
+      <div class="text-center">
+        <div class="spinner-border text-light mb-3" style="width:3rem;height:3rem;" role="status"></div>
+        <div class="fw-semibold text-light">Please wait...</div>
+      </div>
+    </div>
+
+    <div class="container py-4">
+
+      <!-- LOGIN -->
+      <section id="loginSection" class="auth-wrap">
+        <div class="auth-card">
+          <div class="text-center mb-4">
+            <div class="auth-logo mx-auto mb-3">
+              <i class="bi bi-tv"></i>
+            </div>
+            <h1 class="h3 fw-bold mb-1">Your Mini Series</h1>
+            <p class="text-muted-light mb-0">Track every episode, every season.</p>
+          </div>
+          <form id="loginForm" class="row g-3">
+            <div class="col-12">
+              <label for="loginUsername" class="form-label">Username</label>
+              <input id="loginUsername" type="text" class="form-control ms-input" autocomplete="username" required>
+            </div>
+            <div class="col-12">
+              <label for="loginPassword" class="form-label">Password</label>
+              <input id="loginPassword" type="password" class="form-control ms-input" autocomplete="current-password" required>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn ms-btn-primary w-100">Login</button>
+            </div>
+          </form>
+          <div class="text-center mt-3">
+            <a href="./index.html" class="back-link"><i class="bi bi-arrow-left me-1"></i>Back to Movie Feed</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- APP -->
+      <main id="appSection" class="d-none">
+
+        <!-- NAV -->
+        <nav class="ms-nav mb-4">
+          <div class="d-flex align-items-center gap-3">
+            <div class="nav-logo">
+              <i class="bi bi-tv-fill"></i>
+            </div>
+            <div>
+              <h2 class="h5 mb-0 fw-bold">Your Mini Series</h2>
+              <small class="text-muted-light">@<span id="displayName">User</span></small>
+            </div>
+          </div>
+          <div class="d-flex gap-2 align-items-center">
+            <a href="./index.html" class="btn ms-btn-outline btn-sm">
+              <i class="bi bi-film me-1"></i>Movie Feed
+            </a>
+            <button id="logoutBtn" class="btn ms-btn-outline btn-sm" type="button">
+              <i class="bi bi-box-arrow-right"></i>
+            </button>
+          </div>
+        </nav>
+
+        <div class="row g-4">
+
+          <!-- LEFT: Create Series -->
+          <div class="col-lg-4">
+            <div class="ms-card p-4 sticky-panel">
+              <h3 class="section-title mb-4"><i class="bi bi-plus-circle me-2"></i>Create Series</h3>
+
+              <form id="createSeriesForm" class="row g-3">
+                <div class="col-12">
+                  <label for="seriesTitle" class="form-label">Series Title</label>
+                  <input id="seriesTitle" type="text" class="form-control ms-input" placeholder="e.g. The Big Bang Theory" required>
+                </div>
+                <div class="col-12">
+                  <label for="seriesGenre" class="form-label">Genre</label>
+                  <select id="seriesGenre" class="form-select ms-input" required>
+                    <option value="">Select Genre</option>
+                    <option>Action</option>
+                    <option>Adventure</option>
+                    <option>Animation</option>
+                    <option>Comedy</option>
+                    <option>Crime</option>
+                    <option>Documentary</option>
+                    <option>Drama</option>
+                    <option>Fantasy</option>
+                    <option>Horror</option>
+                    <option>Mystery</option>
+                    <option>Romance</option>
+                    <option>Sci-Fi</option>
+                    <option>Thriller</option>
+                    <option>Mini-Series</option>
+                    <option>Series</option>
+                  </select>
+                </div>
+
+                <!-- Step 1: how many seasons -->
+                <div class="col-12">
+                  <label for="numSeasons" class="form-label">No. of Seasons</label>
+                  <div class="d-flex gap-2">
+                    <input id="numSeasons" type="number" class="form-control ms-input" min="1" max="50" placeholder="e.g. 3">
+                    <button id="buildSeasonsBtn" type="button" class="btn ms-btn-outline" style="white-space:nowrap">
+                      <i class="bi bi-arrow-right-circle me-1"></i>Set Episodes
+                    </button>
+                  </div>
+                  <div class="form-text" style="color:var(--muted);font-size:.75rem;margin-top:.35rem;">
+                    Enter season count, then click "Set Episodes" to configure each season individually.
+                  </div>
+                </div>
+
+                <!-- Step 2: per-season episode inputs (injected dynamically) -->
+                <div class="col-12" id="seasonEpisodesWrap" style="display:none;">
+                  <label class="form-label mb-2">Episodes per Season</label>
+                  <div id="seasonEpisodesList" class="season-ep-builder"></div>
+                </div>
+
+                <div class="col-12">
+                  <button type="submit" class="btn ms-btn-primary w-100">
+                    <i class="bi bi-plus-lg me-2"></i>Create Series
+                  </button>
+                </div>
+              </form>
+
+              <!-- Stats -->
+              <div class="ms-stats-row mt-4">
+                <div class="ms-stat-box">
+                  <div class="ms-stat-val" id="statTotalSeries">0</div>
+                  <div class="ms-stat-label">Series</div>
+                </div>
+                <div class="ms-stat-box">
+                  <div class="ms-stat-val" id="statTotalEpisodes">0</div>
+                  <div class="ms-stat-label">Episodes Logged</div>
+                </div>
+                <div class="ms-stat-box">
+                  <div class="ms-stat-val" id="statAvgRating">—</div>
+                  <div class="ms-stat-label">Avg Rating</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Series List -->
+          <div class="col-lg-8">
+
+            <!-- Search + filter bar -->
+            <div class="ms-card p-3 mb-4">
+              <div class="d-flex gap-2 flex-wrap align-items-center">
+                <div class="position-relative flex-grow-1">
+                  <i class="bi bi-search ms-search-icon"></i>
+                  <input id="seriesSearch" type="search" class="form-control ms-input ms-search-input" placeholder="Search series...">
+                </div>
+                <select id="seriesFilter" class="form-select ms-input ms-filter-select">
+                  <option value="all">All Series</option>
+                  <option value="mine">My Series</option>
+                </select>
+                <span id="seriesCountBadge" class="ms-badge">0 series</span>
+              </div>
+            </div>
+
+            <!-- Empty state -->
+            <div id="emptySeriesState" class="ms-card p-5 text-center d-none">
+              <div class="empty-icon-wrap mx-auto mb-3">
+                <i class="bi bi-tv"></i>
+              </div>
+              <p class="mb-1 fw-semibold">No series yet.</p>
+              <p class="text-muted-light small mb-0">Create your first series using the form on the left.</p>
+            </div>
+
+            <!-- Series cards list -->
+            <div id="seriesList"></div>
+
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="./miniseries-app.js"></script>
+  </body>
+</html>
