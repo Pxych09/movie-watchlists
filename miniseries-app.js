@@ -37,7 +37,7 @@ function bindEvents() {
   // Step 1: wire the "Set Episodes" button
   $("buildSeasonsBtn")?.addEventListener("click", handleBuildSeasons);
 
-    // Scroll to top
+  // Scroll to top
   const scrollBtn = $("scrollTopBtn");
   if (scrollBtn) {
     window.addEventListener("scroll", () => {
@@ -80,10 +80,11 @@ function getEpsForSeason(series, season) {
 
 /**
  * Build the seasonEpisodes map from the dynamic form inputs.
+ * Accepts an optional container element; defaults to global #seasonEpisodesList.
  * Returns an object like { "1": 16, "2": 20, "3": 12 }
  */
-function readSeasonEpisodesFromForm() {
-  const list = $("seasonEpisodesList");
+function readSeasonEpisodesFromForm(container) {
+  const list = container || $("seasonEpisodesList");
   if (!list) return null;
   const inputs = list.querySelectorAll(".season-ep-input");
   if (!inputs.length) return null;
@@ -290,6 +291,7 @@ function updateStats() {
 
 // ─────────────────────────────────────────
 // SEASON BUILDER  (Step 1 → Step 2)
+// Global version for the create form
 // ─────────────────────────────────────────
 function handleBuildSeasons() {
   const numSeasons = parseInt($("numSeasons")?.value, 10);
@@ -305,32 +307,10 @@ function handleBuildSeasons() {
   list.innerHTML = "";
 
   for (let s = 1; s <= numSeasons; s++) {
-    const row = document.createElement("div");
-    row.className = "season-ep-row";
-    row.innerHTML = `
-      <div class="season-ep-label">
-        <span class="season-ep-badge">S${s}</span>
-        <span>Season ${s}</span>
-      </div>
-      <div class="season-ep-input-wrap">
-        <input
-          type="number"
-          class="ep-input season-ep-input"
-          data-season="${s}"
-          min="1" max="200"
-          placeholder="Episodes"
-          value="12"
-          required
-        >
-        <span class="season-ep-unit">eps</span>
-      </div>
-    `;
-    list.appendChild(row);
+    list.appendChild(buildSeasonEpRow(s));
   }
 
   wrap.style.display = "block";
-
-  // Scroll the wrap into view smoothly
   wrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
@@ -340,6 +320,37 @@ function resetSeasonBuilder() {
   if (list) list.innerHTML = "";
   if (wrap) wrap.style.display = "none";
   if ($("numSeasons")) $("numSeasons").value = "";
+}
+
+/**
+ * Build a single season-episode row DOM element.
+ * @param {number} s - Season number
+ * @param {number} [defaultVal=12] - Pre-filled episode count
+ * @param {boolean} [readOnly=false] - Whether the input should be disabled
+ */
+function buildSeasonEpRow(s, defaultVal = 12, readOnly = false) {
+  const row = document.createElement("div");
+  row.className = "season-ep-row";
+  row.innerHTML = `
+    <div class="season-ep-label">
+      <span class="season-ep-badge">S${s}</span>
+      <span>Season ${s}</span>
+      ${readOnly ? `<span class="season-ep-readonly-tag">Existing</span>` : ""}
+    </div>
+    <div class="season-ep-input-wrap">
+      <input
+        type="number"
+        class="ep-input season-ep-input"
+        data-season="${s}"
+        min="1" max="200"
+        placeholder="Episodes"
+        value="${defaultVal}"
+        ${readOnly ? "disabled" : "required"}
+      >
+      <span class="season-ep-unit">eps</span>
+    </div>
+  `;
+  return row;
 }
 
 // ─────────────────────────────────────────
@@ -379,7 +390,6 @@ async function handleCreateSeries(e) {
 
   try {
     toggleBtn(btn, true);
-    // Pass seasonEpisodes JSON as the 5th arg; backends that don't know it will ignore it gracefully
     await withLoading(() =>
       api("createSeries", token(), title, genre, numSeasons, totalEpisodes, seasonEpisodesJson)
     );
@@ -405,6 +415,227 @@ async function handleDeleteSeries(seriesId, title) {
     showAlert("Series deleted.", "success");
   } catch (err) {
     showAlert(err.message, "danger");
+  }
+}
+
+// ─────────────────────────────────────────
+// EDIT SERIES — inline form inside the card
+// ─────────────────────────────────────────
+
+/**
+ * Toggle the inline edit form for a series card.
+ * If already open, collapses it. If closed, expands it.
+ */
+function handleEditSeries(seriesId) {
+  const card = document.querySelector(`.series-card[data-series-id="${seriesId}"]`);
+  if (!card) return;
+
+  // If edit form already open, cancel/collapse it
+  const existing = card.querySelector(".series-edit-form-wrap");
+  if (existing) {
+    existing.remove();
+    card.querySelector(".edit-series-btn")?.classList.remove("active");
+    return;
+  }
+
+  const series = state.series.find(s => s.seriesId === seriesId);
+  if (!series) return;
+
+  // Mark button as active
+  card.querySelector(".edit-series-btn")?.classList.add("active");
+
+  const wrap = document.createElement("div");
+  wrap.className = "series-edit-form-wrap";
+  wrap.innerHTML = `
+    <div class="series-edit-form">
+      <div class="series-edit-title">
+        <i class="bi bi-pencil-square me-2"></i>Edit Series
+      </div>
+
+      <div class="series-edit-field">
+        <label class="form-label">Series Title</label>
+        <input
+          type="text"
+          class="ep-input series-edit-title-input"
+          value="${escapeHtml(series.title)}"
+          placeholder="Series title"
+          maxlength="200"
+        >
+      </div>
+
+      <div class="series-edit-field">
+        <label class="form-label">Current Seasons</label>
+        <div class="series-edit-readonly">
+          <i class="bi bi-collection me-2" style="opacity:.5"></i>
+          ${series.numSeasons} season${series.numSeasons !== 1 ? "s" : ""} (cannot be reduced)
+        </div>
+      </div>
+
+      <div class="series-edit-field">
+        <label class="form-label">New Total Season Count</label>
+        <div class="d-flex gap-2">
+          <input
+            type="number"
+            class="ep-input series-edit-seasons-input"
+            min="${series.numSeasons + 1}"
+            max="50"
+            placeholder="e.g. ${series.numSeasons + 1}"
+            style="max-width:120px"
+          >
+          <button type="button" class="btn ms-btn-outline series-edit-build-btn" style="white-space:nowrap">
+            <i class="bi bi-arrow-right-circle me-1"></i>Set New Episodes
+          </button>
+        </div>
+        <div class="form-text" style="color:var(--muted);font-size:.75rem;margin-top:.35rem;">
+          Only values greater than ${series.numSeasons} are allowed. Leave blank if you only want to update the title.
+        </div>
+      </div>
+
+      <div class="series-edit-new-seasons-wrap" style="display:none;">
+        <label class="form-label mb-2">Episodes for New Seasons</label>
+        <div class="season-ep-builder series-edit-new-seasons-list"></div>
+      </div>
+
+      <div class="series-edit-actions">
+        <button type="button" class="btn ms-btn-outline series-edit-cancel-btn">
+          <i class="bi bi-x me-1"></i>Cancel
+        </button>
+        <button type="button" class="btn ms-btn-save series-edit-save-btn">
+          <i class="bi bi-floppy me-1"></i>Save Changes
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Wire "Set New Episodes" button
+  const buildBtn = wrap.querySelector(".series-edit-build-btn");
+  buildBtn.addEventListener("click", () => {
+    const seasonsInput = wrap.querySelector(".series-edit-seasons-input");
+    const newTotal     = parseInt(seasonsInput.value, 10);
+
+    if (!newTotal || newTotal <= series.numSeasons || newTotal > 50) {
+      showAlert(`New season count must be between ${series.numSeasons + 1} and 50.`, "warning");
+      return;
+    }
+
+    const listEl = wrap.querySelector(".series-edit-new-seasons-list");
+    const wrapEl = wrap.querySelector(".series-edit-new-seasons-wrap");
+    listEl.innerHTML = "";
+
+    // Show read-only rows for existing seasons first (visual context)
+    for (let s = 1; s <= series.numSeasons; s++) {
+      const existingEps = getEpsForSeason(series, s);
+      listEl.appendChild(buildSeasonEpRow(s, existingEps, true));
+    }
+
+    // Editable inputs for new seasons only
+    for (let s = series.numSeasons + 1; s <= newTotal; s++) {
+      listEl.appendChild(buildSeasonEpRow(s, 12, false));
+    }
+
+    wrapEl.style.display = "block";
+    wrapEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+
+  // Wire Cancel
+  wrap.querySelector(".series-edit-cancel-btn").addEventListener("click", () => {
+    wrap.remove();
+    card.querySelector(".edit-series-btn")?.classList.remove("active");
+  });
+
+  // Wire Save
+  wrap.querySelector(".series-edit-save-btn").addEventListener("click", () => {
+    handleSaveEditSeries(seriesId, wrap, series);
+  });
+
+  // Insert the edit form after the card header / progress bar, before the seasons accordion
+  const seasonsWrap = card.querySelector(".seasons-wrap");
+  card.insertBefore(wrap, seasonsWrap);
+}
+
+/**
+ * Read the edit form, call the backend, patch state, and re-render.
+ */
+async function handleSaveEditSeries(seriesId, formWrap, series) {
+  const saveBtn      = formWrap.querySelector(".series-edit-save-btn");
+  const newTitle     = formWrap.querySelector(".series-edit-title-input")?.value.trim() || "";
+  const seasonsInput = formWrap.querySelector(".series-edit-seasons-input");
+  const newTotal     = parseInt(seasonsInput?.value, 10);
+
+  if (!newTitle) {
+    showAlert("Series title cannot be empty.", "warning");
+    return;
+  }
+
+  // Determine if user is adding seasons
+  const addingSeasons = !isNaN(newTotal) && newTotal > series.numSeasons;
+
+  // If a season count was entered, it must be valid
+  if (seasonsInput.value.trim() !== "" && !addingSeasons) {
+    showAlert(`New season count must be greater than ${series.numSeasons}.`, "warning");
+    return;
+  }
+
+  let newSeasonEpisodesJson = null;
+
+  if (addingSeasons) {
+    // Read only the NEW season inputs (not the disabled existing ones)
+    const newSeasonsListEl = formWrap.querySelector(".series-edit-new-seasons-list");
+    const allInputs        = newSeasonsListEl
+      ? [...newSeasonsListEl.querySelectorAll(".season-ep-input:not([disabled])")]
+      : [];
+
+    if (!allInputs.length) {
+      showAlert('Click "Set New Episodes" first to configure episodes for the new seasons.', "warning");
+      return;
+    }
+
+    // Validate
+    const newMap = {};
+    for (const input of allInputs) {
+      const s   = input.dataset.season;
+      const val = parseInt(input.value, 10);
+      if (!val || val < 1) {
+        showAlert(`Season ${s} must have at least 1 episode.`, "warning");
+        return;
+      }
+      newMap[s] = val;
+    }
+
+    newSeasonEpisodesJson = JSON.stringify(newMap);
+  }
+
+  const finalNumSeasons = addingSeasons ? newTotal : series.numSeasons;
+
+  try {
+    toggleBtn(saveBtn, true);
+    const updated = await withLoading(() =>
+      api("updateSeries", token(), seriesId, newTitle, finalNumSeasons, newSeasonEpisodesJson || "")
+    );
+
+    // Patch local state
+    const idx = state.series.findIndex(s => s.seriesId === seriesId);
+    if (idx !== -1) {
+      state.series[idx] = {
+        ...state.series[idx],
+        title:          updated.title,
+        numSeasons:     updated.numSeasons,
+        numEpisodes:    updated.numEpisodes,
+        seasonEpisodes: updated.seasonEpisodes,
+      };
+    }
+
+    // Re-render the card in place
+    const card    = document.querySelector(`.series-card[data-series-id="${seriesId}"]`);
+    const newCard = buildSeriesCard(state.series[idx]);
+    card.replaceWith(newCard);
+
+    updateStats();
+    showAlert(`"${updated.title}" updated successfully!`, "success");
+  } catch (err) {
+    showAlert(err.message, "danger");
+  } finally {
+    toggleBtn(saveBtn, false);
   }
 }
 
@@ -461,14 +692,19 @@ function buildSeriesCard(series) {
         <div class="series-meta-pills">
           <span class="ms-pill ms-pill-genre">${escapeHtml(genre)}</span>
           <span class="ms-pill">${numSeasons} Season${numSeasons !== 1 ? "s" : ""}</span>
-          <span class="ms-pill ellipsis" title="${epSummary}">${epSummary}</span>
+          <span class="ms-pill" title="${escapeHtml(createdAt)}">${formatDate(createdAt)}</span>
           <span class="ms-pill">by ${escapeHtml(name || username)}</span>
         </div>
       </div>
       ${isMine ? `
-        <button class="btn ms-btn-danger btn-sm delete-series-btn" type="button" title="Delete series">
-          <i class="bi bi-trash"></i>
-        </button>` : ""}
+        <div class="series-card-actions">
+          <button class="btn ms-btn-edit btn-sm edit-series-btn smx-font" type="button" title="Edit series">
+            <i class="bi bi-pencil"></i>&nbsp; | Edit
+          </button>
+          <button class="btn ms-btn-danger btn-sm delete-series-btn smx-font" type="button" title="Delete series">
+            <i class="bi bi-trash"></i>&nbsp; | Delete
+          </button>
+        </div>` : ""}
     </div>
 
     <div class="series-progress-bar-wrap">
@@ -483,6 +719,9 @@ function buildSeriesCard(series) {
 
     <div class="seasons-wrap">${buildSeasonsHTML(series)}</div>
   `;
+
+  // Edit button
+  card.querySelector(".edit-series-btn")?.addEventListener("click", () => handleEditSeries(seriesId));
 
   // Delete button
   card.querySelector(".delete-series-btn")?.addEventListener("click", () => handleDeleteSeries(seriesId, title));
@@ -570,7 +809,6 @@ function getSeasonStatus(seriesId, season, numEps) {
   }
   const isDone = savedCount === numEps;
 
-  // Season locked if the previous season isn't done — need to know prev season's count too
   let isLocked = false;
   if (season > 1) {
     const series = state.series.find(s => s.seriesId === seriesId);
@@ -610,7 +848,6 @@ function ensureEpisodeInputsWired(seasonItem, series) {
 
   const { seriesId } = series;
   const season    = parseInt(seasonItem.dataset.season, 10);
-  // Use the data attribute we stamped on the item (most reliable)
   const numEpisodes = parseInt(seasonItem.dataset.numEps, 10) || getEpsForSeason(series, season);
 
   // Build episode grid
@@ -624,10 +861,10 @@ function ensureEpisodeInputsWired(seasonItem, series) {
   panel.appendChild(grid);
 
   // Init duration pickers
-    grid.querySelectorAll(".dp-wrap").forEach(wrap => {
-        const saved = wrap.querySelector(".dp-trigger")?.dataset.value || "";
-        initDurationPicker(wrap, saved);
-    });
+  grid.querySelectorAll(".dp-wrap").forEach(wrap => {
+    const saved = wrap.querySelector(".dp-trigger")?.dataset.value || "";
+    initDurationPicker(wrap, saved);
+  });
 
   // Save bar
   const saveBar = document.createElement("div");
@@ -729,7 +966,7 @@ function buildEpisodeCard(seriesId, season, ep, savedData) {
 
 function initDurationPicker(wrap, savedValue) {
   const ITEM_H = 34;
-  const PAD    = 1.5; // spacer items prepended
+  const PAD    = 1.5;
 
   const trigger   = wrap.querySelector(".dp-trigger");
   const panel     = wrap.querySelector(".dp-panel");
@@ -750,7 +987,6 @@ function initDurationPicker(wrap, savedValue) {
   }
 
   function buildList(el, count) {
-    // Leading spacer — exactly PAD items tall so item 0 can center
     const makeSpace = () => {
       const d = document.createElement("div");
       d.style.cssText = `height:${PAD * ITEM_H}px;flex-shrink:0`;
@@ -767,13 +1003,11 @@ function initDurationPicker(wrap, savedValue) {
     makeSpace();
   }
 
-  // scrollTop when item N is centered = N * ITEM_H  (spacer already offsets it)
   function valueToScrollTop(value) {
     return value * ITEM_H;
   }
 
   function scrollTopToValue(scrollTop) {
-    // Round to nearest item, then clamp
     return Math.max(0, Math.round(scrollTop / ITEM_H));
   }
 
@@ -803,7 +1037,6 @@ function initDurationPicker(wrap, savedValue) {
     isOpen = true;
     panel.style.display = "block";
     chevron.style.transform = "rotate(180deg)";
-    // Instant jump to committed values — no animation so it's exact
     scrollToValue(minScroll, committed.m, false);
     scrollToValue(secScroll, committed.s, false);
     setTimeout(() => {
@@ -819,7 +1052,6 @@ function initDurationPicker(wrap, savedValue) {
   }
 
   function commit() {
-    // Snap both scrollers to exact positions before reading
     const m = scrollTopToValue(minScroll.scrollTop);
     const s = scrollTopToValue(secScroll.scrollTop);
     scrollToValue(minScroll, m, false);
@@ -839,7 +1071,6 @@ function initDurationPicker(wrap, savedValue) {
   okBtn.addEventListener("click",     (e) => { e.stopPropagation(); commit(); });
   cancelBtn.addEventListener("click", (e) => { e.stopPropagation(); close(); });
 
-  // Snap-on-scroll-stop: wait for finger/wheel to settle, then snap to nearest item
   function attachSnap(scrollEl) {
     let t;
     scrollEl.addEventListener("scroll", () => {
@@ -858,7 +1089,6 @@ function initDurationPicker(wrap, savedValue) {
     if (isOpen && !wrap.contains(e.target)) close();
   });
 
-  // Pre-highlight saved value without animation
   if (committed.m || committed.s) {
     setTimeout(() => {
       highlightCurrent(minScroll);
@@ -895,8 +1125,7 @@ async function handleSaveSeason(seriesId, season, numEpisodes, seasonItem) {
     if (!card) continue;
 
     const remarks     = card.querySelector(".ep-remarks")?.value.trim()  || "";
-    // const duration    = card.querySelector(".ep-duration")?.value.trim() || "";
-    const duration = card.querySelector(".dp-trigger")?.dataset.value || "";
+    const duration    = card.querySelector(".dp-trigger")?.dataset.value || "";
     const rating      = card.querySelector(".ep-rating")?.value          || "";
     const dateWatched = card.querySelector(".ep-date")?.value            || "";
 
@@ -975,22 +1204,21 @@ function updateSeriesCard(seriesId) {
     badge?.classList.toggle("is-locked", isLocked);
 
     if (toggle) {
-        toggle.classList.toggle("is-locked", isLocked);
-        toggle.disabled = isLocked;
-        toggle.removeAttribute("title");
-    if (isLocked) {
+      toggle.classList.toggle("is-locked", isLocked);
+      toggle.disabled = isLocked;
+      toggle.removeAttribute("title");
+      if (isLocked) {
         toggle.setAttribute("title", "Complete the previous season first");
-    }
+      }
 
-    // Swap the chevron ↔ lock icon
-    var chevron = toggle.querySelector(".season-chevron");
-    if (chevron) {
+      var chevron = toggle.querySelector(".season-chevron");
+      if (chevron) {
         if (isLocked) {
-        chevron.className = "bi bi-lock season-chevron";
+          chevron.className = "bi bi-lock season-chevron";
         } else {
-        chevron.className = "bi bi-chevron-down season-chevron";
+          chevron.className = "bi bi-chevron-down season-chevron";
         }
-    }
+      }
     }
 
     if (pill) {
