@@ -482,7 +482,7 @@ function handleEditSeries(seriesId) {
             placeholder="e.g. ${series.numSeasons + 1}"
             style="max-width:120px"
           >
-          <button type="button" class="btn ms-btn-outline series-edit-build-btn" style="white-space:nowrap">
+          <button type="button" class="btn ms-btn-outline series-edit-build-btn smx-font" style="white-space:nowrap">
             <i class="bi bi-arrow-right-circle me-1"></i>Set New Episodes
           </button>
         </div>
@@ -698,11 +698,11 @@ function buildSeriesCard(series) {
       </div>
       ${isMine ? `
         <div class="series-card-actions">
-          <button class="btn ms-btn-edit btn-sm edit-series-btn smx-font" type="button" title="Edit series">
-            <i class="bi bi-pencil"></i>&nbsp; | Edit
+          <button class="btn ms-btn-edit btn-sm edit-series-btn" type="button" title="Edit series">
+            Edit
           </button>
-          <button class="btn ms-btn-danger btn-sm delete-series-btn smx-font" type="button" title="Delete series">
-            <i class="bi bi-trash"></i>&nbsp; | Delete
+          <button class="btn ms-btn-danger btn-sm delete-series-btn" type="button" title="Delete series">
+            Delete
           </button>
         </div>` : ""}
     </div>
@@ -736,6 +736,9 @@ function buildSeriesCard(series) {
     });
   });
 
+  // Wire "show more seasons" toggle
+  wireShowMoreSeasons(card.querySelector(".seasons-wrap"));
+
   return card;
 }
 
@@ -763,8 +766,11 @@ function buildEpSummary(series) {
 // ─────────────────────────────────────────
 // BUILD SEASONS HTML
 // ─────────────────────────────────────────
+const SEASONS_VISIBLE_DEFAULT = 5;
+
 function buildSeasonsHTML(series) {
   const { seriesId, numSeasons } = series;
+  const hidden = numSeasons > SEASONS_VISIBLE_DEFAULT;
   let html = "";
 
   for (let s = 1; s <= numSeasons; s++) {
@@ -774,6 +780,7 @@ function buildSeasonsHTML(series) {
 
     const badgeClass  = isDone ? "is-done" : isLocked ? "is-locked" : "";
     const toggleClass = isLocked ? "is-locked" : "";
+    const hiddenClass = hidden && s > SEASONS_VISIBLE_DEFAULT ? " season-item-hidden" : "";
 
     let statusPill = "";
     if (isLocked)     statusPill = `<span class="season-status-pill locked"><i class="bi bi-lock-fill me-1"></i>Locked</span>`;
@@ -782,7 +789,7 @@ function buildSeasonsHTML(series) {
     else              statusPill = `<span class="season-status-pill empty">Not started</span>`;
 
     html += `
-      <div class="season-item" data-series-id="${seriesId}" data-season="${s}" data-num-eps="${numEps}">
+      <div class="season-item${hiddenClass}" data-series-id="${seriesId}" data-season="${s}" data-num-eps="${numEps}">
         <button type="button" class="season-toggle ${toggleClass}" aria-expanded="false"
           ${isLocked ? 'disabled title="Complete the previous season first"' : ""}>
           <div class="season-number-badge ${badgeClass}">S${s}</div>
@@ -796,7 +803,45 @@ function buildSeasonsHTML(series) {
         </div>
       </div>`;
   }
+
+  if (hidden) {
+    const remaining = numSeasons - SEASONS_VISIBLE_DEFAULT;
+    html += `
+      <div class="seasons-show-more">
+        <button type="button" class="seasons-show-more-btn">
+          <i class="bi bi-chevron-down me-1"></i>
+          Show ${remaining} more season${remaining !== 1 ? "s" : ""}
+        </button>
+      </div>`;
+  }
+
   return html;
+}
+
+/**
+ * Wire the "Show more / Show less" toggle for a seasons-wrap.
+ * Called once per card after innerHTML is set.
+ */
+function wireShowMoreSeasons(seasonsWrap) {
+  const btn = seasonsWrap.querySelector(".seasons-show-more-btn");
+  if (!btn) return;
+
+  const toggleRow = btn.closest(".seasons-show-more");
+  let expanded = false;
+
+  btn.addEventListener("click", () => {
+    expanded = !expanded;
+    seasonsWrap.querySelectorAll(".season-item-hidden").forEach(el => {
+      el.classList.toggle("season-item-visible", expanded);
+    });
+    const remaining = seasonsWrap.querySelectorAll(".season-item-hidden").length;
+    if (expanded) {
+      btn.innerHTML = `<i class="bi bi-chevron-up me-1"></i>Show less`;
+    } else {
+      btn.innerHTML = `<i class="bi bi-chevron-down me-1"></i>Show ${remaining} more season${remaining !== 1 ? "s" : ""}`;
+    }
+    btn.classList.toggle("is-expanded", expanded);
+  });
 }
 
 // ─────────────────────────────────────────
