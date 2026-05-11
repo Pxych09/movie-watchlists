@@ -651,3 +651,6 @@ textarea.ep-input { resize: vertical; min-height: 60px; }
   .episode-grid { grid-template-columns: 1fr; }
   .season-ep-builder { max-height: 220px; }
 }
+@media (max-width: 400px) {
+  .season-label { font-size: .735rem; }
+}
