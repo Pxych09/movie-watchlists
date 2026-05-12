@@ -761,7 +761,7 @@ function buildSeriesCard(series) {
         <div class="series-meta-pills">
           <span class="ms-pill ms-pill-genre">${escapeHtml(genre)}</span>
           <span class="ms-pill">${numSeasons} Season${numSeasons !== 1 ? "s" : ""}</span>
-          <span class="ms-pill" title="${escapeHtml(createdAt)}">${formatDate(createdAt)}</span>
+          <span class="ms-pill" title="${escapeHtml(createdAt)}">Posted: ${formatDate(createdAt)}</span>
           <span class="ms-pill">by ${escapeHtml(name || username)}</span>
         </div>
       </div>
@@ -1027,7 +1027,7 @@ function buildEpisodeCard(seriesId, season, ep, savedData) {
     </div>
     <div class="ep-field">
       <div class="ep-field-label">Remarks / Notes</div>
-      <textarea class="ep-input ep-remarks" data-field="remarks" placeholder="Your thoughts on this episode...">${val("remarks")}</textarea>
+      <textarea rows="5" class="ep-input ep-remarks" data-field="remarks" placeholder="Your thoughts on this episode...">${val("remarks")}</textarea>
     </div>
     <div class="ep-field mt-2 mb-2">
       <div class="ep-field">
