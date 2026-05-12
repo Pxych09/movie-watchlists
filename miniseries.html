@@ -200,8 +200,30 @@
             </div>
           </div>
 
+          <!-- ═══════════════════════════════════════════════════
+            GALLERY PREVIEW SECTION — insert this ABOVE the <div class="row g-4"> in appSection
+            ═══════════════════════════════════════════════════ -->
+        
+        <section id="gallerySection" class="mb-4 d-none">
+        
+          <!-- Header row -->
+          <!-- <div class="d-flex align-items-center justify-content-between mb-3 px-1" style="display: none;">
+            <div class="section-title">
+              <i class="bi bi-collection-play me-2" style="color:var(--primary)"></i>
+              Gallery Preview
+            </div>
+            <span class="ms-badge smx-font" id="galleryCountBadge">0 series</span>
+          </div> -->
+        
+          <!-- Outer series carousel (one card = one series) -->
+          <div class="gallery-series-track" id="gallerySeriesTrack">
+            <!-- Injected by JS -->
+          </div>
+        
+        </section>
+        <hr>
           <!-- RIGHT: Series List -->
-          <div class="col-lg-8">
+          <div class="col-lg-8 mt-0">
 
             <!-- Search + filter bar -->
             <div class="ms-card p-3 mb-4">
