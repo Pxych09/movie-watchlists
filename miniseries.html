@@ -167,6 +167,35 @@
                   <div id="seasonEpisodesList" class="season-ep-builder"></div>
                 </div>
 
+                <!-- Image Upload (optional) -->
+                <div class="col-12">
+                  <label for="seriesCoverImage" class="form-label">
+                    Cover Image <span style="color:var(--muted);font-weight:400;">(optional)</span>
+                  </label>
+
+                  <label class="series-upload-label" id="seriesUploadLabel" for="seriesCoverImage">
+                    <i class="bi bi-image me-2" style="font-size:1.1rem;opacity:.7"></i>
+                    <span class="series-upload-text smx-font" id="seriesUploadText">
+                      Click to choose an image (JPG, PNG, WEBP — max 5 MB)
+                    </span>
+                    <input
+                      id="seriesCoverImage"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      style="display:none"
+                    >
+                  </label>
+
+                  <!-- Preview -->
+                  <div id="seriesImagePreview" class="series-image-preview d-none">
+                    <img id="seriesImagePreviewImg" src="" alt="Cover preview">
+                    <button type="button" id="seriesImageClearBtn" class="series-image-clear-btn"
+                            aria-label="Remove image">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                </div>
+
                 <div class="col-12">
                   <button type="submit" class="btn ms-btn-primary w-100">
                     <i class="bi bi-plus-lg me-2"></i>Create Series
