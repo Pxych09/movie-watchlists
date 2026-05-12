@@ -95,6 +95,41 @@ function fileToBase64(file) {
   });
 }
 
+/**
+ * Compress an image File before base64 encoding.
+ * Resizes to max 800px wide and compresses to ~70% quality.
+ */
+// Make the image tiny enough to fit under 50KB base64
+function compressImage(file, maxWidth = 400, quality = 0.5) {
+  return new Promise((resolve, reject) => {
+    const img  = new Image();
+    const url  = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale  = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement("canvas");
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(
+        blob => {
+          // Warn if still too large
+          if (blob.size > 35000) {
+            console.warn("Compressed blob still large:", blob.size, "bytes");
+          }
+          blob
+            ? resolve(new File([blob], file.name, { type: "image/jpeg" }))
+            : reject(new Error("Compression failed"));
+        },
+        "image/jpeg",
+        quality
+      );
+    };
+    img.onerror = () => reject(new Error("Could not load image."));
+    img.src = url;
+  });
+}
+
 /** Wire the cover-image upload input + preview + clear button in the Create form. */
 function bindImageUpload() {
   const input      = $("seriesCoverImage");
@@ -243,8 +278,13 @@ function readSeasonTitlesFromForm(container) {
 // API
 // ─────────────────────────────────────────
 async function api(method, ...args) {
-  const body = new URLSearchParams({ method, args: JSON.stringify(args) });
-  const res  = await fetch(API_URL, { method: "POST", body });
+  // Use JSON body instead of URLSearchParams to prevent base64 corruption
+  const res  = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    redirect: "follow",
+    body: new URLSearchParams({ method, args: JSON.stringify(args) })
+  });
   const text = await res.text();
   if (!res.ok) throw new Error(`Request failed: ${res.status}`);
   let result;
@@ -561,8 +601,9 @@ async function handleCreateSeries(e) {
       let imageBase64 = "";
       let imageMime   = "";
       try {
-        imageBase64 = await fileToBase64(imageFile);
-        imageMime   = imageFile.type;
+        const compressed = await compressImage(imageFile);
+        imageBase64      = await fileToBase64(compressed);
+        imageMime        = "image/jpeg";
         await withLoading(() =>
           api("uploadSeriesImage", token(), result.seriesId, imageBase64, imageMime)
         );
@@ -844,8 +885,9 @@ async function handleSaveEditSeries(seriesId, formWrap, series) {
       let imageBase64 = "";
       let imageMime   = "";
       try {
-        imageBase64 = await fileToBase64(imageFile);
-        imageMime   = imageFile.type;
+        const compressed = await compressImage(imageFile);
+        imageBase64      = await fileToBase64(compressed);
+        imageMime        = "image/jpeg";
       } catch (readErr) {
         // Metadata already saved — just warn about the image
         showAlert(`"${updated.title}" updated, but the image could not be read: ${readErr.message}`, "warning");
@@ -855,6 +897,7 @@ async function handleSaveEditSeries(seriesId, formWrap, series) {
       }
 
       try {
+        // ✅ REPLACE the api() call with this
         const imgResult = await withLoading(() =>
           api("uploadSeriesImage", token(), seriesId, imageBase64, imageMime)
         );
@@ -1629,6 +1672,11 @@ function buildGallerySlideEl(slide, isActive) {
     let totalEps  = 0;
     for (let s = 1; s <= series.numSeasons; s++) totalEps += getEpsForSeason(series, s);
     const seasonRange = series.numSeasons === 1 ? "S1" : `S1\u2013S${series.numSeasons}`;
+    const coverUrl = series.coverImageUrl ? series.coverImageUrl : "";
+    if (coverUrl) {
+      el.style.setProperty("--hero-cover", `url('${coverUrl}')`);
+      el.classList.add("has-cover"); // ← add this line
+    }
     el.innerHTML = `
       <div class="gal2-hero-content">
         <div class="gal2-series-name">${escapeHtml(series.title)}</div>
