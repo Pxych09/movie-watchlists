@@ -305,7 +305,6 @@ select.ms-input option { color: #111; }
   flex-wrap: wrap;
 }
 
-.series-title-wrap { flex: 1; min-width: 0; }
 .series-title {
   font-size: 1.1rem;
   font-weight: 700;
@@ -314,17 +313,29 @@ select.ms-input option { color: #111; }
 }
 
 /* ── META PILLS: horizontally scrollable ── */
+.series-title-wrap { width: 100%; }
+.series-meta-pills-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: block; /* add this */
+  /* smooth scrolling on mobile */
+  -webkit-overflow-scrolling: touch;
+
+  /* optional: hide scrollbar */
+  scrollbar-width: none;
+}
+
+.series-meta-pills-wrap::-webkit-scrollbar {
+  display: none;
+}
+
 .series-meta-pills {
   display: flex;
+  gap: 8px;
   flex-wrap: nowrap;
-  gap: 0.5rem;
-  margin-top: 0.4rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding-bottom: 2px;
+  width: max-content;
 }
-.series-meta-pills::-webkit-scrollbar { display: none; }
 
 .ms-pill {
   display: inline-flex;
