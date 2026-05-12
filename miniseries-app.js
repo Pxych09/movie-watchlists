@@ -18,18 +18,12 @@ const state = {
   alertTimers: new Map(),
   loadingCount: 0,
 };
-
 // ── GALLERY STATE ─────────────────────────────────────────────────────────────
-const galleryState = {
-  currentIndex:   0,
-  totalCards:     0,
-  autoTimer:      null,
-  isHovered:      false,
-  isDragging:     false,
-  dragStartX:     0,
-  dragScrollLeft: 0,
+const galState2 = {
+  seriesIdx:  0,   // which series is active in the nav
+  slideIdx:   0,   // current slide (0 = hero, 1+ = episodes)
+  slides:     [],  // flat list of slide descriptors for the active series
 };
-
 // ─────────────────────────────────────────
 // BOOT
 // ─────────────────────────────────────────
@@ -1404,368 +1398,167 @@ function updateSeriesCard(seriesId) {
   });
 }
 
-// ── RENDER GALLERY ────────────────────────────────────────────────────────────
+
+// ── MAIN ENTRY POINT ──────────────────────────────────────────────────────────
 function renderGallery() {
   const section = $("gallerySection");
-  const track   = $("gallerySeriesTrack");
-  const badge   = $("galleryCountBadge");
-  if (!section || !track) return;
- 
+  if (!section) return;
   const items = [...state.series];
- 
-  if (badge) badge.textContent = `${items.length} series`;
- 
-  if (!items.length) {
-    section.classList.add("d-none");
-    stopGalleryAuto();
-    return;
-  }
- 
+  if (!items.length) { section.classList.add("d-none"); return; }
   section.classList.remove("d-none");
-  track.innerHTML = "";
-  galleryState.currentIndex = 0;
-  galleryState.totalCards   = items.length;
- 
-  items.forEach(series => {
-    const node = buildGallerySeriesCard(series);
-    track.appendChild(node);
-  });
- 
-  // Outer nav dots
-  buildOuterDots(items.length);
- 
-  // Outer prev / next
-  const prevBtn = $("galOuterPrev");
-  const nextBtn = $("galOuterNext");
-  if (prevBtn) prevBtn.onclick = () => galOuterGoTo(galleryState.currentIndex - 1, true);
-  if (nextBtn) nextBtn.onclick = () => galOuterGoTo(galleryState.currentIndex + 1, true);
- 
-  // Pause auto on hover
-  track.addEventListener("mouseenter", () => { galleryState.isHovered = true;  stopGalleryAuto(); });
-  track.addEventListener("mouseleave", () => { galleryState.isHovered = false; startGalleryAuto(); });
- 
-  // Drag-to-scroll (mouse)
-  track.addEventListener("mousedown",  onGalDragStart);
-  track.addEventListener("mousemove",  onGalDragMove);
-  track.addEventListener("mouseup",    onGalDragEnd);
-  track.addEventListener("mouseleave", onGalDragEnd);
- 
-  // Touch swipe on outer track
-  let outerTouchStartX = 0;
-  track.addEventListener("touchstart", e => {
-    outerTouchStartX = e.touches[0].clientX;
-    stopGalleryAuto();
-  }, { passive: true });
-  track.addEventListener("touchend", e => {
-    const dx = e.changedTouches[0].clientX - outerTouchStartX;
-    if (Math.abs(dx) > 40) {
-      galOuterGoTo(dx < 0
-        ? galleryState.currentIndex + 1
-        : galleryState.currentIndex - 1, true);
-    }
-    startGalleryAuto();
-  }, { passive: true });
- 
-  galOuterGoTo(0, false);
-  startGalleryAuto();
+  if (galState2.seriesIdx >= items.length) galState2.seriesIdx = 0;
+  buildGalleryNav(items);
+  buildGalleryStage(items[galState2.seriesIdx]);
 }
  
-// ── OUTER DOTS ────────────────────────────────────────────────────────────────
-function buildOuterDots(count) {
-  const dotsWrap = $("galOuterDots");
-  if (!dotsWrap) return;
-  dotsWrap.innerHTML = "";
-  const maxDots = Math.min(count, 20);
-  for (let i = 0; i < maxDots; i++) {
-    const dot = document.createElement("button");
-    dot.type      = "button";
-    dot.className = "gal-outer-dot" + (i === 0 ? " active" : "");
-    dot.setAttribute("aria-label", `Series ${i + 1}`);
-    dot.addEventListener("click", () => {
-      galOuterGoTo(i, true);
-      stopGalleryAuto();
-      startGalleryAuto();
+// ── NAV BAR ───────────────────────────────────────────────────────────────────
+function buildGalleryNav(items) {
+  const navBar = $("galNavBar2");
+  if (!navBar) return;
+  navBar.innerHTML = "";
+  items.forEach((series, i) => {
+    const pill = document.createElement("button");
+    pill.type      = "button";
+    pill.className = "gal2-nav-pill" + (i === galState2.seriesIdx ? " active" : "");
+    pill.textContent = series.title;
+    pill.addEventListener("click", () => {
+      galState2.seriesIdx = i;
+      galState2.slideIdx  = 0;
+      navBar.querySelectorAll(".gal2-nav-pill").forEach((p, j) =>
+        p.classList.toggle("active", j === i)
+      );
+      buildGalleryStage(items[i]);
     });
-    dotsWrap.appendChild(dot);
-  }
-}
- 
-function updateOuterDots(idx) {
-  const dotsWrap = $("galOuterDots");
-  if (!dotsWrap) return;
-  dotsWrap.querySelectorAll(".gal-outer-dot").forEach((d, i) => {
-    d.classList.toggle("active", i === idx);
+    navBar.appendChild(pill);
   });
 }
  
-// ── OUTER GO-TO (smooth scroll to card index) ─────────────────────────────────
-function galOuterGoTo(idx, animate) {
-  const track = $("gallerySeriesTrack");
-  if (!track) return;
+// ── STAGE ─────────────────────────────────────────────────────────────────────
+function buildGalleryStage(series) {
+  const stage    = $("galStage2");
+  const dotsWrap = $("galDots2");
+  const prevBtn  = $("galPrevBtn2");
+  const nextBtn  = $("galNextBtn2");
+  if (!stage) return;
  
-  const total = galleryState.totalCards;
-  if (!total) return;
+  const slides = buildGallerySlides(series);
+  galState2.slides   = slides;
+  galState2.slideIdx = 0;
  
-  // Wrap around
-  idx = ((idx % total) + total) % total;
-  galleryState.currentIndex = idx;
+  stage.innerHTML = "";
+  slides.forEach((slide, i) => {
+    stage.appendChild(buildGallerySlideEl(slide, i === 0));
+  });
  
-  const cards = track.querySelectorAll(".gal-series-card");
-  if (!cards.length) return;
- 
-  const cardW  = cards[0].offsetWidth;
-  const gap    = parseInt(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 18;
-  const target = idx * (cardW + gap);
- 
-  if (animate) {
-    smoothScrollTo(track, target, 700); // 700 ms — slow, cinematic
-  } else {
-    track.scrollLeft = target;
-  }
- 
-  updateOuterDots(idx);
-}
- 
-// ── SMOOTH SCROLL (ease-in-out cubic) ─────────────────────────────────────────
-function smoothScrollTo(el, target, duration) {
-  const start     = el.scrollLeft;
-  const distance  = target - start;
-  const startTime = performance.now();
- 
-  function step(now) {
-    const elapsed  = now - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    const ease     = progress < 0.5
-      ? 4 * progress * progress * progress
-      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-    el.scrollLeft = start + distance * ease;
-    if (progress < 1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-}
- 
-// ── AUTO ADVANCE ──────────────────────────────────────────────────────────────
-function startGalleryAuto() {
-  stopGalleryAuto();
-  if (galleryState.totalCards <= 1) return;
-  galleryState.autoTimer = setInterval(() => {
-    if (!galleryState.isHovered && !galleryState.isDragging) {
-      galOuterGoTo(galleryState.currentIndex + 1, true);
+  // Dots
+  if (dotsWrap) {
+    dotsWrap.innerHTML = "";
+    const max = Math.min(slides.length, 40);
+    for (let i = 0; i < max; i++) {
+      const dot = document.createElement("button");
+      dot.type      = "button";
+      dot.className = "gal2-dot" + (i === 0 ? " active" : "");
+      dot.setAttribute("aria-label", `Slide ${i + 1}`);
+      dot.addEventListener("click", () => galGoTo(i));
+      dotsWrap.appendChild(dot);
     }
-  }, 4500); // advance every 4.5 s
-}
- 
-function stopGalleryAuto() {
-  if (galleryState.autoTimer) {
-    clearInterval(galleryState.autoTimer);
-    galleryState.autoTimer = null;
   }
+ 
+  if (prevBtn) prevBtn.onclick = () => galGoTo(galState2.slideIdx - 1);
+  if (nextBtn) nextBtn.onclick = () => galGoTo(galState2.slideIdx + 1);
+ 
+  galUpdateNavBtns();
 }
  
-// ── DRAG TO SCROLL ────────────────────────────────────────────────────────────
-function onGalDragStart(e) {
-  const track = $("gallerySeriesTrack");
-  if (!track) return;
-  galleryState.isDragging     = true;
-  galleryState.dragStartX     = e.pageX - track.offsetLeft;
-  galleryState.dragScrollLeft = track.scrollLeft;
-  track.style.cursor          = "grabbing";
-  stopGalleryAuto();
-}
- 
-function onGalDragMove(e) {
-  if (!galleryState.isDragging) return;
-  const track = $("gallerySeriesTrack");
-  if (!track) return;
-  e.preventDefault();
-  const x    = e.pageX - track.offsetLeft;
-  const walk = (x - galleryState.dragStartX) * 1.4;
-  track.scrollLeft = galleryState.dragScrollLeft - walk;
-}
- 
-function onGalDragEnd() {
-  if (!galleryState.isDragging) return;
-  galleryState.isDragging = false;
-  const track = $("gallerySeriesTrack");
-  if (track) track.style.cursor = "grab";
- 
-  // Snap to nearest card after drag
-  const cards = track?.querySelectorAll(".gal-series-card");
-  if (!cards?.length) return;
-  const cardW   = cards[0].offsetWidth;
-  const gap     = parseInt(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 18;
-  const nearest = Math.round(track.scrollLeft / (cardW + gap));
-  galOuterGoTo(Math.max(0, Math.min(nearest, galleryState.totalCards - 1)), true);
-  startGalleryAuto();
-}
- 
-// ── BUILD ONE SERIES GALLERY CARD ─────────────────────────────────────────────
-function buildGallerySeriesCard(series) {
-  const { seriesId, title, genre, numSeasons } = series;
- 
-  // Flatten all episodes across all seasons
-  const episodeSlides = [];
-  for (let s = 1; s <= numSeasons; s++) {
+// ── SLIDE LIST ────────────────────────────────────────────────────────────────
+function buildGallerySlides(series) {
+  const slides = [{ type: "hero", series }];
+  for (let s = 1; s <= series.numSeasons; s++) {
     const numEps      = getEpsForSeason(series, s);
     const seasonLabel = getSeasonLabel(series, s);
     for (let ep = 1; ep <= numEps; ep++) {
-      const data = state.episodes[epKey(seriesId, s, ep)] || null;
-      episodeSlides.push({ season: s, seasonLabel, ep, numEps, data });
+      const data = state.episodes[epKey(series.seriesId, s, ep)] || null;
+      slides.push({ type: "ep", season: s, seasonLabel, ep, numEps, data });
     }
   }
- 
-  const totalSlots = episodeSlides.length;
-  const savedCount = episodeSlides.filter(e => e.data).length;
-  const pct        = totalSlots > 0 ? Math.round((savedCount / totalSlots) * 100) : 0;
- 
-  const card = document.createElement("div");
-  card.className = "gal-series-card";
-  card.dataset.galSeriesId = seriesId;
- 
-  // ── Header ──
-  const header = document.createElement("div");
-  header.className = "gal-series-header";
-  header.innerHTML = `
-    <div class="gal-series-name" title="${escapeHtml(title)}">${escapeHtml(title)}</div>
-    <div class="gal-series-meta" hidden="true">
-      <span class="ms-pill ms-pill-genre smx-font">${escapeHtml(genre)}</span>
-      <span class="ms-pill smx-font">${pct}% done</span>
-    </div>
-  `;
-  card.appendChild(header);
- 
-  // ── Inner episode carousel ──
-  const carouselWrap = document.createElement("div");
-  carouselWrap.className = "gal-ep-carousel-wrap";
- 
-  const innerTrack = document.createElement("div");
-  innerTrack.className = "gal-ep-track";
- 
-  episodeSlides.forEach(({ season, seasonLabel, ep, numEps, data }) => {
-    innerTrack.appendChild(buildGalleryEpSlide(season, seasonLabel, ep, numEps, data));
-  });
- 
-  const prevBtn = document.createElement("button");
-  prevBtn.type      = "button";
-  prevBtn.className = "gal-nav gal-nav-prev";
-  prevBtn.innerHTML = `<i class="bi bi-chevron-left"></i>`;
-  prevBtn.setAttribute("aria-label", "Previous episode");
- 
-  const nextBtn = document.createElement("button");
-  nextBtn.type      = "button";
-  nextBtn.className = "gal-nav gal-nav-next";
-  nextBtn.innerHTML = `<i class="bi bi-chevron-right"></i>`;
-  nextBtn.setAttribute("aria-label", "Next episode");
- 
-  carouselWrap.appendChild(innerTrack);
-  carouselWrap.appendChild(prevBtn);
-  carouselWrap.appendChild(nextBtn);
-  card.appendChild(carouselWrap);
- 
-  // ── Inner dot indicators ──
-  const dotsRow = document.createElement("div");
-  dotsRow.className = "gal-dots";
-  const maxDots = Math.min(episodeSlides.length, 30);
-  for (let i = 0; i < maxDots; i++) {
-    const dot = document.createElement("button");
-    dot.type      = "button";
-    dot.className = "gal-dot" + (i === 0 ? " active" : "");
-    dot.setAttribute("aria-label", `Episode slide ${i + 1}`);
-    dotsRow.appendChild(dot);
-  }
-  card.appendChild(dotsRow);
- 
-  // ── Wire inner carousel logic ──
-  let current = 0;
-  const total = episodeSlides.length;
-  const dots  = dotsRow.querySelectorAll(".gal-dot");
- 
-  function innerGoTo(idx) {
-    idx = Math.max(0, Math.min(total - 1, idx));
-    current = idx;
-    innerTrack.style.transform = `translateX(-${current * 100}%)`;
-    prevBtn.disabled = current === 0;
-    nextBtn.disabled = current === total - 1;
-    dots.forEach((d, i) => d.classList.toggle("active", i === current));
-  }
- 
-  prevBtn.addEventListener("click", e => { e.stopPropagation(); innerGoTo(current - 1); });
-  nextBtn.addEventListener("click", e => { e.stopPropagation(); innerGoTo(current + 1); });
-  dots.forEach((d, i) => d.addEventListener("click", e => { e.stopPropagation(); innerGoTo(i); }));
- 
-  // Touch swipe (inner)
-  let innerTouchStartX = 0;
-  carouselWrap.addEventListener("touchstart", e => {
-    innerTouchStartX = e.touches[0].clientX;
-  }, { passive: true });
-  carouselWrap.addEventListener("touchend", e => {
-    const dx = e.changedTouches[0].clientX - innerTouchStartX;
-    if (Math.abs(dx) > 35) innerGoTo(dx < 0 ? current + 1 : current - 1);
-  }, { passive: true });
- 
-  innerGoTo(0);
-  return card;
+  return slides;
 }
  
-// ── BUILD A SINGLE EPISODE SLIDE ──────────────────────────────────────────────
-function buildGalleryEpSlide(season, seasonLabel, ep, numEps, data) {
-  const slide = document.createElement("div");
-  slide.className = "gal-ep-card";
+// ── BUILD SLIDE ELEMENT ───────────────────────────────────────────────────────
+function buildGallerySlideEl(slide, isActive) {
+  const el = document.createElement("div");
+  el.className = "gal2-slide" + (isActive ? " active" : "");
  
-  const hasData     = !!data;
-  const remarks     = (data?.remarks     || "").trim();
-  const rating      = data?.rating       ? Number(data.rating) : 0;
-  const dateWatched = data?.dateWatched  || "";
-  const duration    = data?.duration     || "";
+  if (slide.type === "hero") {
+    const series  = slide.series;
+    let totalEps  = 0;
+    for (let s = 1; s <= series.numSeasons; s++) totalEps += getEpsForSeason(series, s);
+    const seasonRange = series.numSeasons === 1 ? "S1" : `S1\u2013S${series.numSeasons}`;
+    el.innerHTML = `
+      <div class="gal2-hero-content">
+        <div class="gal2-series-name">${escapeHtml(series.title)}</div>
+        <div class="gal2-series-sub">${seasonRange} | Episodes ${totalEps}</div>
+      </div>`;
+  } else {
+    const { seasonLabel, ep, numEps, data } = slide;
+    const remarks     = (data?.remarks    || "").trim();
+    const rating      = data?.rating      ? Number(data.rating) : 0;
+    const dateWatched = data?.dateWatched || "";
+    const duration    = data?.duration    || "";
  
-  const seasonTag = document.createElement("div");
-  seasonTag.className   = "gal-ep-season-tag";
-  seasonTag.textContent = escapeHtml(seasonLabel);
+    const pills = [];
+    if (rating)      pills.push(`<span class="gal2-pill gal2-pill-amber"><i class="bi bi-star-fill"></i> ${rating}/5</span>`);
+    if (dateWatched) pills.push(`<span class="gal2-pill gal2-pill-teal"><i class="bi bi-calendar3"></i> ${formatDate(dateWatched)}</span>`);
+    if (duration)    pills.push(`<span class="gal2-pill"><i class="bi bi-clock"></i> ${escapeHtml(duration)}</span>`);
+    if (!data)       pills.push(`<span class="gal2-pill gal2-pill-muted">Not yet watched</span>`);
  
-  const epNumber = document.createElement("div");
-  epNumber.className   = "gal-ep-number";
-  epNumber.textContent = `Episode ${ep} of ${numEps}`;
- 
-  const remarksEl = document.createElement("div");
-  remarksEl.className   = "gal-ep-remarks" + (remarks ? "" : " is-empty");
-  remarksEl.textContent = remarks || "No data yet. Please add a remark or note.";
- 
-  const metaRow = document.createElement("div");
-  metaRow.className = "gal-ep-meta-row d-none";
- 
-  if (rating) {
-    const p = document.createElement("span");
-    p.className = "ms-pill gal-rating-pill smx-font";
-    p.innerHTML = `<i class="bi bi-star-fill me-1" style="font-size:0.65rem"></i>${rating} / 5`;
-    metaRow.appendChild(p);
+    el.innerHTML = `
+      <div class="gal2-ep-content">
+        <div class="gal2-ep-season">${escapeHtml(seasonLabel)}</div>
+        <div class="gal2-ep-num">Episode ${ep} of ${numEps}</div>
+        <div class="gal2-ep-remarks${remarks ? "" : " is-empty"}">${escapeHtml(remarks) || "No remarks yet."}</div>
+        <div class="gal2-ep-pills">${pills.join("")}</div>
+      </div>`;
   }
-  if (dateWatched) {
-    const p = document.createElement("span");
-    p.className = "ms-pill gal-date-pill smx-font";
-    p.innerHTML = `<i class="bi bi-calendar3 me-1" style="font-size:0.65rem"></i>${formatDate(dateWatched)}`;
-    metaRow.appendChild(p);
-  }
-  if (duration) {
-    const p = document.createElement("span");
-    p.className = "ms-pill smx-font";
-    p.innerHTML = `<i class="bi bi-clock me-1" style="font-size:0.65rem"></i>${escapeHtml(duration)}`;
-    metaRow.appendChild(p);
-  }
-  if (!hasData) {
-    const p = document.createElement("span");
-    p.className   = "ms-pill smx-font";
-    p.style.cssText = "background:rgba(255,255,255,0.04);color:var(--muted);";
-    p.textContent = "Not yet watched";
-    metaRow.appendChild(p);
-  }
- 
-  slide.appendChild(seasonTag);
-  slide.appendChild(epNumber);
-  slide.appendChild(remarksEl);
-  slide.appendChild(metaRow);
-  return slide;
+  return el;
 }
-
+ 
+// ── GO TO SLIDE ───────────────────────────────────────────────────────────────
+function galGoTo(idx) {
+  const stage    = $("galStage2");
+  const dotsWrap = $("galDots2");
+  if (!stage) return;
+  if (idx < 0 || idx >= galState2.slides.length) return;
+ 
+  stage.querySelectorAll(".gal2-slide").forEach((el, i) =>
+    el.classList.toggle("active", i === idx)
+  );
+  dotsWrap?.querySelectorAll(".gal2-dot").forEach((d, i) =>
+    d.classList.toggle("active", i === idx)
+  );
+  galState2.slideIdx = idx;
+  galUpdateNavBtns();
+}
+ 
+// ── UPDATE PREV / NEXT BUTTON STATES ─────────────────────────────────────────
+function galUpdateNavBtns() {
+  const prevBtn = $("galPrevBtn2");
+  const nextBtn = $("galNextBtn2");
+  const atStart = galState2.slideIdx <= 0;
+  const atEnd   = galState2.slideIdx >= galState2.slides.length - 1;
+ 
+  if (prevBtn) {
+    prevBtn.disabled      = atStart;
+    prevBtn.style.opacity = atStart ? "0.28" : "1";
+    prevBtn.style.cursor  = atStart ? "not-allowed" : "pointer";
+  }
+  if (nextBtn) {
+    nextBtn.disabled      = atEnd;
+    nextBtn.style.opacity = atEnd ? "0.28" : "1";
+    nextBtn.style.cursor  = atEnd ? "not-allowed" : "pointer";
+  }
+}
+ 
 // ─────────────────────────────────────────
 // FORMAT DATE
 // ─────────────────────────────────────────
