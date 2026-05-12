@@ -85,11 +85,11 @@
               <form id="createSeriesForm" class="row g-3">
                 <div class="col-12">
                   <label for="seriesTitle" class="form-label">Series Title</label>
-                  <input id="seriesTitle" type="text" class="form-control ms-input" placeholder="e.g. The Big Bang Theory" required>
+                  <input id="seriesTitle" type="text" class="form-control ms-input smx-font" placeholder="e.g. The Big Bang Theory" required>
                 </div>
                 <div class="col-12">
                   <label for="seriesGenre" class="form-label">Genre</label>
-                  <select id="seriesGenre" class="form-select ms-input" required>
+                  <select id="seriesGenre" class="form-select ms-input smx-font" required>
                     <option value="">Select Genre</option>
                     <option>Action</option>
                     <option>Adventure</option>
@@ -111,15 +111,53 @@
 
                 <!-- Step 1: how many seasons -->
                 <div class="col-12">
-                  <label for="numSeasons" class="form-label">No. of Seasons</label>
-                  <div class="d-flex gap-2">
+                  <div class="d-flex align-items-center gap-1">
+                      <div class="info-tip-wrap">
+                        <button type="button" class="info-tip-btn" aria-label="How to use season count">
+                          <i class="bi bi-info-circle" aria-hidden="true"></i>
+                        </button>
+                        <div class="info-tip-box">
+                          <ol>
+                            <li>Enter how many seasons the series has (e.g. <strong>3</strong>)</li>
+                            <li>Click <strong>Set Episodes</strong> to generate per-season inputs</li>
+                            <li>Fill in the episode count for each season</li>
+                            <li>Then submit the form to save</li>
+                          </ol>
+                          <div class="info-tip-note">Seasons can be increased later via Edit, but not reduced.</div>
+                        </div>
+                      </div>
+                      <label for="numSeasons" class="form-label mb-0">No. of Seasons</label>
+                    </div>
+                    <div class="d-flex gap-2 mt-1">
                     <input id="numSeasons" type="number" class="smx-font form-control ms-input" min="1" max="50" placeholder="e.g. 3">
                     <button id="buildSeasonsBtn" type="button" class="btn ms-btn-outline smx-font" style="white-space:nowrap">
                       <i class="bi bi-arrow-right-circle me-1"></i> Set Episodes
                     </button>
                   </div>
-                  <div class="form-text" style="color:var(--muted);font-size:.75rem;margin-top:.35rem;">
-                    Enter season count, then click "Set Episodes" to configure each season individually.
+                </div>
+
+                <!-- Season Title Toggle (optional) -->
+                <div class="col-12">
+                  <div class="season-title-toggle-row">
+                    <label class="form-label mb-0" style="cursor:pointer;display:flex;align-items:center;gap:0.5rem;user-select:none;">
+                      <input type="checkbox" id="enableSeasonTitles" class="season-title-checkbox">
+                      <span class="smx-font">Setup a title for each season (optional)</span>
+                      <div class="info-tip-wrap">
+                        <button type="button" class="info-tip-btn" aria-label="How season titles work">
+                          <i class="bi bi-info-circle" aria-hidden="true"></i>
+                        </button>
+                        <div class="info-tip-box info-tip-box--left">
+                          <ol>
+                            <li>Tick this checkbox <em>first</em>, before clicking Set Episodes</li>
+                            <li>Enter the season count and click <strong>Set Episodes</strong></li>
+                            <li>Each season row will show a title input below its episode count</li>
+                            <li>Type a custom name (e.g. <em>"Coven"</em>, <em>"Rise of the Empire"</em>)</li>
+                            <li>Leaving a field blank falls back to <em>"Season 1"</em>, <em>"Season 2"</em>…</li>
+                          </ol>
+                          <div class="info-tip-note">Titles appear in the season label on the series card.</div>
+                        </div>
+                      </div>
+                    </label>
                   </div>
                 </div>
 
@@ -169,14 +207,14 @@
             <div class="ms-card p-3 mb-4">
               <div class="d-flex gap-2 flex-wrap align-items-center">
                 <div class="position-relative flex-grow-1">
-                  <i class="bi bi-search ms-search-icon"></i>
-                  <input id="seriesSearch" type="search" class="form-control ms-input ms-search-input" placeholder="Search series...">
+                  <i class="bi bi-search ms-search-icon smx-font"></i>
+                  <input id="seriesSearch" type="search" class="form-control ms-input ms-search-input smx-font" placeholder="Search series...">
                 </div>
-                <select id="seriesFilter" class="form-select ms-input ms-filter-select">
-                  <option value="all">All Series</option>
-                  <option value="mine">My Series</option>
+                <select id="seriesFilter" class="form-select ms-input ms-filter-select smx-font">
+                  <option value="all" class="smx-font">All Series</option>
+                  <option value="mine" class="smx-font">My Series</option>
                 </select>
-                <span id="seriesCountBadge" class="ms-badge">0 series</span>
+                <span id="seriesCountBadge" class="ms-badge smx-font">0 series</span>
               </div>
             </div>
 
