@@ -204,22 +204,25 @@
             GALLERY PREVIEW SECTION — insert this ABOVE the <div class="row g-4"> in appSection
             ═══════════════════════════════════════════════════ -->
         
-        <section id="gallerySection" class="mb-2 d-none">
-        
-          <!-- Header row -->
-          <!-- <div class="d-flex align-items-center justify-content-between mb-3 px-1" style="display: none;">
-            <div class="section-title">
-              <i class="bi bi-collection-play me-2" style="color:var(--primary)"></i>
-              Gallery Preview
-            </div>
-            <span class="ms-badge smx-font" id="galleryCountBadge">0 series</span>
-          </div> -->
-        
-          <!-- Outer series carousel (one card = one series) -->
-          <div class="gallery-series-track" id="gallerySeriesTrack">
-            <!-- Injected by JS -->
+        <section id="gallerySection" class="mb-2">
+          <!-- Series navigation pills -->
+          <div class="gal2-nav-wrap">
+            <div class="gal2-nav-bar" id="galNavBar2"></div>
           </div>
         
+          <!-- Main stage -->
+          <div class="gal2-stage" id="galStage2">
+            <!-- slides injected by JS -->
+          </div>
+        
+          <!-- Footer: dots + prev / next -->
+          <div class="gal2-footer">
+            <div class="gal2-dots" id="galDots2"></div>
+            <div class="gal2-nav-btns">
+              <button type="button" class="gal2-dir-btn" id="galPrevBtn2" aria-label="Previous slide">&#9664;</button>
+              <button type="button" class="gal2-dir-btn" id="galNextBtn2" aria-label="Next slide">&#9654;</button>
+            </div>
+          </div>
         </section>
         <hr>
           <!-- RIGHT: Series List -->
