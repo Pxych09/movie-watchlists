@@ -19,6 +19,17 @@ const state = {
   loadingCount: 0,
 };
 
+// ── GALLERY STATE ─────────────────────────────────────────────────────────────
+const galleryState = {
+  currentIndex:   0,
+  totalCards:     0,
+  autoTimer:      null,
+  isHovered:      false,
+  isDragging:     false,
+  dragStartX:     0,
+  dragScrollLeft: 0,
+};
+
 // ─────────────────────────────────────────
 // BOOT
 // ─────────────────────────────────────────
@@ -336,8 +347,8 @@ function updateStats() {
   if ($("statTotalSeries"))   $("statTotalSeries").textContent   = totalSeries;
   if ($("statTotalEpisodes")) $("statTotalEpisodes").textContent = totalLogged;
   if ($("statAvgRating"))     $("statAvgRating").textContent     = avgRating !== "—" ? avgRating + " ★" : "—";
+  renderGallery();
 }
-
 // ─────────────────────────────────────────
 // SEASON BUILDER  (Step 1 → Step 2)
 // Global version for the create form
@@ -733,7 +744,9 @@ function renderSeriesList() {
   }
 
   items.forEach(series => list.appendChild(buildSeriesCard(series)));
+  renderGallery();
 }
+
 
 // ─────────────────────────────────────────
 // BUILD SERIES CARD
@@ -1037,43 +1050,51 @@ function buildEpisodeCard(seriesId, season, ep, savedData) {
       <div class="ep-field">
         <div class="ep-field-label">Duration</div>
         <div class="dp-wrap">
-            <button type="button" class="ep-input dp-trigger" data-field="duration" data-value="${val("duration")}">
+          <button type="button" class="ep-input dp-trigger" data-field="duration" data-value="${val("duration")}">
             <i class="bi bi-clock" style="font-size:13px;opacity:.6"></i>
             <span class="dp-display">${val("duration") || "Select duration"}</span>
             <i class="bi bi-chevron-down dp-chevron" style="font-size:11px;opacity:.5;margin-left:auto"></i>
-            </button>
-            <div class="dp-panel">
+          </button>
+          <div class="dp-panel">
             <div class="dp-cols">
-                <div class="dp-col">
+              <div class="dp-col">
+                <div class="dp-col-label">Hrs</div>
+                <div class="dp-scroll-wrap">
+                  <div class="dp-highlight"></div>
+                  <div class="dp-scroll dp-hrs"></div>
+                </div>
+              </div>
+              <div class="dp-sep">:</div>
+              <div class="dp-col">
                 <div class="dp-col-label">Min</div>
                 <div class="dp-scroll-wrap">
-                    <div class="dp-highlight"></div>
-                    <div class="dp-scroll dp-min"></div>
+                  <div class="dp-highlight"></div>
+                  <div class="dp-scroll dp-min"></div>
                 </div>
-                </div>
-                <div class="dp-sep">:</div>
-                <div class="dp-col">
+              </div>
+              <div class="dp-sep">:</div>
+              <div class="dp-col">
                 <div class="dp-col-label">Sec</div>
                 <div class="dp-scroll-wrap">
-                    <div class="dp-highlight"></div>
-                    <div class="dp-scroll dp-sec"></div>
+                  <div class="dp-highlight"></div>
+                  <div class="dp-scroll dp-sec"></div>
                 </div>
-                </div>
+              </div>
             </div>
             <div class="dp-footer">
-                <button type="button" class="dp-cancel-btn">Cancel</button>
-                <button type="button" class="dp-ok-btn ms-btn-save" style="font-size:0.78rem;padding:0.4rem 0.85rem">Set</button>
+              <button type="button" class="dp-cancel-btn">Cancel</button>
+              <button type="button" class="dp-ok-btn ms-btn-save" style="font-size:0.78rem;padding:0.4rem 0.85rem">Set</button>
             </div>
-            </div>
+          </div>
         </div>
-        </div>
+      </div>
     </div>
     <div class="ep-field">
-        <div class="ep-field-label">Rating</div>
-            <select class="ep-input ep-rating" data-field="rating">
-            <option value="">—</option>
-            ${[1,2,3,4,5].map(n => `<option value="${n}" ${ratingVal == n ? "selected" : ""}>${n} ${"⭐".repeat(n)}</option>`).join("")}
-            </select>
+      <div class="ep-field-label">Rating</div>
+      <select class="ep-input ep-rating" data-field="rating">
+        <option value="">—</option>
+        ${[1,2,3,4,5].map(n => `<option value="${n}" ${ratingVal == n ? "selected" : ""}>${n} ${"⭐".repeat(n)}</option>`).join("")}
+      </select>
     </div>
     <div class="ep-field mt-2">
       <div class="ep-field-label">Date Watched</div>
@@ -1083,6 +1104,9 @@ function buildEpisodeCard(seriesId, season, ep, savedData) {
   return card;
 }
 
+// ─────────────────────────────────────────
+// DURATION PICKER  — now HRS : MIN : SEC
+// ─────────────────────────────────────────
 function initDurationPicker(wrap, savedValue) {
   const ITEM_H = 34;
   const PAD    = 1.5;
@@ -1091,18 +1115,40 @@ function initDurationPicker(wrap, savedValue) {
   const panel     = wrap.querySelector(".dp-panel");
   const display   = wrap.querySelector(".dp-display");
   const chevron   = wrap.querySelector(".dp-chevron");
+  const hrsScroll = wrap.querySelector(".dp-hrs");
   const minScroll = wrap.querySelector(".dp-min");
   const secScroll = wrap.querySelector(".dp-sec");
   const okBtn     = wrap.querySelector(".dp-ok-btn");
   const cancelBtn = wrap.querySelector(".dp-cancel-btn");
 
+  /**
+   * Parse a saved duration string into { h, m, s }.
+   * Supports formats:
+   *   "1h 30m 45s"  (new format with hours)
+   *   "30m 45s"     (old format without hours)
+   *   "30m 05s"
+   */
   function parseValue(str) {
+    const hMatch = String(str || "").match(/(\d+)h/);
     const mMatch = String(str || "").match(/(\d+)m/);
     const sMatch = String(str || "").match(/(\d+)s/);
     return {
+      h: hMatch ? parseInt(hMatch[1], 10) : 0,
       m: mMatch ? parseInt(mMatch[1], 10) : 0,
       s: sMatch ? parseInt(sMatch[1], 10) : 0,
     };
+  }
+
+  /**
+   * Format committed values into a display string.
+   * Omits hours portion if h === 0 (backward-compatible display).
+   */
+  function formatDuration(h, m, s) {
+    const parts = [];
+    if (h > 0) parts.push(`${h}h`);
+    parts.push(`${m}m`);
+    parts.push(`${String(s).padStart(2, "0")}s`);
+    return parts.join(" ");
   }
 
   function buildList(el, count) {
@@ -1146,6 +1192,8 @@ function initDurationPicker(wrap, savedValue) {
     });
   }
 
+  // Hours: 0–23, Minutes: 0–59, Seconds: 0–59
+  buildList(hrsScroll, 24);
   buildList(minScroll, 60);
   buildList(secScroll, 60);
 
@@ -1156,9 +1204,11 @@ function initDurationPicker(wrap, savedValue) {
     isOpen = true;
     panel.style.display = "block";
     chevron.style.transform = "rotate(180deg)";
+    scrollToValue(hrsScroll, committed.h, false);
     scrollToValue(minScroll, committed.m, false);
     scrollToValue(secScroll, committed.s, false);
     setTimeout(() => {
+      highlightCurrent(hrsScroll);
       highlightCurrent(minScroll);
       highlightCurrent(secScroll);
     }, 30);
@@ -1171,12 +1221,14 @@ function initDurationPicker(wrap, savedValue) {
   }
 
   function commit() {
+    const h = scrollTopToValue(hrsScroll.scrollTop);
     const m = scrollTopToValue(minScroll.scrollTop);
     const s = scrollTopToValue(secScroll.scrollTop);
+    scrollToValue(hrsScroll, h, false);
     scrollToValue(minScroll, m, false);
     scrollToValue(secScroll, s, false);
-    committed = { m, s };
-    const txt = m + "m " + String(s).padStart(2, "0") + "s";
+    committed = { h, m, s };
+    const txt = formatDuration(h, m, s);
     trigger.dataset.value = txt;
     display.textContent   = txt;
     trigger.dispatchEvent(new Event("change", { bubbles: true }));
@@ -1201,6 +1253,7 @@ function initDurationPicker(wrap, savedValue) {
       }, 80);
     });
   }
+  attachSnap(hrsScroll);
   attachSnap(minScroll);
   attachSnap(secScroll);
 
@@ -1208,8 +1261,9 @@ function initDurationPicker(wrap, savedValue) {
     if (isOpen && !wrap.contains(e.target)) close();
   });
 
-  if (committed.m || committed.s) {
+  if (committed.h || committed.m || committed.s) {
     setTimeout(() => {
+      highlightCurrent(hrsScroll);
       highlightCurrent(minScroll);
       highlightCurrent(secScroll);
     }, 60);
@@ -1348,6 +1402,368 @@ function updateSeriesCard(seriesId) {
       else              pill.innerHTML = `Not started`;
     }
   });
+}
+
+// ── RENDER GALLERY ────────────────────────────────────────────────────────────
+function renderGallery() {
+  const section = $("gallerySection");
+  const track   = $("gallerySeriesTrack");
+  const badge   = $("galleryCountBadge");
+  if (!section || !track) return;
+ 
+  const items = [...state.series];
+ 
+  if (badge) badge.textContent = `${items.length} series`;
+ 
+  if (!items.length) {
+    section.classList.add("d-none");
+    stopGalleryAuto();
+    return;
+  }
+ 
+  section.classList.remove("d-none");
+  track.innerHTML = "";
+  galleryState.currentIndex = 0;
+  galleryState.totalCards   = items.length;
+ 
+  items.forEach(series => {
+    const node = buildGallerySeriesCard(series);
+    track.appendChild(node);
+  });
+ 
+  // Outer nav dots
+  buildOuterDots(items.length);
+ 
+  // Outer prev / next
+  const prevBtn = $("galOuterPrev");
+  const nextBtn = $("galOuterNext");
+  if (prevBtn) prevBtn.onclick = () => galOuterGoTo(galleryState.currentIndex - 1, true);
+  if (nextBtn) nextBtn.onclick = () => galOuterGoTo(galleryState.currentIndex + 1, true);
+ 
+  // Pause auto on hover
+  track.addEventListener("mouseenter", () => { galleryState.isHovered = true;  stopGalleryAuto(); });
+  track.addEventListener("mouseleave", () => { galleryState.isHovered = false; startGalleryAuto(); });
+ 
+  // Drag-to-scroll (mouse)
+  track.addEventListener("mousedown",  onGalDragStart);
+  track.addEventListener("mousemove",  onGalDragMove);
+  track.addEventListener("mouseup",    onGalDragEnd);
+  track.addEventListener("mouseleave", onGalDragEnd);
+ 
+  // Touch swipe on outer track
+  let outerTouchStartX = 0;
+  track.addEventListener("touchstart", e => {
+    outerTouchStartX = e.touches[0].clientX;
+    stopGalleryAuto();
+  }, { passive: true });
+  track.addEventListener("touchend", e => {
+    const dx = e.changedTouches[0].clientX - outerTouchStartX;
+    if (Math.abs(dx) > 40) {
+      galOuterGoTo(dx < 0
+        ? galleryState.currentIndex + 1
+        : galleryState.currentIndex - 1, true);
+    }
+    startGalleryAuto();
+  }, { passive: true });
+ 
+  galOuterGoTo(0, false);
+  startGalleryAuto();
+}
+ 
+// ── OUTER DOTS ────────────────────────────────────────────────────────────────
+function buildOuterDots(count) {
+  const dotsWrap = $("galOuterDots");
+  if (!dotsWrap) return;
+  dotsWrap.innerHTML = "";
+  const maxDots = Math.min(count, 20);
+  for (let i = 0; i < maxDots; i++) {
+    const dot = document.createElement("button");
+    dot.type      = "button";
+    dot.className = "gal-outer-dot" + (i === 0 ? " active" : "");
+    dot.setAttribute("aria-label", `Series ${i + 1}`);
+    dot.addEventListener("click", () => {
+      galOuterGoTo(i, true);
+      stopGalleryAuto();
+      startGalleryAuto();
+    });
+    dotsWrap.appendChild(dot);
+  }
+}
+ 
+function updateOuterDots(idx) {
+  const dotsWrap = $("galOuterDots");
+  if (!dotsWrap) return;
+  dotsWrap.querySelectorAll(".gal-outer-dot").forEach((d, i) => {
+    d.classList.toggle("active", i === idx);
+  });
+}
+ 
+// ── OUTER GO-TO (smooth scroll to card index) ─────────────────────────────────
+function galOuterGoTo(idx, animate) {
+  const track = $("gallerySeriesTrack");
+  if (!track) return;
+ 
+  const total = galleryState.totalCards;
+  if (!total) return;
+ 
+  // Wrap around
+  idx = ((idx % total) + total) % total;
+  galleryState.currentIndex = idx;
+ 
+  const cards = track.querySelectorAll(".gal-series-card");
+  if (!cards.length) return;
+ 
+  const cardW  = cards[0].offsetWidth;
+  const gap    = parseInt(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 18;
+  const target = idx * (cardW + gap);
+ 
+  if (animate) {
+    smoothScrollTo(track, target, 700); // 700 ms — slow, cinematic
+  } else {
+    track.scrollLeft = target;
+  }
+ 
+  updateOuterDots(idx);
+}
+ 
+// ── SMOOTH SCROLL (ease-in-out cubic) ─────────────────────────────────────────
+function smoothScrollTo(el, target, duration) {
+  const start     = el.scrollLeft;
+  const distance  = target - start;
+  const startTime = performance.now();
+ 
+  function step(now) {
+    const elapsed  = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease     = progress < 0.5
+      ? 4 * progress * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+    el.scrollLeft = start + distance * ease;
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+ 
+// ── AUTO ADVANCE ──────────────────────────────────────────────────────────────
+function startGalleryAuto() {
+  stopGalleryAuto();
+  if (galleryState.totalCards <= 1) return;
+  galleryState.autoTimer = setInterval(() => {
+    if (!galleryState.isHovered && !galleryState.isDragging) {
+      galOuterGoTo(galleryState.currentIndex + 1, true);
+    }
+  }, 4500); // advance every 4.5 s
+}
+ 
+function stopGalleryAuto() {
+  if (galleryState.autoTimer) {
+    clearInterval(galleryState.autoTimer);
+    galleryState.autoTimer = null;
+  }
+}
+ 
+// ── DRAG TO SCROLL ────────────────────────────────────────────────────────────
+function onGalDragStart(e) {
+  const track = $("gallerySeriesTrack");
+  if (!track) return;
+  galleryState.isDragging     = true;
+  galleryState.dragStartX     = e.pageX - track.offsetLeft;
+  galleryState.dragScrollLeft = track.scrollLeft;
+  track.style.cursor          = "grabbing";
+  stopGalleryAuto();
+}
+ 
+function onGalDragMove(e) {
+  if (!galleryState.isDragging) return;
+  const track = $("gallerySeriesTrack");
+  if (!track) return;
+  e.preventDefault();
+  const x    = e.pageX - track.offsetLeft;
+  const walk = (x - galleryState.dragStartX) * 1.4;
+  track.scrollLeft = galleryState.dragScrollLeft - walk;
+}
+ 
+function onGalDragEnd() {
+  if (!galleryState.isDragging) return;
+  galleryState.isDragging = false;
+  const track = $("gallerySeriesTrack");
+  if (track) track.style.cursor = "grab";
+ 
+  // Snap to nearest card after drag
+  const cards = track?.querySelectorAll(".gal-series-card");
+  if (!cards?.length) return;
+  const cardW   = cards[0].offsetWidth;
+  const gap     = parseInt(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 18;
+  const nearest = Math.round(track.scrollLeft / (cardW + gap));
+  galOuterGoTo(Math.max(0, Math.min(nearest, galleryState.totalCards - 1)), true);
+  startGalleryAuto();
+}
+ 
+// ── BUILD ONE SERIES GALLERY CARD ─────────────────────────────────────────────
+function buildGallerySeriesCard(series) {
+  const { seriesId, title, genre, numSeasons } = series;
+ 
+  // Flatten all episodes across all seasons
+  const episodeSlides = [];
+  for (let s = 1; s <= numSeasons; s++) {
+    const numEps      = getEpsForSeason(series, s);
+    const seasonLabel = getSeasonLabel(series, s);
+    for (let ep = 1; ep <= numEps; ep++) {
+      const data = state.episodes[epKey(seriesId, s, ep)] || null;
+      episodeSlides.push({ season: s, seasonLabel, ep, numEps, data });
+    }
+  }
+ 
+  const totalSlots = episodeSlides.length;
+  const savedCount = episodeSlides.filter(e => e.data).length;
+  const pct        = totalSlots > 0 ? Math.round((savedCount / totalSlots) * 100) : 0;
+ 
+  const card = document.createElement("div");
+  card.className = "gal-series-card";
+  card.dataset.galSeriesId = seriesId;
+ 
+  // ── Header ──
+  const header = document.createElement("div");
+  header.className = "gal-series-header";
+  header.innerHTML = `
+    <div class="gal-series-name" title="${escapeHtml(title)}">${escapeHtml(title)}</div>
+    <div class="gal-series-meta" hidden="true">
+      <span class="ms-pill ms-pill-genre smx-font">${escapeHtml(genre)}</span>
+      <span class="ms-pill smx-font">${pct}% done</span>
+    </div>
+  `;
+  card.appendChild(header);
+ 
+  // ── Inner episode carousel ──
+  const carouselWrap = document.createElement("div");
+  carouselWrap.className = "gal-ep-carousel-wrap";
+ 
+  const innerTrack = document.createElement("div");
+  innerTrack.className = "gal-ep-track";
+ 
+  episodeSlides.forEach(({ season, seasonLabel, ep, numEps, data }) => {
+    innerTrack.appendChild(buildGalleryEpSlide(season, seasonLabel, ep, numEps, data));
+  });
+ 
+  const prevBtn = document.createElement("button");
+  prevBtn.type      = "button";
+  prevBtn.className = "gal-nav gal-nav-prev";
+  prevBtn.innerHTML = `<i class="bi bi-chevron-left"></i>`;
+  prevBtn.setAttribute("aria-label", "Previous episode");
+ 
+  const nextBtn = document.createElement("button");
+  nextBtn.type      = "button";
+  nextBtn.className = "gal-nav gal-nav-next";
+  nextBtn.innerHTML = `<i class="bi bi-chevron-right"></i>`;
+  nextBtn.setAttribute("aria-label", "Next episode");
+ 
+  carouselWrap.appendChild(innerTrack);
+  carouselWrap.appendChild(prevBtn);
+  carouselWrap.appendChild(nextBtn);
+  card.appendChild(carouselWrap);
+ 
+  // ── Inner dot indicators ──
+  const dotsRow = document.createElement("div");
+  dotsRow.className = "gal-dots";
+  const maxDots = Math.min(episodeSlides.length, 30);
+  for (let i = 0; i < maxDots; i++) {
+    const dot = document.createElement("button");
+    dot.type      = "button";
+    dot.className = "gal-dot" + (i === 0 ? " active" : "");
+    dot.setAttribute("aria-label", `Episode slide ${i + 1}`);
+    dotsRow.appendChild(dot);
+  }
+  card.appendChild(dotsRow);
+ 
+  // ── Wire inner carousel logic ──
+  let current = 0;
+  const total = episodeSlides.length;
+  const dots  = dotsRow.querySelectorAll(".gal-dot");
+ 
+  function innerGoTo(idx) {
+    idx = Math.max(0, Math.min(total - 1, idx));
+    current = idx;
+    innerTrack.style.transform = `translateX(-${current * 100}%)`;
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+    dots.forEach((d, i) => d.classList.toggle("active", i === current));
+  }
+ 
+  prevBtn.addEventListener("click", e => { e.stopPropagation(); innerGoTo(current - 1); });
+  nextBtn.addEventListener("click", e => { e.stopPropagation(); innerGoTo(current + 1); });
+  dots.forEach((d, i) => d.addEventListener("click", e => { e.stopPropagation(); innerGoTo(i); }));
+ 
+  // Touch swipe (inner)
+  let innerTouchStartX = 0;
+  carouselWrap.addEventListener("touchstart", e => {
+    innerTouchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  carouselWrap.addEventListener("touchend", e => {
+    const dx = e.changedTouches[0].clientX - innerTouchStartX;
+    if (Math.abs(dx) > 35) innerGoTo(dx < 0 ? current + 1 : current - 1);
+  }, { passive: true });
+ 
+  innerGoTo(0);
+  return card;
+}
+ 
+// ── BUILD A SINGLE EPISODE SLIDE ──────────────────────────────────────────────
+function buildGalleryEpSlide(season, seasonLabel, ep, numEps, data) {
+  const slide = document.createElement("div");
+  slide.className = "gal-ep-card";
+ 
+  const hasData     = !!data;
+  const remarks     = (data?.remarks     || "").trim();
+  const rating      = data?.rating       ? Number(data.rating) : 0;
+  const dateWatched = data?.dateWatched  || "";
+  const duration    = data?.duration     || "";
+ 
+  const seasonTag = document.createElement("div");
+  seasonTag.className   = "gal-ep-season-tag";
+  seasonTag.textContent = escapeHtml(seasonLabel);
+ 
+  const epNumber = document.createElement("div");
+  epNumber.className   = "gal-ep-number";
+  epNumber.textContent = `Episode ${ep} of ${numEps}`;
+ 
+  const remarksEl = document.createElement("div");
+  remarksEl.className   = "gal-ep-remarks" + (remarks ? "" : " is-empty");
+  remarksEl.textContent = remarks || "No data yet. Please add a remark or note.";
+ 
+  const metaRow = document.createElement("div");
+  metaRow.className = "gal-ep-meta-row d-none";
+ 
+  if (rating) {
+    const p = document.createElement("span");
+    p.className = "ms-pill gal-rating-pill smx-font";
+    p.innerHTML = `<i class="bi bi-star-fill me-1" style="font-size:0.65rem"></i>${rating} / 5`;
+    metaRow.appendChild(p);
+  }
+  if (dateWatched) {
+    const p = document.createElement("span");
+    p.className = "ms-pill gal-date-pill smx-font";
+    p.innerHTML = `<i class="bi bi-calendar3 me-1" style="font-size:0.65rem"></i>${formatDate(dateWatched)}`;
+    metaRow.appendChild(p);
+  }
+  if (duration) {
+    const p = document.createElement("span");
+    p.className = "ms-pill smx-font";
+    p.innerHTML = `<i class="bi bi-clock me-1" style="font-size:0.65rem"></i>${escapeHtml(duration)}`;
+    metaRow.appendChild(p);
+  }
+  if (!hasData) {
+    const p = document.createElement("span");
+    p.className   = "ms-pill smx-font";
+    p.style.cssText = "background:rgba(255,255,255,0.04);color:var(--muted);";
+    p.textContent = "Not yet watched";
+    metaRow.appendChild(p);
+  }
+ 
+  slide.appendChild(seasonTag);
+  slide.appendChild(epNumber);
+  slide.appendChild(remarksEl);
+  slide.appendChild(metaRow);
+  return slide;
 }
 
 // ─────────────────────────────────────────
