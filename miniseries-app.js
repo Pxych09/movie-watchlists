@@ -1027,19 +1027,33 @@ function buildEpisodeCard(seriesId, season, ep, savedData) {
   card.className    = savedData ? "episode-card is-saved" : "episode-card";
   card.dataset.ep   = ep;
   card.dataset.epKey = epKey(seriesId, season, ep);
-
+ 
   const val = (key) => escapeHtml(savedData?.[key] ?? "");
   const ratingVal = savedData?.rating || "";
-
+ 
   card.innerHTML = `
     <div class="ep-label">
       <span>Episode ${ep}</span>
       ${savedData ? `<span class="ep-saved-dot" title="Saved"></span>` : ""}
     </div>
+ 
     <div class="ep-field">
+      <div class="ep-field-label">Episode Title</div>
+      <input
+        type="text"
+        class="ep-input ep-title"
+        data-field="episodeTitle"
+        placeholder="e.g. Winter Is Coming"
+        maxlength="200"
+        value="${val("episodeTitle")}"
+      >
+    </div>
+ 
+    <div class="ep-field mt-2">
       <div class="ep-field-label">Remarks / Notes</div>
       <textarea rows="5" class="ep-input ep-remarks" data-field="remarks" placeholder="Your thoughts on this episode...">${val("remarks")}</textarea>
     </div>
+ 
     <div class="ep-field mt-2 mb-2">
       <div class="ep-field">
         <div class="ep-field-label">Duration</div>
@@ -1083,6 +1097,7 @@ function buildEpisodeCard(seriesId, season, ep, savedData) {
         </div>
       </div>
     </div>
+ 
     <div class="ep-field">
       <div class="ep-field-label">Rating</div>
       <select class="ep-input ep-rating" data-field="rating">
@@ -1090,6 +1105,7 @@ function buildEpisodeCard(seriesId, season, ep, savedData) {
         ${[1,2,3,4,5].map(n => `<option value="${n}" ${ratingVal == n ? "selected" : ""}>${n} ${"⭐".repeat(n)}</option>`).join("")}
       </select>
     </div>
+ 
     <div class="ep-field mt-2">
       <div class="ep-field-label">Date Watched</div>
       <input type="date" class="ep-input ep-date" data-field="dateWatched" value="${val("dateWatched")}">
@@ -1097,7 +1113,6 @@ function buildEpisodeCard(seriesId, season, ep, savedData) {
   `;
   return card;
 }
-
 // ─────────────────────────────────────────
 // DURATION PICKER  — now HRS : MIN : SEC
 // ─────────────────────────────────────────
@@ -1291,13 +1306,14 @@ async function handleSaveSeason(seriesId, season, numEpisodes, seasonItem) {
     const card = panel.querySelector(`[data-ep="${ep}"]`);
     if (!card) continue;
 
+    const episodeTitle = card.querySelector(".ep-title")?.value.trim()      || "";  // ← NEW
     const remarks     = card.querySelector(".ep-remarks")?.value.trim()  || "";
     const duration    = card.querySelector(".dp-trigger")?.dataset.value || "";
     const rating      = card.querySelector(".ep-rating")?.value          || "";
     const dateWatched = card.querySelector(".ep-date")?.value            || "";
 
-    if (remarks || duration || rating || dateWatched) {
-      episodesPayload.push({ episode: ep, remarks, duration, rating: Number(rating) || 0, dateWatched });
+    if (episodeTitle || remarks || duration || rating || dateWatched) {
+      episodesPayload.push({ episode: ep, episodeTitle, remarks, duration, rating: Number(rating) || 0, dateWatched });
     }
   }
 
@@ -1505,6 +1521,7 @@ function buildGallerySlideEl(slide, isActive) {
     const rating      = data?.rating      ? Number(data.rating) : 0;
     const dateWatched = data?.dateWatched || "";
     const duration    = data?.duration    || "";
+    const episodeTitle    = data?.episodeTitle    || "";
  
     const pills = [];
     if (rating)      pills.push(`<span class="gal2-pill gal2-pill-amber"><i class="bi bi-star-fill"></i> ${rating}/5</span>`);
@@ -1516,6 +1533,7 @@ function buildGallerySlideEl(slide, isActive) {
       <div class="gal2-ep-content">
         <div class="gal2-ep-season">${escapeHtml(seasonLabel)}</div>
         <div class="gal2-ep-num">Episode ${ep} of ${numEps}</div>
+        <div class="gal2-ep-title">${episodeTitle || ""}</div>
         <div class="gal2-ep-remarks${remarks ? "" : " is-empty"}">${escapeHtml(remarks) || "No remarks yet."}</div>
         <div class="gal2-ep-pills">${pills.join("")}</div>
       </div>`;
