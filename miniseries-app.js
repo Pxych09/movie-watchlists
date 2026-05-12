@@ -758,11 +758,13 @@ function buildSeriesCard(series) {
     <div class="series-card-header">
       <div class="series-title-wrap">
         <div class="series-title">${escapeHtml(title)}</div>
-        <div class="series-meta-pills">
-          <span class="ms-pill ms-pill-genre">${escapeHtml(genre)}</span>
-          <span class="ms-pill">${numSeasons} Season${numSeasons !== 1 ? "s" : ""}</span>
-          <span class="ms-pill" title="${escapeHtml(createdAt)}">Posted: ${formatDate(createdAt)}</span>
-          <span class="ms-pill">by ${escapeHtml(name || username)}</span>
+        <div class="series-meta-pills-wrap">
+          <div class="series-meta-pills">
+            <span class="ms-pill ms-pill-genre">${escapeHtml(genre)}</span>
+            <span class="ms-pill">${numSeasons} Season${numSeasons !== 1 ? "s" : ""}</span>
+            <span class="ms-pill" title="${escapeHtml(createdAt)}">Posted: ${formatDate(createdAt)}</span>
+            <span class="ms-pill">by ${escapeHtml(name || username)}</span>
+          </div>
         </div>
       </div>
       ${isMine ? `
