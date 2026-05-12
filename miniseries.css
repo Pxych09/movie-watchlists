@@ -99,6 +99,8 @@ body {
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap; 
+  background-image: url('https://img.freepik.com/free-vector/shiny-film-negative-cinema-background-with-text-space_1017-52787.jpg?semt=ais_hybrid&w=740&q=80');
+        background-size: cover;
 }
 
 .nav-logo {
@@ -112,12 +114,17 @@ body {
 
 /* ── CARDS ── */
 .ms-card {
-  background: var(--card);
+  background: #061117;
+  
   border: 1px solid var(--border);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-lg);
   box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+.ms-card:not(.p-3.mb-4) {
+  background-image: url('https://img.freepik.com/free-vector/shiny-film-negative-cinema-background-with-text-space_1017-52787.jpg?semt=ais_hybrid&w=740&q=80');
+        background-size: cover;
 }
 
 .sticky-panel {
@@ -270,6 +277,22 @@ select.ms-input option { color: #111; }
   margin-bottom: 1.25rem;
   overflow: hidden;
   transition: border-color 0.2s;
+  background-image: linear-gradient(135deg, #244A4F, #3B3B33, #071319);
+  background-size: 300% 300%;
+  animation: gradientMove 8s ease infinite;
+}
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  
+  50% {
+    background-position: 100% 50%;
+  }
+  
+  100% {
+    background-position: 0% 50%;
+  }
 }
 .series-card:hover { border-color: var(--border-strong); }
 
@@ -1119,7 +1142,7 @@ textarea.ep-input { resize: vertical; min-height: 60px; }
         background-image: url('https://img.freepik.com/free-vector/shiny-film-negative-cinema-background-with-text-space_1017-52787.jpg?semt=ais_hybrid&w=740&q=80');
         background-size: cover;
         align-self: self-start;
-    } 
+  } 
   h1.h3 { font-size: 1.25rem; }
   .auth-card p { font-size: .85rem; }
   .app-logo { width: 58px; height: 58px; font-size: 1.5rem; }
