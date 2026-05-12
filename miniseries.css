@@ -1454,3 +1454,63 @@ textarea.ep-input { resize: vertical; min-height: 60px; }
   .gal2-ep-content  { padding: 18px 16px 16px; }
   .gal2-dir-btn     { width: 34px; height: 34px; }
 }
+
+/* ── SERIES COVER IMAGE UPLOAD ── */
+.series-upload-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1.5px dashed rgba(139, 92, 246, 0.4);
+  border-radius: 14px;
+  background: rgba(139, 92, 246, 0.05);
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  width: 100%;
+}
+.series-upload-label:hover {
+  border-color: rgba(139, 92, 246, 0.7);
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--text);
+}
+.series-upload-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.series-image-preview {
+  position: relative;
+  margin-top: 0.6rem;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  max-height: 160px;
+}
+.series-image-preview img {
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+  display: block;
+}
+.series-image-clear-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.series-image-clear-btn:hover {
+  background: rgba(220, 53, 69, 0.8);
+}
