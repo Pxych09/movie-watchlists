@@ -763,6 +763,8 @@ function buildSeriesCard(series) {
             <span class="ms-pill ms-pill-genre">${escapeHtml(genre)}</span>
             <span class="ms-pill">${numSeasons} Season${numSeasons !== 1 ? "s" : ""}</span>
             <span class="ms-pill" title="${escapeHtml(createdAt)}">Posted: ${formatDate(createdAt)}</span>
+            <span class="ms-pill">Total Logged: ${escapeHtml(savedEpCount)}</span>
+            <span class="ms-pill">Total Episodes: ${escapeHtml(totalEpSlots)}</span>
             <span class="ms-pill">by ${escapeHtml(name || username)}</span>
           </div>
         </div>
@@ -780,8 +782,8 @@ function buildSeriesCard(series) {
 
     <div class="series-progress-bar-wrap">
       <div class="series-progress-label">
-        <span>${savedEpCount} / ${totalEpSlots} episodes logged</span>
-        <span>${pct}%</span>
+        <span hidden="true">${savedEpCount} / ${totalEpSlots} episodes logged</span>
+        <span>${pct}% complete</span>
       </div>
       <div class="series-progress-track">
         <div class="series-progress-fill" style="width:${pct}%"></div>
