@@ -41,6 +41,7 @@ function bindEvents() {
 
   // Step 1: wire the "Set Episodes" button
   $("buildSeasonsBtn")?.addEventListener("click", handleBuildSeasons);
+  bindImageUpload();
 
   // Scroll to top
   const scrollBtn = $("scrollTopBtn");
@@ -81,6 +82,93 @@ function escapeHtml(str) {
     .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;").replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+// ── IMAGE UPLOAD HELPERS ──────────────────────────────────────────────────────
+
+/** Read a File as a base64 data-URL string (returns just the base64 payload). */
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result.split(",")[1]); // strip "data:image/...;base64,"
+    reader.onerror = () => reject(new Error("Could not read the image file."));
+    reader.readAsDataURL(file);
+  });
+}
+
+/** Wire the cover-image upload input + preview + clear button in the Create form. */
+function bindImageUpload() {
+  const input      = $("seriesCoverImage");
+  const label      = $("seriesUploadLabel");
+  const uploadText = $("seriesUploadText");
+  const preview    = $("seriesImagePreview");
+  const previewImg = $("seriesImagePreviewImg");
+  const clearBtn   = $("seriesImageClearBtn");
+  if (!input) return;
+
+  input.addEventListener("change", () => {
+    const file = input.files[0];
+    if (!file) return;
+
+    // 5 MB guard
+    if (file.size > 5 * 1024 * 1024) {
+      showAlert("Image must be 5 MB or smaller.", "warning");
+      input.value = "";
+      return;
+    }
+
+    // Show filename in label
+    uploadText.textContent = file.name;
+
+    // Show preview
+    const url = URL.createObjectURL(file);
+    previewImg.src = url;
+    preview.classList.remove("d-none");
+    label.style.display = "none";
+  });
+
+  clearBtn.addEventListener("click", () => {
+    input.value        = "";
+    previewImg.src     = "";
+    uploadText.textContent = "Click to choose an image (JPG, PNG, WEBP — max 5 MB)";
+    preview.classList.add("d-none");
+    label.style.display = "";
+  });
+}
+
+/**
+ * Wire the image upload input/preview/clear inside an edit form wrap element.
+ * Uses class selectors (not IDs) since multiple edit forms could exist.
+ */
+function bindEditImageUpload(wrap) {
+  const input      = wrap.querySelector(".series-edit-image-input");
+  const label      = wrap.querySelector(".series-edit-upload-label");
+  const uploadText = wrap.querySelector(".series-edit-upload-text");
+  const preview    = wrap.querySelector(".series-edit-image-preview");
+  const previewImg = wrap.querySelector(".series-edit-preview-img");
+  const clearBtn   = wrap.querySelector(".series-edit-image-clear-btn");
+  if (!input) return;
+
+  input.addEventListener("change", () => {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showAlert("Image must be 5 MB or smaller.", "warning");
+      input.value = "";
+      return;
+    }
+    uploadText.textContent = file.name;
+    previewImg.src = URL.createObjectURL(file);
+    preview.classList.remove("d-none");
+    label.style.display = "none";
+  });
+
+  clearBtn.addEventListener("click", () => {
+    input.value = "";
+    previewImg.src = "";
+    uploadText.textContent = "Click to choose an image (JPG, PNG, WEBP — max 5 MB)";
+    preview.classList.add("d-none");
+    label.style.display = "";
+  });
 }
 
 function epKey(seriesId, season, ep) { return `${seriesId}::s${season}::e${ep}`; }
@@ -438,14 +526,12 @@ async function handleCreateSeries(e) {
     return;
   }
 
-  // Read per-season episode map
   const seasonEpisodesMap = readSeasonEpisodesFromForm();
   if (!seasonEpisodesMap) {
     showAlert('Click "Set Episodes" first to configure episodes per season.', "warning");
     return;
   }
 
-  // Validate each season has at least 1 episode
   for (let s = 1; s <= numSeasons; s++) {
     const eps = parseInt(seasonEpisodesMap[s], 10);
     if (!eps || eps < 1) {
@@ -453,30 +539,63 @@ async function handleCreateSeries(e) {
       return;
     }
   }
-
-  // Read optional season titles
-  const seasonTitlesMap  = readSeasonTitlesFromForm();
-  const seasonTitlesJson = seasonTitlesMap ? JSON.stringify(seasonTitlesMap) : "";
-
-  // Compute total episodes for backward compat
-  const totalEpisodes = Object.values(seasonEpisodesMap).reduce((sum, n) => sum + parseInt(n, 10), 0);
+  
+  const seasonTitlesMap    = readSeasonTitlesFromForm();
+  const seasonTitlesJson   = seasonTitlesMap ? JSON.stringify(seasonTitlesMap) : "";
+  const totalEpisodes      = Object.values(seasonEpisodesMap).reduce((sum, n) => sum + parseInt(n, 10), 0);
   const seasonEpisodesJson = JSON.stringify(seasonEpisodesMap);
+
+  // ── just keep a reference to the file; base64 reading happens in Step 2 ──
+  const imageFile = $("seriesCoverImage")?.files?.[0];
 
   try {
     toggleBtn(btn, true);
-    await withLoading(() =>
-      api("createSeries", token(), title, genre, numSeasons, totalEpisodes, seasonEpisodesJson, seasonTitlesJson)
+    // Step 1: create the series record
+    const result = await withLoading(() =>
+      api("createSeries", token(), title, genre, numSeasons, totalEpisodes,
+          seasonEpisodesJson, seasonTitlesJson)
     );
+
+    // Step 2: upload image separately if provided
+    if (imageFile) {
+      let imageBase64 = "";
+      let imageMime   = "";
+      try {
+        imageBase64 = await fileToBase64(imageFile);
+        imageMime   = imageFile.type;
+        await withLoading(() =>
+          api("uploadSeriesImage", token(), result.seriesId, imageBase64, imageMime)
+        );
+      } catch (imgErr) {
+        // Series created — just warn about the image
+        showAlert(`"${title}" created, but image upload failed: ${imgErr.message}`, "warning");
+        $("createSeriesForm").reset();
+        resetSeasonBuilder();
+        const clearBtn = $("seriesImageClearBtn");
+        if (clearBtn) clearBtn.click();
+        await refresh();
+        return;
+      }
+    }
+
     $("createSeriesForm").reset();
     resetSeasonBuilder();
+    const clearBtn = $("seriesImageClearBtn");
+    if (clearBtn) clearBtn.click();
     await refresh();
-    showAlert(`"${title}" created successfully!`, "success");
+    showAlert(
+      imageFile
+        ? `"${title}" created with cover image!`
+        : `"${title}" created successfully!`,
+      "success"
+    );
   } catch (err) {
     showAlert(err.message, "danger");
   } finally {
     toggleBtn(btn, false);
   }
 }
+
 
 // ─────────────────────────────────────────
 // DELETE SERIES
@@ -570,6 +689,24 @@ function handleEditSeries(seriesId) {
         <div class="season-ep-builder series-edit-new-seasons-list"></div>
       </div>
 
+      <div class="series-edit-field">
+        <label class="form-label">
+          Cover Image
+          <span style="color:var(--muted);font-weight:400;font-size:0.78rem;"> (optional — replaces existing)</span>
+        </label>
+        <label class="series-upload-label series-edit-upload-label">
+          <i class="bi bi-image me-2" style="font-size:1.1rem;opacity:.7"></i>
+          <span class="series-upload-text smx-font series-edit-upload-text">Click to choose an image (JPG, PNG, WEBP — max 5 MB)</span>
+          <input type="file" accept="image/jpeg,image/png,image/webp" class="series-edit-image-input" style="display:none">
+        </label>
+        <div class="series-image-preview d-none series-edit-image-preview" style="margin-top:0.6rem;">
+          <img class="series-edit-preview-img" src="" alt="Cover preview">
+          <button type="button" class="series-image-clear-btn series-edit-image-clear-btn" aria-label="Remove image">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+
       <div class="series-edit-actions">
         <button type="button" class="btn ms-btn-outline series-edit-cancel-btn">
           <i class="bi bi-x me-1"></i>Cancel
@@ -580,7 +717,8 @@ function handleEditSeries(seriesId) {
       </div>
     </div>
   `;
-
+// Wire edit-form image upload
+  bindEditImageUpload(wrap);
   // Wire "Set New Episodes" button
   const buildBtn = wrap.querySelector(".series-edit-build-btn");
   buildBtn.addEventListener("click", () => {
@@ -641,10 +779,8 @@ async function handleSaveEditSeries(seriesId, formWrap, series) {
     return;
   }
 
-  // Determine if user is adding seasons
   const addingSeasons = !isNaN(newTotal) && newTotal > series.numSeasons;
 
-  // If a season count was entered, it must be valid
   if (seasonsInput.value.trim() !== "" && !addingSeasons) {
     showAlert(`New season count must be greater than ${series.numSeasons}.`, "warning");
     return;
@@ -653,7 +789,6 @@ async function handleSaveEditSeries(seriesId, formWrap, series) {
   let newSeasonEpisodesJson = null;
 
   if (addingSeasons) {
-    // Read only the NEW season inputs (not the disabled existing ones)
     const newSeasonsListEl = formWrap.querySelector(".series-edit-new-seasons-list");
     const allInputs        = newSeasonsListEl
       ? [...newSeasonsListEl.querySelectorAll(".season-ep-input:not([disabled])")]
@@ -664,7 +799,6 @@ async function handleSaveEditSeries(seriesId, formWrap, series) {
       return;
     }
 
-    // Validate
     const newMap = {};
     for (const input of allInputs) {
       const s   = input.dataset.season;
@@ -675,19 +809,24 @@ async function handleSaveEditSeries(seriesId, formWrap, series) {
       }
       newMap[s] = val;
     }
-
     newSeasonEpisodesJson = JSON.stringify(newMap);
   }
 
   const finalNumSeasons = addingSeasons ? newTotal : series.numSeasons;
 
+  // ── Read image file (optional) ────────────────────────────────────────────
+  const imageFile = formWrap.querySelector(".series-edit-image-input")?.files?.[0];
+
   try {
     toggleBtn(saveBtn, true);
+
+    // ── Step 1: update metadata (title, seasons) ──────────────────────────
     const updated = await withLoading(() =>
-      api("updateSeries", token(), seriesId, newTitle, finalNumSeasons, newSeasonEpisodesJson || "")
+      api("updateSeries", token(), seriesId, newTitle, finalNumSeasons,
+          newSeasonEpisodesJson || "")
     );
 
-    // Patch local state
+    // Patch local state with metadata update
     const idx = state.series.findIndex(s => s.seriesId === seriesId);
     if (idx !== -1) {
       state.series[idx] = {
@@ -696,16 +835,49 @@ async function handleSaveEditSeries(seriesId, formWrap, series) {
         numSeasons:     updated.numSeasons,
         numEpisodes:    updated.numEpisodes,
         seasonEpisodes: updated.seasonEpisodes,
+        coverImageUrl:  updated.coverImageUrl || state.series[idx].coverImageUrl || "",
       };
     }
 
-    // Re-render the card in place
-    const card    = document.querySelector(`.series-card[data-series-id="${seriesId}"]`);
-    const newCard = buildSeriesCard(state.series[idx]);
-    card.replaceWith(newCard);
+    // ── Step 2: upload image separately if one was chosen ─────────────────
+    if (imageFile) {
+      let imageBase64 = "";
+      let imageMime   = "";
+      try {
+        imageBase64 = await fileToBase64(imageFile);
+        imageMime   = imageFile.type;
+      } catch (readErr) {
+        // Metadata already saved — just warn about the image
+        showAlert(`"${updated.title}" updated, but the image could not be read: ${readErr.message}`, "warning");
+        rerenderCard(idx, seriesId);
+        updateStats();
+        return;
+      }
 
+      try {
+        const imgResult = await withLoading(() =>
+          api("uploadSeriesImage", token(), seriesId, imageBase64, imageMime)
+        );
+        if (idx !== -1 && imgResult?.coverImageUrl) {
+          state.series[idx].coverImageUrl = imgResult.coverImageUrl;
+        }
+      } catch (imgErr) {
+        // Metadata already saved — just warn about the image
+        showAlert(`"${updated.title}" updated, but image upload failed: ${imgErr.message}`, "warning");
+        rerenderCard(idx, seriesId);
+        updateStats();
+        return;
+      }
+    }
+
+    rerenderCard(idx, seriesId);
     updateStats();
-    showAlert(`"${updated.title}" updated successfully!`, "success");
+    showAlert(
+      imageFile
+        ? `"${updated.title}" updated with new cover image!`
+        : `"${updated.title}" updated successfully!`,
+      "success"
+    );
   } catch (err) {
     showAlert(err.message, "danger");
   } finally {
@@ -713,6 +885,14 @@ async function handleSaveEditSeries(seriesId, formWrap, series) {
   }
 }
 
+/** Re-render a series card in place using current state. */
+function rerenderCard(idx, seriesId) {
+  if (idx === -1) return;
+  const card    = document.querySelector(`.series-card[data-series-id="${seriesId}"]`);
+  if (!card) return;
+  const newCard = buildSeriesCard(state.series[idx]);
+  card.replaceWith(newCard);
+}
 // ─────────────────────────────────────────
 // RENDER SERIES LIST
 // ─────────────────────────────────────────
@@ -1353,67 +1533,6 @@ async function handleSaveSeason(seriesId, season, numEpisodes, seasonItem) {
     toggleBtn(btn, false);
   }
 }
-
-// ─────────────────────────────────────────
-// UPDATE SERIES CARD (progress + season badges) after save
-// ─────────────────────────────────────────
-function updateSeriesCard(seriesId) {
-  const series = state.series.find(s => s.seriesId === seriesId);
-  if (!series) return;
-
-  const card = document.querySelector(`.series-card[data-series-id="${seriesId}"]`);
-  if (!card) return;
-
-  const totalEpSlots = countTotalEpisodeSlots(series);
-  const savedEpCount = countSavedEpisodes(series);
-  const pct          = totalEpSlots > 0 ? Math.round((savedEpCount / totalEpSlots) * 100) : 0;
-
-  const fill  = card.querySelector(".series-progress-fill");
-  const label = card.querySelector(".series-progress-label");
-  if (fill)  fill.style.width = `${pct}%`;
-  if (label) label.innerHTML  = `<span>${savedEpCount} / ${totalEpSlots} episodes logged</span><span>${pct}%</span>`;
-
-  card.querySelectorAll(".season-item").forEach(seasonItem => {
-    const s      = parseInt(seasonItem.dataset.season, 10);
-    const numEps = parseInt(seasonItem.dataset.numEps, 10) || getEpsForSeason(series, s);
-    const toggle = seasonItem.querySelector(".season-toggle");
-    const badge  = seasonItem.querySelector(".season-number-badge");
-    const pill   = seasonItem.querySelector(".season-status-pill");
-
-    const { isLocked, isDone, savedCount } = getSeasonStatus(seriesId, s, numEps);
-    const partial = !isDone && savedCount > 0;
-
-    badge?.classList.toggle("is-done",   isDone && !isLocked);
-    badge?.classList.toggle("is-locked", isLocked);
-
-    if (toggle) {
-      toggle.classList.toggle("is-locked", isLocked);
-      toggle.disabled = isLocked;
-      toggle.removeAttribute("title");
-      if (isLocked) {
-        toggle.setAttribute("title", "Complete the previous season first");
-      }
-
-      var chevron = toggle.querySelector(".season-chevron");
-      if (chevron) {
-        if (isLocked) {
-          chevron.className = "bi bi-lock season-chevron";
-        } else {
-          chevron.className = "bi bi-chevron-down season-chevron";
-        }
-      }
-    }
-
-    if (pill) {
-      pill.className = "season-status-pill " + (isLocked ? "locked" : isDone ? "done" : partial ? "partial" : "empty");
-      if (isLocked)     pill.innerHTML = `<i class="bi bi-lock-fill me-1"></i>Locked`;
-      else if (isDone)  pill.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i>Done`;
-      else if (partial) pill.innerHTML = `${savedCount}/${numEps} logged`;
-      else              pill.innerHTML = `Not started`;
-    }
-  });
-}
-
 
 // ── MAIN ENTRY POINT ──────────────────────────────────────────────────────────
 function renderGallery() {
