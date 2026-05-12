@@ -48,6 +48,22 @@ function bindEvents() {
       window.scrollTo({ top: 0, behavior: "instant" });
     });
   }
+
+  // Info tooltips
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".info-tip-btn");
+    if (btn) {
+      e.stopPropagation();
+      const box = btn.nextElementSibling;
+      const isOpen = box.classList.contains("open");
+      document.querySelectorAll(".info-tip-box.open").forEach(b => b.classList.remove("open"));
+      if (!isOpen) box.classList.add("open");
+      return;
+    }
+    if (!e.target.closest(".info-tip-wrap")) {
+      document.querySelectorAll(".info-tip-box.open").forEach(b => b.classList.remove("open"));
+    }
+  });
 }
 
 // ─────────────────────────────────────────
@@ -79,6 +95,21 @@ function getEpsForSeason(series, season) {
 }
 
 /**
+ * Get the custom title for a season, falling back to "Season N".
+ * Works with both stored seasonTitles JSON and a plain object.
+ */
+function getSeasonLabel(series, season) {
+  if (series.seasonTitles) {
+    const map = typeof series.seasonTitles === "string"
+      ? JSON.parse(series.seasonTitles)
+      : series.seasonTitles;
+    const custom = (map[season] ?? map[String(season)] ?? "").trim();
+    if (custom) return custom;
+  }
+  return `Season ${season}`;
+}
+
+/**
  * Build the seasonEpisodes map from the dynamic form inputs.
  * Accepts an optional container element; defaults to global #seasonEpisodesList.
  * Returns an object like { "1": 16, "2": 20, "3": 12 }
@@ -93,6 +124,24 @@ function readSeasonEpisodesFromForm(container) {
     const s   = input.dataset.season;
     const val = parseInt(input.value, 10);
     map[s]    = isNaN(val) || val < 1 ? 1 : val;
+  });
+  return map;
+}
+
+/**
+ * Build the seasonTitles map from the dynamic form title inputs.
+ * Returns null if the toggle is off or no inputs exist.
+ * Returns an object like { "1": "The Beginning", "2": "" }
+ */
+function readSeasonTitlesFromForm(container) {
+  const list = container || $("seasonEpisodesList");
+  if (!list) return null;
+  const inputs = list.querySelectorAll(".season-title-input");
+  if (!inputs.length) return null;
+  const map = {};
+  inputs.forEach(input => {
+    const s = input.dataset.season;
+    map[s]  = input.value.trim();
   });
   return map;
 }
@@ -304,10 +353,12 @@ function handleBuildSeasons() {
   const wrap = $("seasonEpisodesWrap");
   if (!list || !wrap) return;
 
+  const titlesEnabled = $("enableSeasonTitles")?.checked || false;
+
   list.innerHTML = "";
 
   for (let s = 1; s <= numSeasons; s++) {
-    list.appendChild(buildSeasonEpRow(s));
+    list.appendChild(buildSeasonEpRow(s, 12, false, titlesEnabled));
   }
 
   wrap.style.display = "block";
@@ -320,6 +371,7 @@ function resetSeasonBuilder() {
   if (list) list.innerHTML = "";
   if (wrap) wrap.style.display = "none";
   if ($("numSeasons")) $("numSeasons").value = "";
+  if ($("enableSeasonTitles")) $("enableSeasonTitles").checked = false;
 }
 
 /**
@@ -327,8 +379,10 @@ function resetSeasonBuilder() {
  * @param {number} s - Season number
  * @param {number} [defaultVal=12] - Pre-filled episode count
  * @param {boolean} [readOnly=false] - Whether the input should be disabled
+ * @param {boolean} [showTitleInput=false] - Whether to show the season title input
+ * @param {string}  [defaultTitle=""] - Pre-filled title value
  */
-function buildSeasonEpRow(s, defaultVal = 12, readOnly = false) {
+function buildSeasonEpRow(s, defaultVal = 12, readOnly = false, showTitleInput = false, defaultTitle = "") {
   const row = document.createElement("div");
   row.className = "season-ep-row";
   row.innerHTML = `
@@ -349,6 +403,17 @@ function buildSeasonEpRow(s, defaultVal = 12, readOnly = false) {
       >
       <span class="season-ep-unit">eps</span>
     </div>
+    ${showTitleInput && !readOnly ? `
+    <div class="season-title-input-wrap">
+      <input
+        type="text"
+        class="ep-input season-title-input"
+        data-season="${s}"
+        maxlength="80"
+        placeholder="Season title (optional)"
+        value="${escapeHtml(defaultTitle)}"
+      >
+    </div>` : ""}
   `;
   return row;
 }
@@ -384,6 +449,10 @@ async function handleCreateSeries(e) {
     }
   }
 
+  // Read optional season titles
+  const seasonTitlesMap  = readSeasonTitlesFromForm();
+  const seasonTitlesJson = seasonTitlesMap ? JSON.stringify(seasonTitlesMap) : "";
+
   // Compute total episodes for backward compat
   const totalEpisodes = Object.values(seasonEpisodesMap).reduce((sum, n) => sum + parseInt(n, 10), 0);
   const seasonEpisodesJson = JSON.stringify(seasonEpisodesMap);
@@ -391,7 +460,7 @@ async function handleCreateSeries(e) {
   try {
     toggleBtn(btn, true);
     await withLoading(() =>
-      api("createSeries", token(), title, genre, numSeasons, totalEpisodes, seasonEpisodesJson)
+      api("createSeries", token(), title, genre, numSeasons, totalEpisodes, seasonEpisodesJson, seasonTitlesJson)
     );
     $("createSeriesForm").reset();
     resetSeasonBuilder();
@@ -525,12 +594,12 @@ function handleEditSeries(seriesId) {
     // Show read-only rows for existing seasons first (visual context)
     for (let s = 1; s <= series.numSeasons; s++) {
       const existingEps = getEpsForSeason(series, s);
-      listEl.appendChild(buildSeasonEpRow(s, existingEps, true));
+      listEl.appendChild(buildSeasonEpRow(s, existingEps, true, false));
     }
 
     // Editable inputs for new seasons only
     for (let s = series.numSeasons + 1; s <= newTotal; s++) {
-      listEl.appendChild(buildSeasonEpRow(s, 12, false));
+      listEl.appendChild(buildSeasonEpRow(s, 12, false, false));
     }
 
     wrapEl.style.display = "block";
@@ -775,6 +844,7 @@ function buildSeasonsHTML(series) {
 
   for (let s = 1; s <= numSeasons; s++) {
     const numEps = getEpsForSeason(series, s);
+    const seasonLabel = getSeasonLabel(series, s);
     const { isLocked, isDone, savedCount } = getSeasonStatus(seriesId, s, numEps);
     const partial = !isDone && savedCount > 0;
 
@@ -793,7 +863,7 @@ function buildSeasonsHTML(series) {
         <button type="button" class="season-toggle ${toggleClass}" aria-expanded="false"
           ${isLocked ? 'disabled title="Complete the previous season first"' : ""}>
           <div class="season-number-badge ${badgeClass}">S${s}</div>
-          <div class="season-label">Season ${s}</div>
+          <div class="season-label smx-font" title="${escapeHtml(seasonLabel)}">${escapeHtml(seasonLabel)}</div>
           <div class="season-sub">${numEps} ep${numEps !== 1 ? "s" : ""}</div>
           ${statusPill}
           ${!isLocked ? `<i class="bi bi-chevron-down season-chevron"></i>` : `<i class="bi bi-lock season-chevron"></i>`}
