@@ -1272,7 +1272,7 @@ textarea.ep-input { resize: vertical; min-height: 60px; }
 .gal2-stage {
   position: relative;
   overflow: hidden;
-  min-height: 260px;
+  min-height: 350px;
   border-radius: 1em;
   background: linear-gradient(160deg, #12003a 0%, #071030 45%, #011510 100%);
 }
@@ -1438,6 +1438,14 @@ textarea.ep-input { resize: vertical; min-height: 60px; }
 .gal2-dir-btn:active:not(:disabled) {
   transform: scale(0.93);
   background: rgba(139,92,246,0.42);
+}
+.gal2-ep-title {
+  font-size: 0.78rem;
+  /* font-style: italic; */
+  font-weight: bold;
+  text-decoration: underline;
+  text-underline-offset: 4.5px;
+  margin-bottom: 4px;
 }
  
 @media (max-width: 480px) {
