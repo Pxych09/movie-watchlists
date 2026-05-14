@@ -137,7 +137,71 @@ function bindEvents() {
   }
 
   mobileLogoutBtn?.addEventListener("click", handleLogout);
+  bindToolsToggle();
+  bindDashboardToggle();
 
+}
+
+// ─────────────────────────────────────────
+// TOOLS PANEL TOGGLE
+// ─────────────────────────────────────────
+const TOOLS_STORAGE_KEY = "toolsPanelVisible";
+
+function bindToolsToggle() {
+  const toggle = $("toolsToggle");
+  if (!toggle) return;
+
+  const saved     = localStorage.getItem(TOOLS_STORAGE_KEY);
+  const isVisible = saved === null ? false : saved === "true";
+  applyToolsState(isVisible, false);
+
+  toggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const current = toggle.getAttribute("aria-checked") === "true";
+    applyToolsState(!current, true);
+  });
+
+  function applyToolsState(visible, save) {
+    toggle.setAttribute("aria-checked", String(visible));
+
+    const content    = $("sidebarContent");
+    const btn        = $("toggleSidebarBtn");
+    const headerCard = $("toolsHeaderCard");
+    if (content)    content.classList.toggle("d-none", !visible);
+    if (headerCard) headerCard.classList.toggle("d-none", !visible);
+    if (btn)        btn.textContent = visible ? "Hide Tools" : "Show Tools";
+
+    if (save) localStorage.setItem(TOOLS_STORAGE_KEY, String(visible));
+  }
+}
+
+// ─────────────────────────────────────────
+// DASHBOARD PANEL TOGGLE
+// ─────────────────────────────────────────
+const DASHBOARD_STORAGE_KEY = "dashboardPanelVisible";
+
+function bindDashboardToggle() {
+  const toggle = $("dashboardToggle");
+  if (!toggle) return;
+
+  const saved     = localStorage.getItem(DASHBOARD_STORAGE_KEY);
+  const isVisible = saved === null ? true : saved === "true";
+  applyDashboardToggleState(isVisible, false);
+
+  toggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const current = toggle.getAttribute("aria-checked") === "true";
+    applyDashboardToggleState(!current, true);
+  });
+
+  function applyDashboardToggleState(visible, save) {
+    toggle.setAttribute("aria-checked", String(visible));
+    state.dashboardHidden = !visible;
+    const dashboardCard = $("dashboardCard");
+    if (dashboardCard) dashboardCard.classList.toggle("d-none", !visible);
+    applyDashboardVisibility();
+    if (save) localStorage.setItem(DASHBOARD_STORAGE_KEY, String(visible));
+  }
 }
 
 // ─────────────────────────────────────────
@@ -1423,14 +1487,27 @@ async function handleAddSubGenre() {
 // ─────────────────────────────────────────
 function toggleDashboard() {
   state.dashboardHidden = !state.dashboardHidden;
+  const visible = !state.dashboardHidden;
+  localStorage.setItem(DASHBOARD_STORAGE_KEY, String(visible));
+  const toggle = $("dashboardToggle");
+  if (toggle) toggle.setAttribute("aria-checked", String(visible));
+  const dashboardCard = $("dashboardCard");
+  if (dashboardCard) dashboardCard.classList.toggle("d-none", !visible);
   applyDashboardVisibility();
 }
+
 function toggleSidebar() {
-  const content = $("sidebarContent");
-  const btn     = $("toggleSidebarBtn");
+  const content    = $("sidebarContent");
+  const btn        = $("toggleSidebarBtn");
+  const headerCard = $("toolsHeaderCard");
   if (!content || !btn) return;
   const isHidden = content.classList.toggle("d-none");
+  const visible  = !isHidden;
+  if (headerCard) headerCard.classList.toggle("d-none", !visible);
   btn.textContent = isHidden ? "Show Tools" : "Hide Tools";
+  localStorage.setItem(TOOLS_STORAGE_KEY, String(visible));
+  const toggle = $("toolsToggle");
+  if (toggle) toggle.setAttribute("aria-checked", String(visible));
 }
 
 function applyDashboardVisibility() {
