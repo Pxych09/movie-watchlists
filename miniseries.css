@@ -1533,3 +1533,87 @@ textarea.ep-input { resize: vertical; min-height: 60px; }
   pointer-events: none;
   border-radius: inherit;
 }
+/* ── EPISODE PAGINATION ── */
+.ep-pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 0 0.25rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  flex-wrap: wrap;
+}
+
+.ep-pagination-info {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ep-pagination-total {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.ep-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.ep-page-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.75rem;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.18s;
+}
+.ep-page-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.ep-page-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.ep-page-dot {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.18s;
+}
+.ep-page-dot:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+}
+.ep-page-dot.active {
+  background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(20,184,166,0.2));
+  border-color: rgba(139,92,246,0.45);
+  color: var(--text);
+}
+
+.ep-page-ellipsis {
+  font-size: 0.72rem;
+  color: var(--muted);
+  padding: 0 2px;
+  user-select: none;
+}
