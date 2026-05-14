@@ -60,6 +60,7 @@ const state = {
   todoRouletteTrackIndex: 0,
   // Track which tab is active in the monthly chart
   dashboardMonthTab: "count",
+  notifShowUnreadOnly: false,
 };
 
 document.addEventListener("DOMContentLoaded", bootstrap);
@@ -110,6 +111,33 @@ function bindEvents() {
     if (!wrap) return;
     if (!wrap.contains(event.target)) closeNotifications();
   });
+
+  // Mobile nav menu
+  const mobileNavBtn      = $("mobileNavBtn");
+  const mobileNavDropdown = $("mobileNavDropdown");
+  const mobileLogoutBtn   = $("mobileLogoutBtn");
+
+  if (mobileNavBtn && mobileNavDropdown) {
+    mobileNavBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = mobileNavDropdown.classList.toggle("open");
+      mobileNavBtn.setAttribute("aria-expanded", String(isOpen));
+      mobileNavBtn.querySelector("i").className = isOpen
+        ? "bi bi-x"
+        : "bi bi-list";
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!mobileNavDropdown.contains(e.target) && e.target !== mobileNavBtn) {
+        mobileNavDropdown.classList.remove("open");
+        mobileNavBtn.setAttribute("aria-expanded", "false");
+        mobileNavBtn.querySelector("i").className = "bi bi-list";
+      }
+    });
+  }
+
+  mobileLogoutBtn?.addEventListener("click", handleLogout);
+
 }
 
 // ─────────────────────────────────────────
@@ -419,6 +447,7 @@ async function handleLogout() {
   state.selectedTodoId = "";
   state.subGenres      = [];
   state.dashboardMonthTab = "count";
+  state.notifShowUnreadOnly = false;
 
   clearSession();
   $("loginForm")?.reset();
@@ -1429,36 +1458,67 @@ function bindDashboardMonthToggles() {
 // ─────────────────────────────────────────
 function toggleNotifications() {
   state.notifOpen = !state.notifOpen;
-  $("notifDropdown")?.classList.toggle("d-none", !state.notifOpen);
+  const dropdown = $("notifDropdown");
+  dropdown?.classList.toggle("open", state.notifOpen);
   if (state.notifOpen) markNotificationsRead();
 }
 
 function closeNotifications() {
   state.notifOpen = false;
-  $("notifDropdown")?.classList.add("d-none");
+  $("notifDropdown")?.classList.remove("open");
 }
 
 function renderNotifications() {
-  const notifList  = $("notifList");
-  const notifBadge = $("notifBadge");
+  const notifList      = $("notifList");
+  const notifBadge     = $("notifBadge");
+  const notifPanelBadge = $("notifPanelBadge");
+  const toggleBtn      = $("notifToggleReadBtn");
   if (!notifList || !notifBadge) return;
 
   const items       = Array.isArray(state.notifications) ? state.notifications : [];
-  const unreadCount = items.filter((item) => !item.isRead).length;
+  const unreadCount = items.filter(n => !n.isRead).length;
 
+  // Bell badge
   notifBadge.textContent = String(unreadCount);
   notifBadge.classList.toggle("d-none", unreadCount === 0);
 
-  if (!items.length) {
-    notifList.innerHTML = `<div class="p-3 text-secondary-light small">No notifications yet.</div>`;
+  // Panel header badge
+  if (notifPanelBadge) {
+    notifPanelBadge.textContent = unreadCount > 0
+      ? `${unreadCount} unread`
+      : "0 unread";
+    notifPanelBadge.classList.toggle("is-empty", unreadCount === 0);
+  }
+
+  // Toggle button state — "Show unread" / "Show all"
+  const showingUnread = state.notifShowUnreadOnly || false;
+  if (toggleBtn) {
+    toggleBtn.textContent = showingUnread ? "Show all" : `Unread (${unreadCount})`;
+    toggleBtn.classList.toggle("is-active", showingUnread);
+
+    toggleBtn.onclick = () => {
+      state.notifShowUnreadOnly = !state.notifShowUnreadOnly;
+      renderNotifications();
+    };
+  }
+
+  // Filter list
+  const visible = showingUnread ? items.filter(n => !n.isRead) : items;
+
+  if (!visible.length) {
+    notifList.innerHTML = `
+      <div class="notif-empty">
+        <i class="bi bi-bell-slash"></i>
+        ${showingUnread && items.length ? "No unread notifications." : "No notifications yet."}
+      </div>`;
     return;
   }
 
   notifList.innerHTML = "";
-  items.forEach((item) => {
+  visible.forEach(item => {
     const btn = document.createElement("button");
     btn.type      = "button";
-    btn.className = `notif-item ${item.isRead ? "" : "unread"}`;
+    btn.className = `notif-item${item.isRead ? "" : " unread"}`;
     btn.innerHTML = `
       <div class="notif-item-title">${escapeHtml(item.message || "")}</div>
       <div class="notif-item-time">${formatDateTime(item.createdAt)}</div>
