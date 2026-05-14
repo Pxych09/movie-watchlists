@@ -62,32 +62,59 @@
               <small class="text-secondary-light">@<span id="displayName">User</span></small>
             </div>
           </div>
-          <div class="d-flex align-items-center gap-2">
-            <div class="notif-wrap">
-              <button id="notifBtn" class="btn btn-outline-light custom-outline-btn notif-btn" type="button">
-                <i class="bi bi-bell"></i>
-                <span id="notifBadge" class="notif-badge d-none">0</span>
-              </button>
 
-              <div id="notifDropdown" class="notif-dropdown d-none">
-                <div class="notif-dropdown-header">
-                  <span class="fw-bold">Notifications</span>
+        <div class="d-flex align-items-center gap-2">
+          <div class="notif-wrap">
+            <button id="notifBtn" class="btn btn-outline-light custom-outline-btn notif-btn" type="button" aria-label="Notifications">
+              <i class="bi bi-bell"></i>
+              <span id="notifBadge" class="notif-badge d-none">0</span>
+            </button>
+
+            <div id="notifDropdown" class="notif-panel" role="dialog" aria-label="Notifications">
+              <div class="notif-panel-header">
+                <div class="notif-panel-title">
+                  Notifications
+                  <span id="notifPanelBadge" class="notif-panel-badge is-empty">0 unread</span>
                 </div>
-                <div id="notifList" class="notif-list">
-                  <div class="text-secondary-light small">No notifications yet.</div>
+                <button id="notifToggleReadBtn" class="notif-panel-toggle" type="button">
+                  Show all
+                </button>
+              </div>
+              <div id="notifList" class="notif-list">
+                <div class="notif-empty">
+                  <i class="bi bi-bell-slash"></i>
+                  No notifications yet.
                 </div>
               </div>
             </div>
           </div>
-          <div class="d-flex align-items-center gap-2">
-  
-            <a href="./miniseries.html" class="btn btn-outline-light custom-outline-btn" type="button" title="Your Mini Series">
-                <i class="bi bi-tv me-1"></i><span class="d-none d-sm-inline"> Mini Series</span>
+        </div>
+
+        <!-- Desktop nav actions -->
+        <div class="d-flex align-items-center gap-2 app-nav-actions">
+          <a href="./miniseries.html" class="btn btn-outline-light custom-outline-btn" type="button" title="Your Mini Series">
+            <i class="bi bi-tv me-1"></i><span class="d-none d-sm-inline"> Mini Series</span>
+          </a>
+          <button id="logoutBtn" class="btn btn-outline-light custom-outline-btn" type="button">
+            <i class="bi bi-box-arrow-right"></i>
+          </button>
+        </div>
+
+        <!-- Mobile hamburger + dropdown -->
+        <div style="position:relative;">
+          <button id="mobileNavBtn" class="app-nav-menu-btn" aria-label="Open menu" aria-expanded="false">
+            <i class="bi bi-list"></i>
+          </button>
+          <div id="mobileNavDropdown" class="app-nav-dropdown" role="menu">
+            <a href="./miniseries.html" class="app-nav-dropdown-item" role="menuitem">
+              <i class="bi bi-tv"></i> Mini Series
             </a>
-            <button id="logoutBtn" class="btn btn-outline-light custom-outline-btn" type="button">
-              <i class="bi bi-box-arrow-right"></i>
+            <button id="mobileLogoutBtn" class="app-nav-dropdown-item is-danger" role="menuitem" type="button">
+              <i class="bi bi-box-arrow-right"></i> Log Out
             </button>
           </div>
+        </div>
+
         </nav>
 
         <section class="row g-4">
