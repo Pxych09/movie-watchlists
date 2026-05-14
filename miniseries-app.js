@@ -427,6 +427,90 @@ function toggleBtn(btn, disabled) {
 })();
 
 // ─────────────────────────────────────────
+// CUSTOM CONFIRM MODAL
+// ─────────────────────────────────────────
+function msConfirm({ title = "Are you sure?", message = "", warning = "" } = {}) {
+  return new Promise((resolve) => {
+    // Inject modal HTML once
+    let backdrop = document.getElementById("msConfirmBackdrop");
+    if (!backdrop) {
+      backdrop = document.createElement("div");
+      backdrop.id        = "msConfirmBackdrop";
+      backdrop.className = "ms-confirm-backdrop";
+      backdrop.innerHTML = `
+        <div class="ms-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="msConfirmTitle">
+          <div class="ms-confirm-stripe"></div>
+          <div class="ms-confirm-body">
+            <div class="ms-confirm-header">
+              <div class="ms-confirm-icon">
+                <i class="bi bi-trash3"></i>
+              </div>
+              <div>
+                <div class="ms-confirm-title" id="msConfirmTitle"></div>
+                <div class="ms-confirm-message" id="msConfirmMessage"></div>
+              </div>
+            </div>
+            <div class="ms-confirm-warning-box" id="msConfirmWarningBox">
+              <i class="bi bi-exclamation-circle" style="flex-shrink:0;opacity:0.8"></i>
+              <span id="msConfirmWarning"></span>
+            </div>
+            <div class="ms-confirm-actions">
+              <button type="button" class="ms-confirm-cancel" id="msConfirmCancel">Cancel</button>
+              <button type="button" class="ms-confirm-ok" id="msConfirmOk">
+                <i class="bi bi-trash3"></i> Yes, clear it
+              </button>
+            </div>
+          </div>
+        </div>`;
+      document.body.appendChild(backdrop);
+    }
+
+    // Populate content
+    document.getElementById("msConfirmTitle").textContent   = title;
+    document.getElementById("msConfirmMessage").textContent = message;
+
+    const warningBox = document.getElementById("msConfirmWarningBox");
+    const warningEl  = document.getElementById("msConfirmWarning");
+    if (warning) {
+      warningEl.textContent       = warning;
+      warningBox.style.display    = "flex";
+    } else {
+      warningBox.style.display    = "none";
+    }
+
+    // Open
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => backdrop.classList.add("open"));
+    });
+
+    function close(result) {
+      backdrop.classList.remove("open");
+      // Wait for transition then clean up listeners
+      backdrop.addEventListener("transitionend", () => {
+        okBtn.removeEventListener("click", onOk);
+        cancelBtn.removeEventListener("click", onCancel);
+        backdrop.removeEventListener("click", onBackdropClick);
+        document.removeEventListener("keydown", onKeydown);
+      }, { once: true });
+      resolve(result);
+    }
+
+    const okBtn     = document.getElementById("msConfirmOk");
+    const cancelBtn = document.getElementById("msConfirmCancel");
+
+    function onOk()           { close(true);  }
+    function onCancel()       { close(false); }
+    function onBackdropClick(e) { if (e.target === backdrop) close(false); }
+    function onKeydown(e)     { if (e.key === "Escape") close(false); }
+
+    okBtn.addEventListener("click",     onOk);
+    cancelBtn.addEventListener("click", onCancel);
+    backdrop.addEventListener("click",  onBackdropClick);
+    document.addEventListener("keydown", onKeydown);
+  });
+}
+
+// ─────────────────────────────────────────
 // SECTIONS
 // ─────────────────────────────────────────
 function showSection(loggedIn) {
@@ -1737,7 +1821,12 @@ async function handleClearEpisode(card, seriesId, season, ep, saveBar, series) {
   const wasSaved = !!state.episodes[epKey(seriesId, season, ep)];
 
   if (wasSaved) {
-    if (!confirm(`Clear Episode ${ep}? This will permanently remove its saved data.`)) return;
+    const confirmed = await msConfirm({
+      title:   `Clear Episode ${ep}?`,
+      message: "This will permanently remove all saved data for this episode. This action cannot be undone.",
+      warning: "Remarks, rating, duration, and date watched will be cleared.",
+    });
+    if (!confirmed) return;
   }
 
   // ── Reset all DOM inputs ──
