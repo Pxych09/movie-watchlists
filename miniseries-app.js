@@ -1353,6 +1353,11 @@ function ensureEpisodeInputsWired(seasonItem, series) {
         input.addEventListener("change", () => markEpisodeChanged(input, seriesId, season, saveBar));
       });
 
+      // Wire Clear button
+      card.querySelector(".ep-clear-btn")?.addEventListener("click", () => {
+        handleClearEpisode(card, seriesId, season, ep, saveBar, series);
+      });
+
       cardCache[ep] = card;
     }
     return cardCache[ep];
@@ -1448,7 +1453,12 @@ function buildEpisodeCard(seriesId, season, ep, savedData) {
   card.innerHTML = `
     <div class="ep-label">
       <span>Episode ${ep}</span>
-      ${savedData ? `<span class="ep-saved-dot" title="Saved"></span>` : ""}
+      <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+        ${savedData ? `<span class="ep-saved-dot" title="Saved"></span>` : ""}
+        <button type="button" class="ep-clear-btn" title="Clear this episode">
+          <i class="bi bi-x-circle"></i> Clear
+        </button>
+      </div>
     </div>
  
     <div class="ep-field">
@@ -1717,6 +1727,70 @@ function markEpisodeChanged(inputEl, seriesId, season, saveBar) {
   }
   if (!saveBar.classList.contains("visible")) {
     saveBar.classList.add("visible");
+  }
+}
+
+// ─────────────────────────────────────────
+// CLEAR EPISODE
+// ─────────────────────────────────────────
+async function handleClearEpisode(card, seriesId, season, ep, saveBar, series) {
+  const wasSaved = !!state.episodes[epKey(seriesId, season, ep)];
+
+  if (wasSaved) {
+    if (!confirm(`Clear Episode ${ep}? This will permanently remove its saved data.`)) return;
+  }
+
+  // ── Reset all DOM inputs ──
+  const titleInput  = card.querySelector(".ep-title");
+  const remarksArea = card.querySelector(".ep-remarks");
+  const ratingSelect= card.querySelector(".ep-rating");
+  const dateInput   = card.querySelector(".ep-date");
+  const dpTrigger   = card.querySelector(".dp-trigger");
+  const dpDisplay   = card.querySelector(".dp-display");
+
+  if (titleInput)   titleInput.value   = "";
+  if (remarksArea)  remarksArea.value  = "";
+  if (ratingSelect) ratingSelect.value = "";
+  if (dateInput)    dateInput.value    = "";
+  if (dpTrigger)    dpTrigger.dataset.value = "";
+  if (dpDisplay)    dpDisplay.textContent   = "Select duration";
+
+  // Reset card visual state
+  card.classList.remove("is-saved", "has-changes");
+  const dot = card.querySelector(".ep-saved-dot");
+  if (dot) dot.remove();
+
+  if (!wasSaved) {
+    // Nothing saved — just a local wipe, no API call needed
+    return;
+  }
+
+  // ── Delete from backend ──
+  const clearBtn = card.querySelector(".ep-clear-btn");
+  try {
+    if (clearBtn) { clearBtn.disabled = true; clearBtn.style.opacity = "0.5"; }
+    await withLoading(() => api("clearEpisode", token(), seriesId, season, ep));
+
+    // Remove from local state
+    delete state.episodes[epKey(seriesId, season, ep)];
+
+    // Hide save bar if no other cards in this season have unsaved changes
+    const panelEl = card.closest(".season-panel");
+    const anyDirty = panelEl
+      ? [...panelEl.querySelectorAll(".episode-card.has-changes")].length > 0
+      : false;
+    if (!anyDirty) saveBar?.classList.remove("visible");
+
+    // Refresh card count / progress bar on the series card
+    const seriesIdx = state.series.findIndex(s => s.seriesId === seriesId);
+    rerenderCard(seriesIdx, seriesId);
+    updateStats();
+
+    showAlert(`Episode ${ep} cleared.`, "success");
+  } catch (err) {
+    showAlert(err.message, "danger");
+  } finally {
+    if (clearBtn) { clearBtn.disabled = false; clearBtn.style.opacity = ""; }
   }
 }
 
