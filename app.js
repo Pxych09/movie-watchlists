@@ -47,6 +47,7 @@ const state = {
     userTotals: []
   },
   dashboardHidden: true,
+  guidelinesHidden: false,
   isEditing: false,
   alertTimers: new Map(),
   loadingCount: 0,
@@ -135,10 +136,22 @@ function bindEvents() {
       }
     });
   }
+  
+  bind("toggleGuidelinesBtn", "click", toggleGuidelines);
+  const guidelinesNavBtn = $("guidelinesNavBtn");
+  guidelinesNavBtn?.addEventListener("click", () => {
+    if (state.guidelinesHidden) {
+      state.guidelinesHidden = false;
+      applyGuidelinesVisibility(true);
+    }
+    const card = $("guidelinesCard");
+    if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   mobileLogoutBtn?.addEventListener("click", handleLogout);
   bindToolsToggle();
   bindDashboardToggle();
+  bindGuidelinesToggle();
 
 }
 
@@ -203,7 +216,53 @@ function bindDashboardToggle() {
     if (save) localStorage.setItem(DASHBOARD_STORAGE_KEY, String(visible));
   }
 }
+// ─────────────────────────────────────────
+// GUIDELINES PANEL TOGGLE
+// ─────────────────────────────────────────
+const GUIDELINES_STORAGE_KEY = "guidelinesPanelVisible";
 
+function bindGuidelinesToggle() {
+  const toggle = $("guidelinesToggle");
+  if (!toggle) return;
+
+  const saved     = localStorage.getItem(GUIDELINES_STORAGE_KEY);
+  const isVisible = saved === null ? true : saved === "true";
+  applyGuidelinesToggleState(isVisible, false);
+
+  toggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const current = toggle.getAttribute("aria-checked") === "true";
+    applyGuidelinesToggleState(!current, true);
+  });
+
+  function applyGuidelinesToggleState(visible, save) {
+    toggle.setAttribute("aria-checked", String(visible));
+    state.guidelinesHidden = !visible;
+    const guidelinesCard = $("guidelinesCard");
+    if (guidelinesCard) guidelinesCard.classList.toggle("d-none", !visible);
+    applyGuidelinesVisibility(visible);
+    if (save) localStorage.setItem(GUIDELINES_STORAGE_KEY, String(visible));
+  }
+}
+
+function toggleGuidelines() {
+  state.guidelinesHidden = !state.guidelinesHidden;
+  const visible = !state.guidelinesHidden;
+  localStorage.setItem(GUIDELINES_STORAGE_KEY, String(visible));
+  const toggle = $("guidelinesToggle");
+  if (toggle) toggle.setAttribute("aria-checked", String(visible));
+  const guidelinesCard = $("guidelinesCard");
+  if (guidelinesCard) guidelinesCard.classList.toggle("d-none", !visible);
+  applyGuidelinesVisibility(visible);
+}
+
+function applyGuidelinesVisibility(visible) {
+  const content = $("guidelinesContent");
+  const btn     = $("toggleGuidelinesBtn");
+  if (!content || !btn) return;
+  content.classList.toggle("d-none", !visible);
+  btn.textContent = visible ? "Hide Guidelines" : "Show Guidelines";
+}
 // ─────────────────────────────────────────
 // API
 // ─────────────────────────────────────────
@@ -567,6 +626,11 @@ async function handleLogout() {
   $("notifBadge")?.classList.add("d-none");
 
   if ($("subGenreSearch")) $("subGenreSearch").value = "";
+  state.guidelinesHidden = false;
+  if ($("guidelinesContent")) $("guidelinesContent").classList.remove("d-none");
+  if ($("toggleGuidelinesBtn")) $("toggleGuidelinesBtn").textContent = "Hide Guidelines";
+  const guidelinesCard = $("guidelinesCard");
+  if (guidelinesCard) guidelinesCard.classList.remove("d-none");
 
   hideAlerts();
   showSection(false);
