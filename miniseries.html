@@ -55,6 +55,7 @@
 
         <!-- NAV -->
         <nav class="ms-nav mb-4">
+          
           <div class="d-flex align-items-center gap-3">
             <img id="profileAvatar" class="profile-avatar d-none" alt="avatar">
             <div class="app-logo small-logo" id="fallbackAvatar">
@@ -65,13 +66,29 @@
               <small class="text-secondary-light">@<span id="displayName">User</span></small>
             </div>
           </div>
-          <div class="d-flex gap-2 align-items-center">
+
+          <div class="d-flex gap-2 align-items-center ms-nav-actions">
             <a href="./index.html" class="btn ms-btn-outline btn-sm">
               <i class="bi bi-film me-1"></i> &nbsp;Our Movies
             </a>
             <button id="logoutBtn" class="btn ms-btn-outline btn-sm" type="button">
               <i class="bi bi-box-arrow-right"></i> &nbsp;Log Out
             </button>
+          </div>
+
+          <!-- Mobile hamburger + dropdown -->
+          <div style="position:relative;">
+            <button id="mobileNavBtn" class="ms-nav-menu-btn" aria-label="Open menu" aria-expanded="false">
+              <i class="bi bi-list"></i>
+            </button>
+            <div id="mobileNavDropdown" class="ms-nav-dropdown" role="menu">
+              <a href="./index.html" class="ms-nav-dropdown-item" role="menuitem">
+                <i class="bi bi-film"></i> Our Movies
+              </a>
+              <button id="mobileLogoutBtn" class="ms-nav-dropdown-item is-danger" role="menuitem" type="button">
+                <i class="bi bi-box-arrow-right"></i> Log Out
+              </button>
+            </div>
           </div>
         </nav>
 
@@ -208,15 +225,15 @@
               <div class="ms-stats-row mt-4">
 
                 <div class="ms-stat-box">
-                  <div class="ms-stat-val" id="statTotalSeries">0</div>
+                  <div class="ms-stat-val" id="statTotalSeries"></div>
                   <div class="ms-stat-label" hidden>Series</div>
                 </div>
                 <div class="ms-stat-box">
-                  <div class="ms-stat-val" id="statTotalEpisodes">0</div>
+                  <div class="ms-stat-val" id="statTotalEpisodes"></div>
                   <div class="ms-stat-label" hidden>Episodes Logged</div>
                 </div>
                 <div class="ms-stat-box">
-                  <div class="ms-stat-val" id="statAvgRating">—</div>
+                  <div class="ms-stat-val" id="statAvgRating"></div>
                   <div class="ms-stat-label" hidden>Avg Rating</div>
                 </div>
               </div>
