@@ -81,21 +81,55 @@
             <button id="mobileNavBtn" class="ms-nav-menu-btn" aria-label="Open menu" aria-expanded="false">
               <i class="bi bi-list"></i>
             </button>
+
             <div id="mobileNavDropdown" class="ms-nav-dropdown" role="menu">
               <a href="./index.html" class="ms-nav-dropdown-item" role="menuitem">
                 <i class="bi bi-film"></i> Our Movies
               </a>
+              <div class="ms-nav-dropdown-item ms-nav-dropdown-toggle-row" role="menuitem">
+                <div style="display:flex;align-items:center;gap:0.6rem;flex:1;">
+                  <i class="bi bi-plus-square"></i>
+                  <span style="font-size:0.82rem;font-weight:500;">Create</span>
+                </div>
+                <button
+                  type="button"
+                  id="createSeriesToggle"
+                  class="ms-panel-toggle"
+                  role="switch"
+                  aria-checked="true"
+                  aria-label="Toggle Create Series panel"
+                >
+                  <span class="ms-panel-toggle-thumb"></span>
+                </button>
+              </div>
+              <div class="ms-nav-dropdown-item ms-nav-dropdown-toggle-row" role="menuitem">
+                <div style="display:flex;align-items:center;gap:0.6rem;flex:1;">
+                  <i class="bi bi-images"></i>
+                  <span style="font-size:0.82rem;font-weight:500;">Gallery</span>
+                </div>
+                <button
+                  type="button"
+                  id="galleryToggle"
+                  class="ms-panel-toggle"
+                  role="switch"
+                  aria-checked="true"
+                  aria-label="Toggle Gallery section"
+                >
+                  <span class="ms-panel-toggle-thumb"></span>
+                </button>
+              </div>
               <button id="mobileLogoutBtn" class="ms-nav-dropdown-item is-danger" role="menuitem" type="button">
                 <i class="bi bi-box-arrow-right"></i> Log Out
               </button>
             </div>
+
           </div>
         </nav>
 
         <div class="row g-4">
 
           <!-- LEFT: Create Series -->
-          <div class="col-lg-4">
+          <div class="col-lg-4" id="createSeriesPanelCol">
             <div class="ms-card p-4 sticky-panel">
               <h3 class="section-title mb-4">Create Series</h3>
 
