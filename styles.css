@@ -70,7 +70,7 @@ html, body {
 
 body {
   background:
-    radial-gradient(circle at top left, #4c1d95 0%, transparent 30%),
+    radial-gradient(circle at top left, #15343c 0%, transparent 30%),
     radial-gradient(circle at bottom right, #0f766e 0%, transparent 25%),
     linear-gradient(135deg, var(--bg1), var(--bg2));
   color: var(--text);
@@ -1511,13 +1511,13 @@ textarea.custom-input {
 }
 
 .border-double-secondary {
-  border: 2px double var(--bg2);
-  box-shadow: 0 0 0 0 transparent, -2px -2px 6px 0 var(--primary);
+  border: 2px double #15343c;
+  box-shadow: 0 0 0 0 transparent, -2px -2px 6px 0 #15343c;
   transition: all 0.35s ease;
 }
 
 .border-double-secondary:hover {
-  box-shadow: 0 0 0 0 transparent, 2px 2px 6px 0 var(--primary);
+  box-shadow: 0 0 0 0 transparent, 2px 2px 6px 0 var(--bg2);
   transform: translate(-2px, -2px);
 }
 
