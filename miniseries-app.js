@@ -97,7 +97,7 @@ function bindEvents() {
 
   // Wire mobile logout to the same handler as the desktop logout button
   mobileLogoutBtn?.addEventListener("click", handleLogout);
-  
+
 }
 
 // ─────────────────────────────────────────
@@ -1288,6 +1288,8 @@ function countSavedEpisodes(series) {
 // ─────────────────────────────────────────
 // INJECT EPISODE CARDS INTO OPEN SEASON
 // ─────────────────────────────────────────
+// Registry: "seriesId::season" → cardCache object
+const episodeCardCache = {};
 function ensureEpisodeInputsWired(seasonItem, series) {
   const panel = seasonItem.querySelector(".season-panel");
   if (!panel || panel.dataset.wired) return;
@@ -1297,7 +1299,7 @@ function ensureEpisodeInputsWired(seasonItem, series) {
   const season      = parseInt(seasonItem.dataset.season, 10);
   const numEpisodes = parseInt(seasonItem.dataset.numEps, 10) || getEpsForSeason(series, season);
 
-  const PAGE_SIZE = 5;
+  const PAGE_SIZE = 6;
   let currentPage = 1;
   const totalPages = Math.ceil(numEpisodes / PAGE_SIZE);
 
@@ -1330,7 +1332,9 @@ function ensureEpisodeInputsWired(seasonItem, series) {
   });
 
   // ── Episode card cache: build all cards once, reuse across page switches
+  const cacheKey = `${seriesId}::${season}`;
   const cardCache = {};
+  episodeCardCache[cacheKey] = cardCache;
   function getOrBuildCard(ep) {
     if (!cardCache[ep]) {
       const savedData = state.episodes[epKey(seriesId, season, ep)] || null;
@@ -1725,12 +1729,12 @@ async function handleSaveSeason(seriesId, season, numEpisodes, seasonItem) {
   const btn     = saveBar?.querySelector(".save-season-btn");
 
   const episodesPayload = [];
+  const cacheKey = `${seriesId}::${season}`;
+  const cache    = episodeCardCache[cacheKey] || {};
 
-  // Collect from ALL episode cards rendered in the cache (not just visible page)
   for (let ep = 1; ep <= numEpisodes; ep++) {
-    // Cards may be in the live DOM or detached (other pages) — querySelector works on detached nodes
-    const card = panel.querySelector(`[data-ep="${ep}"]`) 
-              || seasonItem.querySelector(`[data-ep="${ep}"]`);
+    // Prefer cached card (covers all pages); fall back to live DOM
+    const card = cache[ep] || panel.querySelector(`[data-ep="${ep}"]`);
     if (!card) continue;
 
     const episodeTitle = card.querySelector(".ep-title")?.value.trim()     || "";
@@ -1740,12 +1744,20 @@ async function handleSaveSeason(seriesId, season, numEpisodes, seasonItem) {
     const dateWatched  = card.querySelector(".ep-date")?.value             || "";
 
     if (episodeTitle || remarks || duration || rating || dateWatched) {
-      episodesPayload.push({ episode: ep, episodeTitle, remarks, duration, rating: Number(rating) || 0, dateWatched });
+      episodesPayload.push({
+        episode: ep,
+        episodeTitle,
+        remarks,
+        duration,
+        rating: Number(rating) || 0,
+        dateWatched
+      });
     }
   }
 
   if (!episodesPayload.length) {
-    showAlert("Fill in at least one episode's details before saving.", "warning"); return;
+    showAlert("Fill in at least one episode's details before saving.", "warning");
+    return;
   }
 
   try {
@@ -1759,9 +1771,12 @@ async function handleSaveSeason(seriesId, season, numEpisodes, seasonItem) {
       state.episodes[k] = { ...ep, seriesId, season, savedAt: new Date().toISOString() };
     });
 
-    panel.querySelectorAll(".episode-card").forEach(card => {
-      const ep = parseInt(card.dataset.ep, 10);
-      if (episodesPayload.find(e => e.episode === ep)) {
+    // Update visual state on ALL cached cards, not just visible ones
+    for (let ep = 1; ep <= numEpisodes; ep++) {
+      const card = cache[ep] || panel.querySelector(`[data-ep="${ep}"]`);
+      if (!card) continue;
+      const wasSaved = episodesPayload.find(e => e.episode === ep);
+      if (wasSaved) {
         card.classList.add("is-saved");
         card.classList.remove("has-changes");
         const label = card.querySelector(".ep-label");
@@ -1769,7 +1784,7 @@ async function handleSaveSeason(seriesId, season, numEpisodes, seasonItem) {
           label.insertAdjacentHTML("beforeend", `<span class="ep-saved-dot"></span>`);
         }
       }
-    });
+    }
 
     saveBar?.classList.remove("visible");
     const seriesIdx = state.series.findIndex(s => s.seriesId === seriesId);
