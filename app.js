@@ -1698,104 +1698,205 @@ function renderFeed(feed) {
   feed.forEach((post) => feedList.appendChild(renderPostCard(post)));
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DROP-IN REPLACEMENTS for app.js
+// Replace the existing renderPostCard() and renderCommentItem() functions
+// with these two. Everything else in app.js stays the same.
+// ─────────────────────────────────────────────────────────────────────────────
+
 function renderPostCard(post) {
-  const card        = document.createElement("div");
-  card.className    = "glass-card post-card p-4 mb-4";
+  const card     = document.createElement("div");
+  card.className = "glass-card post-card mb-4";
   card.setAttribute("data-post-id", post.postId);
 
-  const canEditPost    = state.currentUser && state.currentUser.username === post.username;
-  const subGenrePills  = (post.subGenres || [])
-    .map((sg) => `<span class="meta-pill">${escapeHtml(sg)}</span>`)
+  const canEditPost   = state.currentUser && state.currentUser.username === post.username;
+  const subGenrePills = (post.subGenres || [])
+    .map((sg) => `<span class="pc-pill pc-pill--sub">${escapeHtml(sg)}</span>`)
     .join("");
 
+  // Avatar: image or coloured initial
+  const displayName  = post.name || post.username || "?";
+  const initials     = displayName.trim().charAt(0).toUpperCase();
+  const avatarHtml   = post.avatar
+    ? `<img src="${escapeHtml(post.avatar)}" class="pc-avatar pc-avatar--img" alt="avatar">`
+    : `<div class="pc-avatar pc-avatar--init">${escapeHtml(initials)}</div>`;
+
+  // Star row  ★★★★☆
+  const rating    = Number(post.rating || 0);
+  const starsHtml = [1,2,3,4,5]
+    .map((n) => `<span class="pc-star${n <= rating ? " pc-star--on" : ""}">${n <= rating ? "★" : "☆"}</span>`)
+    .join("");
+
+  // Metadata chips (clock icon + duration, eye icon + watched date)
+  const durationHtml = post.duration
+    ? `<span class="pc-meta-chip"><i class="bi bi-clock"></i> ${escapeHtml(post.duration)}</span>`
+    : "";
+  const watchedHtml  = post.dateWatched
+    ? `<span class="pc-meta-chip"><i class="bi bi-eye"></i> Watched ${escapeHtml(formatDate(post.dateWatched))}</span>`
+    : "";
+
+  // Genre + sub-genre pill row
+  const genrePills = post.genre
+    ? `<span class="pc-pill pc-pill--genre">${escapeHtml(post.genre)}</span>`
+    : "";
+
+  // Caption (blockquote style)
+  const captionHtml = post.caption
+    ? `<blockquote class="pc-caption">${escapeHtml(post.caption)}</blockquote>`
+    : "";
+
+  // Edit/delete actions
+  const actionsHtml = canEditPost
+    ? `<div class="pc-actions">
+         <button class="pc-action-btn pc-action-btn--edit edit-post-btn" type="button" title="Edit">
+           <i class="bi bi-pencil-square"></i>
+         </button>
+         <button class="pc-action-btn pc-action-btn--del delete-post-btn" type="button" title="Delete">
+           <i class="bi bi-trash"></i>
+         </button>
+       </div>`
+    : "";
+
+  // Updated-at label
+  const editedHtml = (post.updatedAt && post.updatedAt !== post.createdAt)
+    ? `<span class="pc-edited">edited ${formatDateTime(post.updatedAt)}</span>`
+    : "";
+
   card.innerHTML = `
-    <div class="d-flex justify-content-between gap-3 flex-wrap">
-      <div class="d-flex gap-3 align-items-start">
-        ${post.avatar
-          ? `<img src="${escapeHtml(post.avatar)}" class="avatar-img" alt="avatar">`
-          : `<div class="avatar-fallback"><i class="bi bi-person-fill"></i></div>`}
-        <div>
-          <div class="fw-bold">${escapeHtml(post.name || post.username)}</div>
-          <div class="text-secondary-light small" hidden>@${escapeHtml(post.username)}</div>
-          <div class="text-secondary-light small mt-1">${formatDateTime(post.createdAt)}</div>
-          ${post.updatedAt && post.updatedAt !== post.createdAt
-            ? `<div class="text-secondary-light small mt-1" style="color: wheat; font-size: .70rem !important;">
-                Last edited ${formatDateTime(post.updatedAt)}
-               </div>`
-            : ""}
+    <div class="pc-header">
+      <div class="pc-header-left">
+        ${avatarHtml}
+        <div class="pc-header-meta">
+          <span class="pc-author">${escapeHtml(displayName)}</span>
+          <span class="pc-date">${escapeHtml(formatDateTime(post.createdAt))}${editedHtml}</span>
         </div>
       </div>
-      ${canEditPost
-        ? `<div class="d-flex gap-2">
-             <button class="btn btn-sm btn-warning-soft edit-post-btn align-self-start" type="button">
-               <i class="bi bi-pencil-square"></i>
-             </button>
-             <button class="btn btn-sm btn-danger-soft delete-post-btn align-self-start" type="button">
-               <i class="bi bi-trash"></i>
-             </button>
-           </div>`
-        : ""}
+      ${actionsHtml}
     </div>
 
-    <div class="mt-4">
-      <h3 class="h4 fw-bold mb-2">${escapeHtml(post.movieName)}</h3>
-      <div class="post-meta mb-3">
-        <span class="meta-pill meta-pill-genre">${escapeHtml(post.genre || "-")}</span>
-        ${subGenrePills}
-        <span class="meta-pill">${renderStars(post.rating)}</span>
-        <span class="meta-pill">${escapeHtml(post.duration || "-")}</span>
-        <span class="meta-pill">Watched: ${formatDate(post.dateWatched)}</span>
+    <div class="pc-body">
+      <h3 class="pc-title">${escapeHtml(post.movieName)}</h3>
+
+      <div class="pc-stars-row">
+        ${starsHtml}
+        ${durationHtml}
+        ${watchedHtml}
       </div>
-      ${post.caption ? `<p class="post-caption mb-0">${escapeHtml(post.caption)}</p>` : ""}
+
+      <div class="pc-pills-row">
+        ${genrePills}
+        ${subGenrePills}
+      </div>
+
+      ${captionHtml}
     </div>
 
-    <hr class="custom-divider">
+    <div class="pc-comments">
+      <div class="pc-comments-header">
+        <i class="bi bi-chat-square-dots"></i>
+        <span>${post.comments.length} COMMENT${post.comments.length !== 1 ? "S" : ""}</span>
+      </div>
 
-    <div class="comments-wrap">
-      <h4 class="h6 fw-bold mb-3">
-        <i class="bi bi-chat-dots me-2"></i>Comments (${post.comments.length})
-      </h4>
-      <div class="comments-list mb-3"></div>
-      <form class="comment-form d-flex gap-2">
-        <input type="text" class="form-control custom-input comment-input" placeholder="Write a comment..." required>
-        <button type="submit" class="btn btn-primary custom-btn comment-btn">
+      <div class="pc-comments-list"></div>
+
+      <form class="pc-comment-form">
+        <input type="text" class="pc-comment-input comment-input" placeholder="Write a comment..." required>
+        <button type="submit" class="pc-comment-submit" aria-label="Send">
           <i class="bi bi-send"></i>
         </button>
       </form>
     </div>
   `;
 
-  const commentsList = card.querySelector(".comments-list");
+  const commentsList = card.querySelector(".pc-comments-list");
   if (!post.comments.length) {
-    commentsList.innerHTML = `<div class="text-secondary-light small">No comments yet.</div>`;
+    commentsList.innerHTML = `<p class="pc-no-comments">No comments yet.</p>`;
   } else {
-    post.comments.forEach((comment) => commentsList.appendChild(renderCommentItem(comment)));
+    post.comments.forEach((c) => commentsList.appendChild(renderCommentItem(c)));
   }
 
-  bindPostCardEvents(card, post, canEditPost);
+  // Re-wire comment form to use the new selector name
+  const commentForm  = card.querySelector(".pc-comment-form");
+  const commentInput = card.querySelector(".comment-input");
+  commentForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const text      = commentInput.value.trim();
+    const submitBtn = commentForm.querySelector("button[type='submit']");
+    if (!text) return;
+    try {
+      toggleButton(submitBtn, true);
+      await withLoading(() => api("addComment", getSessionToken(), post.postId, text))();
+      commentInput.value = "";
+      showAlert("Comment posted successfully.", "success");
+      await refreshFeed();
+    } catch (error) {
+      showAlert(error.message, "danger");
+    } finally {
+      toggleButton(submitBtn, false);
+    }
+  });
+
+  card.querySelectorAll(".delete-comment-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const commentId = btn.dataset.commentId;
+      try {
+        toggleButton(btn, true);
+        await withLoading(() => api("deleteComment", getSessionToken(), commentId))();
+        showAlert("Comment deleted successfully.", "success");
+        await refreshFeed();
+      } catch (error) {
+        showAlert(error.message, "danger");
+      } finally {
+        toggleButton(btn, false);
+      }
+    });
+  });
+
+  if (!canEditPost) return card;
+
+  card.querySelector(".edit-post-btn")?.addEventListener("click", () => startEdit(post));
+  card.querySelector(".delete-post-btn")?.addEventListener("click", async (event) => {
+    if (!confirm(`Delete post for "${post.movieName}"?`)) return;
+    const btn = event.currentTarget;
+    try {
+      toggleButton(btn, true);
+      await withLoading(() => api("deletePost", getSessionToken(), post.postId))();
+      showAlert("Post deleted successfully.", "success");
+      await refreshFeed();
+    } catch (error) {
+      showAlert(error.message, "danger");
+    } finally {
+      toggleButton(btn, false);
+    }
+  });
+
   return card;
 }
 
+// ── Comment item ─────────────────────────────────────────────────────────────
 function renderCommentItem(comment) {
   const item = document.createElement("div");
-  item.className = "comment-item";
+  item.className = "pc-comment-item";
 
-  const canDeleteComment = state.currentUser && state.currentUser.username === comment.username;
+  const canDelete   = state.currentUser && state.currentUser.username === comment.username;
+  const displayName = comment.name || comment.username || "?";
+  const initials    = displayName.trim().charAt(0).toUpperCase();
+  const avatarHtml  = comment.avatar
+    ? `<img src="${escapeHtml(comment.avatar)}" class="pc-comment-avatar pc-comment-avatar--img" alt="avatar">`
+    : `<div class="pc-comment-avatar pc-comment-avatar--init">${escapeHtml(initials)}</div>`;
+
   item.innerHTML = `
-    <div class="d-flex justify-content-between gap-3">
-      <div class="d-flex gap-2">
-        ${comment.avatar
-          ? `<img src="${escapeHtml(comment.avatar)}" class="comment-avatar" alt="avatar">`
-          : `<div class="comment-avatar fallback"><i class="bi bi-person-fill"></i></div>`}
-        <div>
-          <div class="small fw-semibold">${escapeHtml(comment.name || comment.username)}</div>
-          <div class="small text-secondary-light smx-font">${escapeHtml(comment.comment)}</div>
-          <div class="small smx-font mt-1">${formatDateTime(comment.createdAt)}</div>
-        </div>
+    <div class="pc-comment-row">
+      ${avatarHtml}
+      <div class="pc-comment-body">
+        <span class="pc-comment-author">${escapeHtml(displayName)}</span>
+        <p class="pc-comment-text">${escapeHtml(comment.comment)}</p>
+        <span class="pc-comment-time">${escapeHtml(formatDateTime(comment.createdAt))}</span>
       </div>
-      ${canDeleteComment
-        ? `<button class="btn btn-sm btn-link text-danger delete-comment-btn p-3 align-self-center" type="button" data-comment-id="${escapeHtml(comment.commentId)}">
-             <i class="bi bi-x-circle lgx-font"></i>
+      ${canDelete
+        ? `<button class="pc-comment-del delete-comment-btn" type="button"
+             data-comment-id="${escapeHtml(comment.commentId)}" title="Delete">
+             <i class="bi bi-x-circle"></i>
            </button>`
         : ""}
     </div>
