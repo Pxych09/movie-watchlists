@@ -70,6 +70,34 @@ function bindEvents() {
       document.querySelectorAll(".info-tip-box.open").forEach(b => b.classList.remove("open"));
     }
   });
+
+  // Mobile nav menu
+  const mobileNavBtn      = $("mobileNavBtn");
+  const mobileNavDropdown = $("mobileNavDropdown");
+  const mobileLogoutBtn   = $("mobileLogoutBtn");
+
+  if (mobileNavBtn && mobileNavDropdown) {
+    mobileNavBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = mobileNavDropdown.classList.toggle("open");
+      mobileNavBtn.setAttribute("aria-expanded", String(isOpen));
+      mobileNavBtn.querySelector("i").className = isOpen
+        ? "bi bi-x"
+        : "bi bi-list";
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!mobileNavDropdown.contains(e.target) && e.target !== mobileNavBtn) {
+        mobileNavDropdown.classList.remove("open");
+        mobileNavBtn.setAttribute("aria-expanded", "false");
+        mobileNavBtn.querySelector("i").className = "bi bi-list";
+      }
+    });
+  }
+
+  // Wire mobile logout to the same handler as the desktop logout button
+  mobileLogoutBtn?.addEventListener("click", handleLogout);
+  
 }
 
 // ─────────────────────────────────────────
@@ -475,6 +503,7 @@ async function handleLogout() {
 async function refresh() {
   if (!state.currentUser) return;
   showSkeletons();
+  showStatsSkeleton();   // stats
   try {
     const [series, episodes] = await Promise.all([
       api("getSeries",   token()),
@@ -508,24 +537,38 @@ function showSkeletons() {
   }
   $("emptySeriesState")?.classList.add("d-none");
 }
+function showStatsSkeleton() {
+  ["statTotalSeries", "statTotalEpisodes", "statAvgRating"].forEach(id => {
+    const box = $(id)?.closest(".ms-stat-box");
+    if (box) box.classList.add("is-loading");
+  });
+}
 
 // ─────────────────────────────────────────
 // STATS
 // ─────────────────────────────────────────
 function updateStats() {
-  const totalSeries   = state.series.length;
-  const allEpisodes   = Object.values(state.episodes);
-  const totalLogged   = allEpisodes.length;
-  const rated         = allEpisodes.filter(ep => ep.rating > 0);
-  const avgRating     = rated.length
+  const totalSeries  = state.series.length;
+  const allEpisodes  = Object.values(state.episodes);
+  const totalLogged  = allEpisodes.length;
+  const rated        = allEpisodes.filter(ep => ep.rating > 0);
+  const avgRating    = rated.length
     ? (rated.reduce((s, ep) => s + Number(ep.rating), 0) / rated.length).toFixed(1)
     : "—";
 
   if ($("statTotalSeries"))   $("statTotalSeries").textContent   = totalSeries;
   if ($("statTotalEpisodes")) $("statTotalEpisodes").textContent = totalLogged;
   if ($("statAvgRating"))     $("statAvgRating").textContent     = avgRating !== "—" ? avgRating + " ★" : "—";
+
+  // Remove skeleton once values are populated
+  ["statTotalSeries", "statTotalEpisodes", "statAvgRating"].forEach(id => {
+    const box = $(id)?.closest(".ms-stat-box");
+    if (box) box.classList.remove("is-loading");
+  });
+
   renderGallery();
 }
+
 // ─────────────────────────────────────────
 // SEASON BUILDER  (Step 1 → Step 2)
 // Global version for the create form
