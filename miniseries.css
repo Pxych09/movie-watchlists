@@ -103,6 +103,8 @@ body {
   flex-wrap: wrap; 
   background-image: url('https://img.freepik.com/free-vector/shiny-film-negative-cinema-background-with-text-space_1017-52787.jpg?semt=ais_hybrid&w=740&q=80');
         background-size: cover;
+  position: relative;   /* add this */
+  z-index: 1000;        /* add this */
 }
 
 .nav-logo {
@@ -132,6 +134,7 @@ body {
 .sticky-panel {
   position: sticky;
   top: 1rem;
+  z-index: 1 !important;
 }
 
 /* ── FORM CONTROLS ── */
@@ -1740,4 +1743,117 @@ textarea.ep-input { resize: vertical; min-height: 60px; }
   color: var(--muted);
   padding: 0 2px;
   user-select: none;
+}
+/* ── STATS SKELETON ── */
+.ms-stat-box.is-loading .ms-stat-val {
+  position: relative;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  pointer-events: none;
+}
+.ms-stat-box.is-loading .ms-stat-val::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 52px;
+  height: 18px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.05) 25%,
+    rgba(255,255,255,0.13) 50%,
+    rgba(255,255,255,0.05) 75%
+  );
+  background-size: 300px 100%;
+  animation: skeletonShimmer 1.5s infinite linear;
+} 
+
+/* ── MOBILE NAV MENU ── */
+.ms-nav-menu-btn {
+  display: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  font-size: 1.1rem;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.18s;
+  flex-shrink: 0;
+}
+.ms-nav-menu-btn:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+.ms-nav-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  background: rgba(20, 20, 30, 0.96);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 99999;
+  overflow: hidden;
+  transform: translateY(-6px);
+  opacity: 0;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.2s ease;
+  pointer-events: none;
+}
+.ms-nav-dropdown.open {
+  display: block;
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+  border: 1px solid var(--bg2);
+  z-index: 999 !important;
+}
+.ms-nav-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.ms-nav-dropdown-item:last-child {
+  border-bottom: none;
+}
+.ms-nav-dropdown-item:hover {
+  background: rgba(255,255,255,0.07);
+}
+.ms-nav-dropdown-item.is-danger {
+  color: #fca5a5;
+}
+.ms-nav-dropdown-item.is-danger:hover {
+  background: rgba(248,113,113,0.1);
+}
+
+@media (max-width: 480px) {
+  .ms-nav-actions {
+    display: none !important;
+  }
+  .ms-nav-menu-btn {
+    display: grid;
+  }
+  .ms-nav {
+    position: relative;
+  }
 }
