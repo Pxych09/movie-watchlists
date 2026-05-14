@@ -795,6 +795,9 @@ textarea.ep-input { resize: vertical; min-height: 60px; }
   scrollbar-width: none;
   display: flex;
   flex-direction: column;
+  touch-action: pan-y;              /* add this */
+  overscroll-behavior: contain;     /* add this */
+  -webkit-overflow-scrolling: touch; /* keep this — needed for iOS momentum */
 }
 .dp-scroll::-webkit-scrollbar { display: none; }
 
