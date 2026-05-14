@@ -1191,31 +1191,32 @@ function countSavedEpisodes(series) {
 // INJECT EPISODE CARDS INTO OPEN SEASON
 // ─────────────────────────────────────────
 function ensureEpisodeInputsWired(seasonItem, series) {
-  const panel  = seasonItem.querySelector(".season-panel");
-  if (!panel || panel.dataset.wired) return; // already built
+  const panel = seasonItem.querySelector(".season-panel");
+  if (!panel || panel.dataset.wired) return;
   panel.dataset.wired = "1";
 
   const { seriesId } = series;
-  const season    = parseInt(seasonItem.dataset.season, 10);
+  const season      = parseInt(seasonItem.dataset.season, 10);
   const numEpisodes = parseInt(seasonItem.dataset.numEps, 10) || getEpsForSeason(series, season);
 
-  // Build episode grid
+  const PAGE_SIZE = 5;
+  let currentPage = 1;
+  const totalPages = Math.ceil(numEpisodes / PAGE_SIZE);
+
+  // ── Grid container
   const grid = document.createElement("div");
   grid.className = "episode-grid";
-
-  for (let ep = 1; ep <= numEpisodes; ep++) {
-    const savedData = state.episodes[epKey(seriesId, season, ep)] || null;
-    grid.appendChild(buildEpisodeCard(seriesId, season, ep, savedData));
-  }
   panel.appendChild(grid);
 
-  // Init duration pickers
-  grid.querySelectorAll(".dp-wrap").forEach(wrap => {
-    const saved = wrap.querySelector(".dp-trigger")?.dataset.value || "";
-    initDurationPicker(wrap, saved);
-  });
+  // ── Pagination bar (only if more than one page)
+  let paginationBar = null;
+  if (totalPages > 1) {
+    paginationBar = document.createElement("div");
+    paginationBar.className = "ep-pagination-bar";
+    panel.appendChild(paginationBar);
+  }
 
-  // Save bar
+  // ── Save bar
   const saveBar = document.createElement("div");
   saveBar.className = "season-save-bar";
   saveBar.dataset.saveBar = `${seriesId}::${season}`;
@@ -1226,20 +1227,108 @@ function ensureEpisodeInputsWired(seasonItem, series) {
     </button>`;
   panel.appendChild(saveBar);
 
-  // Save button handler
   saveBar.querySelector(".save-season-btn").addEventListener("click", () => {
     handleSaveSeason(seriesId, season, numEpisodes, seasonItem);
   });
 
-  // Wire up change detection on all inputs
-  grid.querySelectorAll(".ep-input").forEach(input => {
-    input.addEventListener("input", () => {
-      markEpisodeChanged(input, seriesId, season, saveBar);
+  // ── Episode card cache: build all cards once, reuse across page switches
+  const cardCache = {};
+  function getOrBuildCard(ep) {
+    if (!cardCache[ep]) {
+      const savedData = state.episodes[epKey(seriesId, season, ep)] || null;
+      const card = buildEpisodeCard(seriesId, season, ep, savedData);
+
+      // Wire duration picker immediately after building
+      const dpWrap = card.querySelector(".dp-wrap");
+      if (dpWrap) {
+        const saved = card.querySelector(".dp-trigger")?.dataset.value || "";
+        initDurationPicker(dpWrap, saved);
+      }
+
+      // Wire change detection
+      card.querySelectorAll(".ep-input").forEach(input => {
+        input.addEventListener("input",  () => markEpisodeChanged(input, seriesId, season, saveBar));
+        input.addEventListener("change", () => markEpisodeChanged(input, seriesId, season, saveBar));
+      });
+
+      cardCache[ep] = card;
+    }
+    return cardCache[ep];
+  }
+
+  // ── Render a specific page
+  function renderPage(page) {
+    currentPage = page;
+    grid.innerHTML = "";
+
+    const start = (page - 1) * PAGE_SIZE + 1;
+    const end   = Math.min(page * PAGE_SIZE, numEpisodes);
+
+    for (let ep = start; ep <= end; ep++) {
+      grid.appendChild(getOrBuildCard(ep));
+    }
+
+    // Scroll season panel top into view smoothly
+    seasonItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    if (paginationBar) renderPaginationBar();
+  }
+
+  // ── Build pagination bar UI
+  function renderPaginationBar() {
+    const start = (currentPage - 1) * PAGE_SIZE + 1;
+    const end   = Math.min(currentPage * PAGE_SIZE, numEpisodes);
+
+    paginationBar.innerHTML = `
+      <div class="ep-pagination-info">
+        Ep ${start}–${end} <span class="ep-pagination-total">of ${numEpisodes}</span>
+      </div>
+      <div class="ep-pagination-controls">
+        <button type="button" class="ep-page-btn ep-page-prev" ${currentPage === 1 ? "disabled" : ""} aria-label="Previous episodes">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        ${buildPageDots()}
+        <button type="button" class="ep-page-btn ep-page-next" ${currentPage === totalPages ? "disabled" : ""} aria-label="Next episodes">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>`;
+
+    paginationBar.querySelector(".ep-page-prev")?.addEventListener("click", () => {
+      if (currentPage > 1) renderPage(currentPage - 1);
     });
-    input.addEventListener("change", () => {
-      markEpisodeChanged(input, seriesId, season, saveBar);
+    paginationBar.querySelector(".ep-page-next")?.addEventListener("click", () => {
+      if (currentPage < totalPages) renderPage(currentPage + 1);
     });
-  });
+    paginationBar.querySelectorAll(".ep-page-dot").forEach(dot => {
+      dot.addEventListener("click", () => renderPage(parseInt(dot.dataset.page, 10)));
+    });
+  }
+
+  function buildPageDots() {
+    // Show at most 5 dots; collapse middle pages with ellipsis for large counts
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => {
+        const p = i + 1;
+        return `<button type="button" class="ep-page-dot ${p === currentPage ? "active" : ""}" data-page="${p}" aria-label="Page ${p}">${p}</button>`;
+      }).join("");
+    }
+
+    // Windowed: always show first, last, current ±1
+    const pages = new Set([1, totalPages, currentPage, currentPage - 1, currentPage + 1]
+      .filter(p => p >= 1 && p <= totalPages));
+    const sorted = [...pages].sort((a, b) => a - b);
+    let dots = "";
+    let prev = 0;
+    sorted.forEach(p => {
+      if (prev && p - prev > 1) dots += `<span class="ep-page-ellipsis">…</span>`;
+      dots += `<button type="button" class="ep-page-dot ${p === currentPage ? "active" : ""}" data-page="${p}">${p}</button>`;
+      prev = p;
+    });
+    return dots;
+  }
+
+  // ── Initial render
+  renderPage(1);
 }
 
 // ─────────────────────────────────────────
@@ -1497,7 +1586,7 @@ function initDurationPicker(wrap, savedValue) {
       }
     }, { passive: true });
   }
-  
+
   attachSnap(hrsScroll);
   attachSnap(minScroll);
   attachSnap(secScroll);
@@ -1538,15 +1627,19 @@ async function handleSaveSeason(seriesId, season, numEpisodes, seasonItem) {
   const btn     = saveBar?.querySelector(".save-season-btn");
 
   const episodesPayload = [];
+
+  // Collect from ALL episode cards rendered in the cache (not just visible page)
   for (let ep = 1; ep <= numEpisodes; ep++) {
-    const card = panel.querySelector(`[data-ep="${ep}"]`);
+    // Cards may be in the live DOM or detached (other pages) — querySelector works on detached nodes
+    const card = panel.querySelector(`[data-ep="${ep}"]`) 
+              || seasonItem.querySelector(`[data-ep="${ep}"]`);
     if (!card) continue;
 
-    const episodeTitle = card.querySelector(".ep-title")?.value.trim()      || "";  // ← NEW
-    const remarks     = card.querySelector(".ep-remarks")?.value.trim()  || "";
-    const duration    = card.querySelector(".dp-trigger")?.dataset.value || "";
-    const rating      = card.querySelector(".ep-rating")?.value          || "";
-    const dateWatched = card.querySelector(".ep-date")?.value            || "";
+    const episodeTitle = card.querySelector(".ep-title")?.value.trim()     || "";
+    const remarks      = card.querySelector(".ep-remarks")?.value.trim()   || "";
+    const duration     = card.querySelector(".dp-trigger")?.dataset.value  || "";
+    const rating       = card.querySelector(".ep-rating")?.value           || "";
+    const dateWatched  = card.querySelector(".ep-date")?.value             || "";
 
     if (episodeTitle || remarks || duration || rating || dateWatched) {
       episodesPayload.push({ episode: ep, episodeTitle, remarks, duration, rating: Number(rating) || 0, dateWatched });
