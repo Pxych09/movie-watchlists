@@ -2078,4 +2078,4 @@ textarea.ep-input { resize: vertical; min-height: 60px; }
 #createSeriesPanelCol.panel-hidden {
   display: none !important;
 }
-.gal2-series-name, .gal2-series-skub { position: relative; }
+.gal2-series-name, .gal2-series-sub { position: relative !important;}
