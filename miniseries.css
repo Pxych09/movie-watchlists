@@ -33,6 +33,7 @@
 *, *::before, *::after { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
 html, body { margin: 0; padding: 0; overflow-x: hidden; }
+html { scroll-behavior: smooth; }
 
 body {
   background:
@@ -1856,4 +1857,30 @@ textarea.ep-input { resize: vertical; min-height: 60px; }
   .ms-nav {
     position: relative;
   }
+}
+/* ── EPISODE CLEAR BUTTON ── */
+.ep-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  color: rgba(255, 100, 115, 0.8);
+  border-radius: 8px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.18s;
+  line-height: 1;
+}
+.ep-clear-btn:hover {
+  background: rgba(220, 53, 69, 0.15);
+  border-color: rgba(220, 53, 69, 0.55);
+  color: #ffb3bd;
+}
+.ep-clear-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
