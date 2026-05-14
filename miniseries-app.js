@@ -1475,16 +1475,29 @@ function initDurationPicker(wrap, savedValue) {
   cancelBtn.addEventListener("click", (e) => { e.stopPropagation(); close(); });
 
   function attachSnap(scrollEl) {
+    // Use scrollend if available (Chrome 114+, Firefox 109+)
+    // Fall back to a longer passive debounce on older/iOS browsers
+    const evtName = "onscrollend" in window ? "scrollend" : "scroll";
     let t;
-    scrollEl.addEventListener("scroll", () => {
-      clearTimeout(t);
-      t = setTimeout(() => {
+
+    scrollEl.addEventListener(evtName, () => {
+      if (evtName === "scrollend") {
+        // scrollend fires only once, after inertia fully settles — no debounce needed
         const v = scrollTopToValue(scrollEl.scrollTop);
         scrollToValue(scrollEl, v, true);
         highlightCurrent(scrollEl);
-      }, 80);
-    });
+      } else {
+        // Fallback: debounce but with a longer delay so mobile inertia can finish
+        clearTimeout(t);
+        t = setTimeout(() => {
+          const v = scrollTopToValue(scrollEl.scrollTop);
+          scrollToValue(scrollEl, v, true);
+          highlightCurrent(scrollEl);
+        }, 150);
+      }
+    }, { passive: true });
   }
+  
   attachSnap(hrsScroll);
   attachSnap(minScroll);
   attachSnap(secScroll);
