@@ -279,48 +279,87 @@ function showSection(isLoggedIn) {
   $("appSection")?.classList.toggle("d-none", !isLoggedIn);
 }
 
-// ─────────────────────────────────────────
-// ALERTS
-// ─────────────────────────────────────────
-function showAlert(message, type = "danger", duration = 5000) {
-  const wrap = $("globalAlertWrap");
-  if (!wrap) return;
+// ── TOAST SYSTEM ──────────────────────────────────────────────────────────────
+(function () {
+  const DURATION = 6000;
+  const MAX      = 5;
+  const TYPES = {
+    success: { icon: "bi-check-circle-fill", label: "Success" },
+    danger:  { icon: "bi-x-circle-fill",     label: "Error"   },
+    warning: { icon: "bi-exclamation-circle-fill", label: "Warning" },
+    info:    { icon: "bi-info-circle-fill",   label: "Info"   },
+  };
 
-  const alertId = `alert-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const alertEl = document.createElement("div");
-  alertEl.className = `alert alert-${type} alert-dismissible fade show`;
-  alertEl.id = alertId;
-  alertEl.role = "alert";
+  function getStack() {
+    let el = document.getElementById("toastStack");
+    if (!el) {
+      el = document.createElement("div");
+      el.id        = "toastStack";
+      el.className = "toast-stack";
+      el.setAttribute("aria-live", "polite");
+      el.setAttribute("aria-atomic", "false");
+      document.body.appendChild(el);
+    }
+    return el;
+  }
 
-  alertEl.innerHTML = `
-    <div class="d-flex align-items-start justify-content-between gap-3">
-      <div>${escapeHtml(message)}</div>
-      <button type="button" class="btn-close ${type === "success" ? "" : "btn-close-white"}" aria-label="Close"></button>
-    </div>
-  `;
+  function removeToast(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    clearTimeout(el._autoTimer);
+    el.classList.remove("toast-in");
+    el.classList.add("toast-out");
+    setTimeout(() => el.remove(), 300);
+  }
 
-  alertEl.querySelector(".btn-close")?.addEventListener("click", () => removeAlert(alertId));
-  wrap.appendChild(alertEl);
+  window.showAlert = function (message, type = "danger", duration = DURATION) {
+    const stack = getStack();
+    const existing = stack.querySelectorAll(".toast-item");
+    if (existing.length >= MAX) removeToast(existing[existing.length - 1].id);
 
-  const timer = setTimeout(() => removeAlert(alertId), duration);
-  state.alertTimers.set(alertId, timer);
-}
+    const cfg = TYPES[type] || TYPES.info;
+    const id  = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const el  = document.createElement("div");
+    el.id        = id;
+    el.className = `toast-item toast-${type}`;
+    el.setAttribute("role", "alert");
+    el.innerHTML = `
+      <div class="toast-icon"><i class="bi ${cfg.icon}"></i></div>
+      <div class="toast-body">
+        <div class="toast-title">${cfg.label}</div>
+        <div class="toast-msg">${escapeHtml(message)}</div>
+      </div>
+      <button class="toast-close" aria-label="Dismiss"><i class="bi bi-x"></i></button>
+      <div class="toast-progress" style="animation-duration:${duration}ms"></div>
+    `;
 
-function removeAlert(alertId) {
-  const el = document.getElementById(alertId);
-  if (!el) return;
-  const timer = state.alertTimers.get(alertId);
-  if (timer) { clearTimeout(timer); state.alertTimers.delete(alertId); }
-  el.classList.remove("show");
-  setTimeout(() => el.remove(), 200);
-}
+    el.querySelector(".toast-close").addEventListener("click", () => removeToast(id));
+    el.addEventListener("mouseenter", () => {
+      clearTimeout(el._autoTimer);
+      el.querySelector(".toast-progress").style.animationPlayState = "paused";
+    });
+    el.addEventListener("mouseleave", () => {
+      el.querySelector(".toast-progress").style.animationPlayState = "running";
+      el._autoTimer = setTimeout(() => removeToast(id), 2000);
+    });
 
-function hideAlerts() {
-  const wrap = $("globalAlertWrap");
-  if (wrap) wrap.innerHTML = "";
-  state.alertTimers.forEach((timer) => clearTimeout(timer));
-  state.alertTimers.clear();
-}
+    stack.prepend(el);
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("toast-in")));
+    el._autoTimer = setTimeout(() => removeToast(id), duration);
+  };
+
+  window.removeAlert = function (id) { removeToast(id); };
+
+  // hideAlerts() is called on logout — clears all toasts at once
+  window.hideAlerts = function () {
+    const stack = document.getElementById("toastStack");
+    if (!stack) return;
+    stack.querySelectorAll(".toast-item").forEach(el => {
+      clearTimeout(el._autoTimer);
+      el.remove();
+    });
+  };
+})();
 
 // ─────────────────────────────────────────
 // SESSION
