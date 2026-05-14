@@ -2137,7 +2137,7 @@ function buildGallerySlideEl(slide, isActive) {
     el.innerHTML = `
       <div class="gal2-hero-content">
         <div class="gal2-series-name">${escapeHtml(series.title)}</div>
-        <div class="gal2-series-sub">${seasonRange} | Episodes ${totalEps}</div>
+        <div class="gal2-series-sub">${seasonRange} 󠁯•󠁏 ${totalEps} Episodes</div>
       </div>`;
   } else {
     const { seasonLabel, ep, numEps, data } = slide;
