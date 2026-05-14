@@ -1461,6 +1461,9 @@ textarea.ep-input { resize: vertical; min-height: 60px; }
   color: rgba(255,255,255,0.55);
   margin-bottom: 10px;
 }
+.gal2-ep-remarks::first-letter {
+  text-transform: uppercase;
+}
 .gal2-ep-remarks {
   font-size: 0.84rem;
   line-height: 1.65;
