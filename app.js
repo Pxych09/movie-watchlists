@@ -562,7 +562,7 @@ async function handleLogout() {
   if ($("todoRouletteResult"))     $("todoRouletteResult").classList.add("d-none");
   if ($("todoRouletteResultText")) $("todoRouletteResultText").textContent = "";
 
-  $("notifDropdown")?.classList.add("d-none");
+  $("notifDropdown")?.classList.remove("open");
   if ($("notifList")) $("notifList").innerHTML = `<div class="p-3 text-secondary-light small">No notifications yet.</div>`;
   $("notifBadge")?.classList.add("d-none");
 
@@ -1536,11 +1536,17 @@ function bindDashboardMonthToggles() {
 function toggleNotifications() {
   state.notifOpen = !state.notifOpen;
   const dropdown = $("notifDropdown");
-  dropdown?.classList.toggle("open", state.notifOpen);
-  if (state.notifOpen) markNotificationsRead();
+  if (!dropdown) return;
+  if (state.notifOpen) {
+    dropdown.classList.add("open");
+    markNotificationsRead();
+  } else {
+    dropdown.classList.remove("open");
+  }
 }
 
 function closeNotifications() {
+  if (!state.notifOpen) return;
   state.notifOpen = false;
   $("notifDropdown")?.classList.remove("open");
 }
