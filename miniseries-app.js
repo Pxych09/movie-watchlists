@@ -2144,13 +2144,15 @@ function buildGallerySlideEl(slide, isActive) {
     const remarks     = (data?.remarks    || "").trim();
     const rating      = data?.rating      ? Number(data.rating) : 0;
     const dateWatched = data?.dateWatched || "";
+    const saveAt = data?.savedAt || "";
     const duration    = data?.duration    || "";
     const episodeTitle    = data?.episodeTitle    || "";
  
     const pills = [];
-    if (rating)      pills.push(`<span class="gal2-pill gal2-pill-amber"><i class="bi bi-star-fill"></i> ${rating}/5</span>`);
-    if (dateWatched) pills.push(`<span class="gal2-pill gal2-pill-teal"><i class="bi bi-calendar3"></i> ${formatDate(dateWatched)}</span>`);
-    if (duration)    pills.push(`<span class="gal2-pill"><i class="bi bi-clock"></i> ${escapeHtml(duration)}</span>`);
+    if (rating)      pills.push(`<span class="gal2-pill gal2-pill-amber" hidden="true" aria-hidden="true"><i class="bi bi-star-fill"></i> ${rating}/5</span>`);
+    if (dateWatched) pills.push(`<span class="gal2-pill gal2-pill-amber">Watched: ${formatDate(dateWatched)}</span>`);
+    if (dateWatched) pills.push(`<span class="gal2-pill gal2-pill-teal">Written: ${formatDate(saveAt)}</span>`);
+    if (duration)    pills.push(`<span class="gal2-pill" hidden="true" aria-hidden="true"><i class="bi bi-clock"></i> ${escapeHtml(duration)}</span>`);
     if (!data)       pills.push(`<span class="gal2-pill gal2-pill-muted">Not yet watched</span>`);
  
     el.innerHTML = `
