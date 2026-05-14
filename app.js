@@ -1860,6 +1860,14 @@ function startEdit(post) {
   $("submitBtn").innerHTML   = `<i class="bi bi-save me-2"></i>Save Changes`;
   $("cancelEditBtn").classList.remove("d-none");
 
+    // Force-open the tools sidebar if it's hidden
+  const content = $("sidebarContent");
+  const btn     = $("toggleSidebarBtn");
+  if (content && content.classList.contains("d-none")) {  // ← add
+    content.classList.remove("d-none");                   // ← add
+    if (btn) btn.textContent = "Hide Tools";              // ← add
+  }
+
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
