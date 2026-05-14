@@ -1167,7 +1167,7 @@ function buildEpSummary(series) {
 // ─────────────────────────────────────────
 // BUILD SEASONS HTML
 // ─────────────────────────────────────────
-const SEASONS_VISIBLE_DEFAULT = 5;
+const SEASONS_VISIBLE_DEFAULT = 3;
 
 function buildSeasonsHTML(series) {
   const { seriesId, numSeasons } = series;
@@ -1299,7 +1299,7 @@ function ensureEpisodeInputsWired(seasonItem, series) {
   const season      = parseInt(seasonItem.dataset.season, 10);
   const numEpisodes = parseInt(seasonItem.dataset.numEps, 10) || getEpsForSeason(series, season);
 
-  const PAGE_SIZE = 6;
+  const PAGE_SIZE = 5;
   let currentPage = 1;
   const totalPages = Math.ceil(numEpisodes / PAGE_SIZE);
 
