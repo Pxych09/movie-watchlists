@@ -313,35 +313,90 @@ function toggleBtn(btn, disabled) {
   btn.setAttribute("aria-disabled", String(disabled));
 }
 
-// ─────────────────────────────────────────
-// ALERTS
-// ─────────────────────────────────────────
-function showAlert(message, type = "danger", duration = 5000) {
-  const wrap = $("globalAlertWrap");
-  if (!wrap) return;
-  const id  = `alert-${Date.now()}`;
-  const el  = document.createElement("div");
-  el.id        = id;
-  el.className = `alert alert-${type} alert-dismissible fade show`;
-  el.role      = "alert";
-  el.innerHTML = `<div class="d-flex align-items-start justify-content-between gap-3">
-    <div>${escapeHtml(message)}</div>
-    <button type="button" class="btn-close ${type === "success" ? "" : "btn-close-white"}" aria-label="Close"></button>
-  </div>`;
-  el.querySelector(".btn-close")?.addEventListener("click", () => removeAlert(id));
-  wrap.appendChild(el);
-  const timer = setTimeout(() => removeAlert(id), duration);
-  state.alertTimers.set(id, timer);
-}
+// ── TOAST SYSTEM ──────────────────────────────────────────────────────────────
+(function () {
+  const DURATION = 6000;
+  const MAX      = 5;
 
-function removeAlert(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  clearTimeout(state.alertTimers.get(id));
-  state.alertTimers.delete(id);
-  el.classList.remove("show");
-  setTimeout(() => el.remove(), 200);
-}
+  const TYPES = {
+    success: { icon: "bi-check-circle-fill", label: "Success"  },
+    danger:  { icon: "bi-x-circle-fill",     label: "Error"    },
+    warning: { icon: "bi-exclamation-circle-fill", label: "Warning" },
+    info:    { icon: "bi-info-circle-fill",   label: "Info"    },
+  };
+
+  // Inject stack container once
+  function getStack() {
+    let el = document.getElementById("toastStack");
+    if (!el) {
+      el = document.createElement("div");
+      el.id        = "toastStack";
+      el.className = "toast-stack";
+      el.setAttribute("aria-live", "polite");
+      el.setAttribute("aria-atomic", "false");
+      document.body.appendChild(el);
+    }
+    return el;
+  }
+
+  function removeToast(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    clearTimeout(el._autoTimer);
+    el.classList.remove("toast-in");
+    el.classList.add("toast-out");
+    setTimeout(() => el.remove(), 300);
+  }
+
+  window.showAlert = function (message, type = "danger", duration = DURATION) {
+    const stack = getStack();
+
+    // Cap stack at MAX — remove oldest (last child, since column-reverse)
+    const existing = stack.querySelectorAll(".toast-item");
+    if (existing.length >= MAX) removeToast(existing[existing.length - 1].id);
+
+    const cfg  = TYPES[type] || TYPES.info;
+    const id   = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+
+    const el   = document.createElement("div");
+    el.id        = id;
+    el.className = `toast-item toast-${type}`;
+    el.setAttribute("role", "alert");
+    el.innerHTML = `
+      <div class="toast-icon"><i class="bi ${cfg.icon}"></i></div>
+      <div class="toast-body">
+        <div class="toast-title">${cfg.label}</div>
+        <div class="toast-msg">${escapeHtml(message)}</div>
+      </div>
+      <button class="toast-close" aria-label="Dismiss"><i class="bi bi-x"></i></button>
+      <div class="toast-progress" style="animation-duration:${duration}ms"></div>
+    `;
+
+    el.querySelector(".toast-close").addEventListener("click", () => removeToast(id));
+
+    // Pause progress on hover
+    el.addEventListener("mouseenter", () => {
+      clearTimeout(el._autoTimer);
+      el.querySelector(".toast-progress").style.animationPlayState = "paused";
+    });
+    el.addEventListener("mouseleave", () => {
+      el.querySelector(".toast-progress").style.animationPlayState = "running";
+      // Restart auto-dismiss from remaining time isn't trivial, so just give a fresh 2s grace
+      el._autoTimer = setTimeout(() => removeToast(id), 2000);
+    });
+
+    stack.prepend(el);
+
+    // Trigger enter animation on next frame
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => el.classList.add("toast-in"));
+    });
+
+    el._autoTimer = setTimeout(() => removeToast(id), duration);
+  };
+
+  window.removeAlert = function (id) { removeToast(id); };
+})();
 
 // ─────────────────────────────────────────
 // SECTIONS
