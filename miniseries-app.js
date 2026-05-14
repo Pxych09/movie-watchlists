@@ -2029,7 +2029,18 @@ function renderGallery() {
   if (!section) return;
   const items = [...state.series];
   if (!items.length) { section.classList.add("d-none"); return; }
-  section.classList.remove("d-none");
+
+  // Respect the user's saved visibility preference
+  const savedVisible = localStorage.getItem(GALLERY_STORAGE_KEY);
+  const shouldShow   = savedVisible === null ? true : savedVisible === "true";
+  section.classList.toggle("d-none", !shouldShow);
+
+  // Keep the toggle switch in sync
+  const toggle = $("galleryToggle");
+  if (toggle) toggle.setAttribute("aria-checked", String(shouldShow));
+
+  if (!shouldShow) return; // no need to build slides if hidden
+
   if (galState2.seriesIdx >= items.length) galState2.seriesIdx = 0;
   buildGalleryNav(items);
   buildGalleryStage(items[galState2.seriesIdx]);
