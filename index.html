@@ -98,6 +98,9 @@
           <button id="logoutBtn" class="btn btn-outline-light custom-outline-btn" type="button">
             <i class="bi bi-box-arrow-right"></i>
           </button>
+          <button id="guidelinesNavBtn" class="btn btn-outline-light custom-outline-btn" type="button" title="Guidelines">
+            <i class="bi bi-journal-text me-1"></i><span class="d-none d-sm-inline"> Guidelines</span>
+          </button>
         </div>
 
         <!-- Mobile hamburger + dropdown -->
@@ -137,6 +140,22 @@
                 role="switch"
                 aria-checked="true"
                 aria-label="Toggle Dashboard panel"
+              >
+                <span class="ms-panel-toggle-thumb"></span>
+              </button>
+            </div>
+            <div class="app-nav-dropdown-item ms-nav-dropdown-toggle-row" role="menuitem">
+              <div style="display:flex;align-items:center;gap:0.6rem;flex:1;">
+                <i class="bi bi-journal-text"></i>
+                <span style="font-size:0.82rem;font-weight:500;">Guidelines</span>
+              </div>
+              <button
+                type="button"
+                id="guidelinesToggle"
+                class="ms-panel-toggle"
+                role="switch"
+                aria-checked="true"
+                aria-label="Toggle Guidelines panel"
               >
                 <span class="ms-panel-toggle-thumb"></span>
               </button>
@@ -342,6 +361,152 @@
           </div>
 
           <div class="col-lg-8">
+
+            <!-- ─── GUIDELINES ─── -->
+            <div id="guidelinesCard" class="glass-card p-4 mb-4 border-double-primary">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <span class="fw-bold"><i class="bi bi-journal-text me-2"></i>Guidelines</span>
+                <button id="toggleGuidelinesBtn" class="btn btn-sm btn-outline-light custom-outline-btn" type="button">
+                  Hide Guidelines
+                </button>
+              </div>
+
+              <div id="guidelinesContent" class="guidelines-content mt-4">
+
+                <!-- Welcome -->
+                <div class="guide-section mb-4">
+                  <div class="guide-section-header">
+                    <i class="bi bi-stars"></i>
+                    <span>Welcome to Our Movie Watchlists</span>
+                  </div>
+                  <p class="guide-text">
+                    A shared space for everyone to log, rate, and discuss movies they've watched.
+                    Post your latest watch, leave comments on others' picks, and track your watchlist all in one place.
+                  </p>
+                </div>
+
+                <div class="guide-divider"></div>
+
+                <!-- Getting Started -->
+                <div class="guide-section mb-4">
+                  <div class="guide-section-header">
+                    <i class="bi bi-rocket-takeoff"></i>
+                    <span>Getting Started</span>
+                  </div>
+                  <div class="guide-steps">
+                    <div class="guide-step">
+                      <div class="guide-step-num">1</div>
+                      <div>
+                        <div class="guide-step-title">Log In</div>
+                        <div class="guide-step-desc">Use your username and password to access the app. Your session is saved so you won't need to log in every time.</div>
+                      </div>
+                    </div>
+                    <div class="guide-step">
+                      <div class="guide-step-num">2</div>
+                      <div>
+                        <div class="guide-step-title">Open Tools</div>
+                        <div class="guide-step-desc">Click <strong>Show Tools</strong> (or toggle it in the menu) to reveal the post form, watchlists, and sub-genre manager on the left sidebar.</div>
+                      </div>
+                    </div>
+                    <div class="guide-step">
+                      <div class="guide-step-num">3</div>
+                      <div>
+                        <div class="guide-step-title">Create Your First Post</div>
+                        <div class="guide-step-desc">Fill in the movie name, genre, rating, duration, and date watched. Add a caption to share your thoughts, then hit <strong>Post Movie</strong>.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="guide-divider"></div>
+
+                <!-- Features -->
+                <div class="guide-section mb-4">
+                  <div class="guide-section-header">
+                    <i class="bi bi-grid-1x2"></i>
+                    <span>Features at a Glance</span>
+                  </div>
+                  <div class="guide-features-grid">
+                    <div class="guide-feature-card">
+                      <i class="bi bi-film guide-feature-icon"></i>
+                      <div class="guide-feature-title">Movie Feed</div>
+                      <div class="guide-feature-desc">Browse all posts from every user. Search by movie title, genre, sub-genre, or username using the search bar.</div>
+                    </div>
+                    <div class="guide-feature-card">
+                      <i class="bi bi-bar-chart-line guide-feature-icon"></i>
+                      <div class="guide-feature-title">Dashboard</div>
+                      <div class="guide-feature-desc">At-a-glance stats: total posts, hours watched, average rating, genre breakdown, monthly trends, and streaks.</div>
+                    </div>
+                    <div class="guide-feature-card">
+                      <i class="bi bi-bookmark-check guide-feature-icon"></i>
+                      <div class="guide-feature-title">To-Do Watchlists</div>
+                      <div class="guide-feature-desc">Save movies you plan to watch. Draft items, save them, and use <strong>Spin the Wheel</strong> to randomly pick your next movie.</div>
+                    </div>
+                    <div class="guide-feature-card">
+                      <i class="bi bi-tags guide-feature-icon"></i>
+                      <div class="guide-feature-title">Sub-Genres</div>
+                      <div class="guide-feature-desc">Add custom sub-genre tags (e.g. "Slasher", "Space Opera") that can be attached to any post for richer filtering.</div>
+                    </div>
+                    <div class="guide-feature-card">
+                      <i class="bi bi-chat-square-dots guide-feature-icon"></i>
+                      <div class="guide-feature-title">Comments</div>
+                      <div class="guide-feature-desc">React to anyone's post with a comment. You can delete your own comments anytime.</div>
+                    </div>
+                    <div class="guide-feature-card">
+                      <i class="bi bi-bell guide-feature-icon"></i>
+                      <div class="guide-feature-title">Notifications</div>
+                      <div class="guide-feature-desc">Get notified when someone comments on your post. Unread notifications are highlighted — click to jump to the post.</div>
+                    </div>
+                    <div class="guide-feature-card">
+                      <i class="bi bi-tv guide-feature-icon"></i>
+                      <div class="guide-feature-title">Mini Series</div>
+                      <div class="guide-feature-desc">A separate section for logging mini-series and TV shows, accessible via the nav bar.</div>
+                    </div>
+                    <div class="guide-feature-card">
+                      <i class="bi bi-pencil-square guide-feature-icon"></i>
+                      <div class="guide-feature-title">Edit &amp; Delete</div>
+                      <div class="guide-feature-desc">You can edit or delete your own posts at any time using the icons at the top-right of each post card.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="guide-divider"></div>
+
+                <!-- Tips -->
+                <div class="guide-section mb-4">
+                  <div class="guide-section-header">
+                    <i class="bi bi-lightbulb"></i>
+                    <span>Tips &amp; Tricks</span>
+                  </div>
+                  <ul class="guide-tips-list">
+                    <li><i class="bi bi-check2-circle"></i> <span>Link a To-Do item to a new post by checking it in the <em>Saved To-Do Watchlists</em> panel before posting — it auto-fills the movie name and removes it from the list after posting.</span></li>
+                    <li><i class="bi bi-check2-circle"></i> <span>Use the <strong>Spin the Wheel</strong> roulette to pick a random movie from your watchlist when you can't decide what to watch.</span></li>
+                    <li><i class="bi bi-check2-circle"></i> <span>The Dashboard panels and Tools sidebar visibility are remembered between sessions — set them up once and they stay.</span></li>
+                    <li><i class="bi bi-check2-circle"></i> <span>Switch between <strong>Count</strong> and <strong>Avg Rating</strong> tabs in the monthly chart to see different views of your watch history.</span></li>
+                    <li><i class="bi bi-check2-circle"></i> <span>Search the feed to quickly find posts by a specific user, genre, or sub-genre tag.</span></li>
+                    <li><i class="bi bi-check2-circle"></i> <span>Duration format examples: <code>2h 15m</code>, <code>1h</code>, <code>45m</code>. These are used to calculate total hours watched in the Dashboard.</span></li>
+                  </ul>
+                </div>
+
+                <div class="guide-divider"></div>
+
+                <!-- Ratings scale -->
+                <div class="guide-section mb-2">
+                  <div class="guide-section-header">
+                    <i class="bi bi-star-half"></i>
+                    <span>Rating Scale</span>
+                  </div>
+                  <div class="guide-ratings">
+                    <div class="guide-rating-row"><span class="guide-stars">⭐</span><span class="guide-rating-label">1 — Not for me</span></div>
+                    <div class="guide-rating-row"><span class="guide-stars">⭐⭐</span><span class="guide-rating-label">2 — Below average</span></div>
+                    <div class="guide-rating-row"><span class="guide-stars">⭐⭐⭐</span><span class="guide-rating-label">3 — It was okay</span></div>
+                    <div class="guide-rating-row"><span class="guide-stars">⭐⭐⭐⭐</span><span class="guide-rating-label">4 — Really enjoyed it</span></div>
+                    <div class="guide-rating-row"><span class="guide-stars">⭐⭐⭐⭐⭐</span><span class="guide-rating-label">5 — Absolute must-watch</span></div>
+                  </div>
+                </div>
+
+              </div><!-- /guidelinesContent -->
+            </div><!-- /guidelinesCard -->
 
             <!-- ─── DASHBOARD ─── -->
             <div id="dashboardCard" class="glass-card p-4 mb-4 border-double-primary">
