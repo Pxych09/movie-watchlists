@@ -42,6 +42,8 @@ function bindEvents() {
   // Step 1: wire the "Set Episodes" button
   $("buildSeasonsBtn")?.addEventListener("click", handleBuildSeasons);
   bindImageUpload();
+  bindCreateSeriesToggle();
+  bindGalleryToggle();
 
   // Scroll to top
   const scrollBtn = $("scrollTopBtn");
@@ -196,6 +198,67 @@ function bindImageUpload() {
     preview.classList.add("d-none");
     label.style.display = "";
   });
+}
+
+// ─────────────────────────────────────────
+// CREATE SERIES PANEL TOGGLE
+// ─────────────────────────────────────────
+const PANEL_STORAGE_KEY = "createSeriesPanelVisible";
+
+function bindCreateSeriesToggle() {
+  const toggle     = $("createSeriesToggle");
+  const panelCol   = $("createSeriesPanelCol");
+  if (!toggle || !panelCol) return;
+
+  // Restore saved preference (default: visible)
+  const saved = localStorage.getItem(PANEL_STORAGE_KEY);
+  const isVisible = saved === null ? true : saved === "true";
+  applyPanelState(isVisible, false);
+
+  toggle.addEventListener("click", (e) => {
+    e.stopPropagation(); // don't close the dropdown
+    const current = toggle.getAttribute("aria-checked") === "true";
+    applyPanelState(!current, true);
+  });
+
+  function applyPanelState(visible, save) {
+    toggle.setAttribute("aria-checked", String(visible));
+    if (visible) {
+      panelCol.classList.remove("panel-hidden");
+    } else {
+      panelCol.classList.add("panel-hidden");
+    }
+    if (save) {
+      localStorage.setItem(PANEL_STORAGE_KEY, String(visible));
+    }
+  }
+}
+
+// ─────────────────────────────────────────
+// GALLERY SECTION TOGGLE
+// ─────────────────────────────────────────
+const GALLERY_STORAGE_KEY = "gallerySectionVisible";
+
+function bindGalleryToggle() {
+  const toggle  = $("galleryToggle");
+  const section = $("gallerySection");
+  if (!toggle || !section) return;
+
+  const saved     = localStorage.getItem(GALLERY_STORAGE_KEY);
+  const isVisible = saved === null ? true : saved === "true";
+  applyGalleryState(isVisible, false);
+
+  toggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const current = toggle.getAttribute("aria-checked") === "true";
+    applyGalleryState(!current, true);
+  });
+
+  function applyGalleryState(visible, save) {
+    toggle.setAttribute("aria-checked", String(visible));
+    section.classList.toggle("d-none", !visible);
+    if (save) localStorage.setItem(GALLERY_STORAGE_KEY, String(visible));
+  }
 }
 
 /**
@@ -1251,7 +1314,7 @@ function buildEpSummary(series) {
 // ─────────────────────────────────────────
 // BUILD SEASONS HTML
 // ─────────────────────────────────────────
-const SEASONS_VISIBLE_DEFAULT = 3;
+const SEASONS_VISIBLE_DEFAULT = 1;
 
 function buildSeasonsHTML(series) {
   const { seriesId, numSeasons } = series;
@@ -1383,7 +1446,7 @@ function ensureEpisodeInputsWired(seasonItem, series) {
   const season      = parseInt(seasonItem.dataset.season, 10);
   const numEpisodes = parseInt(seasonItem.dataset.numEps, 10) || getEpsForSeason(series, season);
 
-  const PAGE_SIZE = 5;
+  const PAGE_SIZE = 2;
   let currentPage = 1;
   const totalPages = Math.ceil(numEpisodes / PAGE_SIZE);
 
