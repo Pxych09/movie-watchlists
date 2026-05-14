@@ -1775,3 +1775,399 @@ textarea.custom-input {
 .ms-panel-toggle[aria-checked="true"] .ms-panel-toggle-thumb {
   transform: translateX(18px);
 }
+/* ═══════════════════════════════════════════════════════════════════════════
+   POST CARD  (pc-*)
+   Add this block anywhere in styles.css — it replaces the old .post-card rules.
+   The old selectors (.avatar-img, .avatar-fallback, .post-meta, .meta-pill,
+   .post-caption, .comment-item, .comment-avatar, .comment-btn) can stay for
+   backward-compat or be removed once the new card is confirmed.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Avatar colour palette (cycles by first letter) ── */
+.pc-avatar--init { --av-bg: #3b1f6e; }
+.pc-avatar--init[data-initial="A"],
+.pc-avatar--init[data-initial="N"] { --av-bg: #1a4d6e; }
+.pc-avatar--init[data-initial="B"],
+.pc-avatar--init[data-initial="O"] { --av-bg: #3d1f52; }
+.pc-avatar--init[data-initial="C"],
+.pc-avatar--init[data-initial="P"] { --av-bg: #1f4d3a; }
+.pc-avatar--init[data-initial="D"],
+.pc-avatar--init[data-initial="Q"] { --av-bg: #4d2b1f; }
+.pc-avatar--init[data-initial="E"],
+.pc-avatar--init[data-initial="R"] { --av-bg: #1f3a4d; }
+.pc-avatar--init[data-initial="F"],
+.pc-avatar--init[data-initial="S"] { --av-bg: #4d1f3a; }
+.pc-avatar--init[data-initial="G"],
+.pc-avatar--init[data-initial="T"] { --av-bg: #2b4d1f; }
+.pc-avatar--init[data-initial="H"],
+.pc-avatar--init[data-initial="U"] { --av-bg: #4d3a1f; }
+.pc-avatar--init[data-initial="I"],
+.pc-avatar--init[data-initial="V"] { --av-bg: #1f2b4d; }
+.pc-avatar--init[data-initial="J"],
+.pc-avatar--init[data-initial="W"] { --av-bg: #4d1f1f; }
+.pc-avatar--init[data-initial="K"],
+.pc-avatar--init[data-initial="X"] { --av-bg: #1f4d4d; }
+.pc-avatar--init[data-initial="L"],
+.pc-avatar--init[data-initial="Y"] { --av-bg: #3a3a1f; }
+.pc-avatar--init[data-initial="M"],
+.pc-avatar--init[data-initial="Z"] { --av-bg: #1f3a3a; }
+
+/* ── Card shell ── */
+.post-card {
+  padding: 0 !important;          /* override glass-card's p-4 from HTML if any */
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+}
+
+/* ── Header ── */
+.pc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.1rem 1.25rem 0.85rem;
+}
+
+.pc-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.pc-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  object-fit: cover;
+}
+
+.pc-avatar--init {
+  background: var(--av-bg, #3b1f6e);
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.01em;
+}
+
+.pc-header-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.pc-author {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pc-date {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.pc-edited {
+  margin-left: 0.45rem;
+  font-style: italic;
+  opacity: 0.65;
+  font-size: 0.68rem;
+  color: wheat;
+}
+
+/* ── Edit / Delete buttons ── */
+.pc-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.pc-action-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.55);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+}
+
+.pc-action-btn--edit:hover {
+  background: rgba(255,193,7,0.18);
+  border-color: rgba(255,193,7,0.35);
+  color: #ffe08a;
+}
+
+.pc-action-btn--del:hover {
+  background: rgba(220,53,69,0.18);
+  border-color: rgba(220,53,69,0.35);
+  color: #ffb3bd;
+}
+
+/* ── Body ── */
+.pc-body {
+  padding: 0 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.pc-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.25;
+  margin: 0;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+/* ── Stars + metadata row ── */
+.pc-stars-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.pc-star {
+  font-size: 1rem;
+  line-height: 1;
+  color: rgba(255,255,255,0.2);
+  letter-spacing: 0.05em;
+}
+
+.pc-star--on {
+  color: #f5c518;  /* IMDb gold */
+}
+
+.pc-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.pc-meta-chip i { font-size: 0.78rem; }
+
+/* ── Genre / sub-genre pills ── */
+.pc-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.pc-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.32rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.07);
+  color: var(--text);
+}
+
+.pc-pill--genre {
+  background: rgba(139,92,246,0.18);
+  border-color: rgba(139,92,246,0.4);
+  color: #d8b4fe;
+}
+
+.pc-pill--sub {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.1);
+  color: var(--muted);
+}
+
+/* ── Caption blockquote ── */
+.pc-caption {
+  margin: 0.15rem 0 0;
+  padding: 0 0 0 1.1rem;
+  border-left: 2.5px solid rgba(255,255,255,0.18);
+  font-size: 0.88rem;
+  font-style: italic;
+  font-family: "Lobster Two", sans-serif;
+  font-weight: 500;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+/* ── Comments section ── */
+.pc-comments {
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding: 0.85rem 1.25rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.pc-comments-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.pc-comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.pc-no-comments {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.3);
+  margin: 0;
+}
+
+/* ── Single comment ── */
+.pc-comment-item {
+  padding: 0.7rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.pc-comment-item:last-child { border-bottom: none; }
+
+.pc-comment-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.pc-comment-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.1);
+  object-fit: cover;
+}
+
+.pc-comment-avatar--init {
+  background: var(--av-bg, #3b1f6e);
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.pc-comment-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.pc-comment-author {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pc-comment-text {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.75);
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.pc-comment-time {
+  font-size: 0.67rem;
+  color: rgba(255,255,255,0.3);
+  margin-top: 0.1rem;
+}
+
+.pc-comment-del {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.25);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.15rem;
+  flex-shrink: 0;
+  align-self: center;
+  transition: color 0.15s;
+  line-height: 1;
+}
+
+.pc-comment-del:hover { color: #ffb3bd; }
+
+/* ── Comment input row ── */
+.pc-comment-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.1rem;
+}
+
+.pc-comment-input {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  color: var(--text);
+  padding: 0.6rem 0.9rem;
+  font-size: 0.8rem;
+  font-family: 'Poppins', sans-serif;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s;
+}
+
+.pc-comment-input::placeholder { color: rgba(255,255,255,0.3); }
+
+.pc-comment-input:focus {
+  border-color: rgba(139,92,246,0.45);
+  background: rgba(255,255,255,0.07);
+}
+
+.pc-comment-submit {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(139,92,246,0.2);
+  color: #d8b4fe;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  align-self: center;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.pc-comment-submit:hover {
+  background: rgba(139,92,246,0.38);
+  border-color: rgba(139,92,246,0.5);
+  color: #fff;
+}
+
+/* ── Mobile tweaks ── */
+@media (max-width: 480px) {
+  .pc-title { font-size: 1.05rem; }
+  .pc-header { padding: 0.9rem 1rem 0.7rem; }
+  .pc-body   { padding: 0 1rem 0.85rem; }
+  .pc-comments { padding: 0.75rem 1rem 0.9rem; }
+}
