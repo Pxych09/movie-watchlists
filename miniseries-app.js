@@ -1568,7 +1568,8 @@ async function handleSaveSeason(seriesId, season, numEpisodes, seasonItem) {
     });
 
     saveBar?.classList.remove("visible");
-    updateSeriesCard(seriesId);
+    const seriesIdx = state.series.findIndex(s => s.seriesId === seriesId);
+    rerenderCard(seriesIdx, seriesId);
     updateStats();
   } catch (err) {
     showAlert(err.message, "danger");
