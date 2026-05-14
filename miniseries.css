@@ -2032,3 +2032,49 @@ textarea.ep-input { resize: vertical; min-height: 60px; }
   .ms-confirm-modal { max-width: 100%; }
   .ms-confirm-actions { flex-direction: column-reverse; }
 }
+/* ── CREATE SERIES PANEL TOGGLE ── */
+.ms-nav-dropdown-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  cursor: default;
+}
+
+.ms-panel-toggle {
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: background 0.22s ease;
+  padding: 0;
+}
+.ms-panel-toggle[aria-checked="true"] {
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+}
+.ms-panel-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+.ms-panel-toggle[aria-checked="true"] .ms-panel-toggle-thumb {
+  transform: translateX(18px);
+}
+
+/* Slide the panel in/out */
+#createSeriesPanelCol {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+#createSeriesPanelCol.panel-hidden {
+  display: none !important;
+}
