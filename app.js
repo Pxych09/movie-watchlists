@@ -51,6 +51,7 @@ const state = {
     userTotals: []
   },
   dashboardHidden: true,
+  dashboardScope: "all",   // "all" | "mine"
   guidelinesHidden: false,
   isEditing: false,
   alertTimers: new Map(),
@@ -98,6 +99,19 @@ function bindEvents() {
   bind("subGenreSearch", "input",   handleSubGenreSearch);
   bind("savedTodoSearch","input",   handleSavedTodoSearch);
   bind("spinTodoBtn",    "click",   handleSpinTodoRoulette);
+  
+    // Dashboard scope tabs
+  document.getElementById("dbScopeTabs")?.addEventListener("click", (e) => {
+    const btn = e.target.closest(".db-scope-tab");
+    if (!btn) return;
+    document.querySelectorAll(".db-scope-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.dashboardScope = btn.dataset.scope;
+    renderDashboard();
+  });
+
+  // Feed retry button
+  bind("feedRetryBtn", "click", () => refreshFeed());
 
   bind("feedSort", "change", handleFeedSort);
 
@@ -109,6 +123,9 @@ function bindEvents() {
     btn.classList.add("active");
     state.feedFilter = btn.dataset.filter;
     state.feedPage   = 0;
+    state.dashboardScope = "all";
+    document.querySelectorAll(".db-scope-tab").forEach((b, i) => b.classList.toggle("active", i === 0));
+    $("feedError")?.classList.add("d-none");
     applyFeedFilter();
   });
 
@@ -705,6 +722,9 @@ function setProfile(user) {
 async function refreshFeed() {
   if (!state.currentUser) return;
 
+  // Hide error card, show skeletons
+  $("feedError")?.classList.add("d-none");
+
   showFeedSkeleton(3);
   showDashboardSkeleton();
   showSidebarSkeleton("savedTodoList",      3, "todo");
@@ -725,6 +745,9 @@ async function refreshFeed() {
     state.subGenres     = Array.isArray(subGenres)     ? subGenres     : [];
     state.dashboard     = dashboard || { genres: [], topRated: [], watchedByMonth: [], userTotals: [] };
 
+    // Clear error card on success
+    $("feedError")?.classList.add("d-none");
+
     renderSavedTodos();
     renderDraftTodos();
     renderSubGenrePreview();
@@ -733,8 +756,46 @@ async function refreshFeed() {
     applyFeedFilter();
     renderNotifications();
   } catch (error) {
+    // Show error / retry card instead of leaving skeletons
+    showFeedError(error.message);
     showAlert(error.message, "danger");
     if (/Session expired/i.test(error.message)) await handleLogout();
+  }
+}
+
+// Silent refresh — no skeletons, no overlay. Used after optimistic actions succeed.
+async function silentRefresh() {
+  if (!state.currentUser) return;
+  try {
+    const [feed, dashboard] = await Promise.all([
+      api("getFeed",          getSessionToken()),
+      api("getDashboardData", getSessionToken()),
+    ]);
+    state.feed      = Array.isArray(feed) ? feed : [];
+    state.dashboard = dashboard || state.dashboard;
+    renderDashboard();
+    applyFeedFilter();
+  } catch (_) {
+    // silent — the optimistic update already showed the change
+  }
+}
+
+function showFeedError(message) {
+  // Clear skeletons
+  const feedList = $("feedList");
+  if (feedList) feedList.innerHTML = "";
+  $("emptyFeed")?.classList.add("d-none");
+  if ($("feedCountBadge")) $("feedCountBadge").textContent = "0 posts";
+
+  // Show error card
+  const card = $("feedError");
+  if (!card) return;
+  card.classList.remove("d-none");
+
+  // Update sub-text with the actual error (capped)
+  const sub = card.querySelector(".feed-error-sub");
+  if (sub && message) {
+    sub.textContent = message.length > 120 ? message.slice(0, 117) + "…" : message;
   }
 }
 
@@ -1180,49 +1241,107 @@ function computeSubGenreCounts(feed) {
 }
 
 // ─────────────────────────────────────────
-// DASHBOARD — RENDER
+// DASHBOARD — RENDER (scope-aware)
 // ─────────────────────────────────────────
 function renderDashboard() {
-  if (!$("genreStatsList")) return; // DOM not ready
+  if (!$("genreStatsList")) return;
 
-  const dashboard     = state.dashboard || {};
-  const genres        = Array.isArray(dashboard.genres)        ? dashboard.genres        : [];
-  const topRated      = Array.isArray(dashboard.topRated)      ? dashboard.topRated      : [];
+  const dashboard      = state.dashboard || {};
+  const allFeed        = Array.isArray(state.feed) ? state.feed : [];
+  const isMyScope      = state.dashboardScope === "mine";
+  const currentUser    = state.currentUser;
+
+  // Filter feed for "Mine" scope
+  const feed = isMyScope && currentUser
+    ? allFeed.filter(p => p.username === currentUser.username)
+    : allFeed;
+
+  // Filter server-side aggregates for "Mine" scope
+  const genres = Array.isArray(dashboard.genres) ? dashboard.genres : [];
+  const topRated = Array.isArray(dashboard.topRated) ? dashboard.topRated : [];
   const watchedByMonth = Array.isArray(dashboard.watchedByMonth) ? dashboard.watchedByMonth : [];
-  const userTotals    = Array.isArray(dashboard.userTotals)    ? dashboard.userTotals    : [];
-  const feed          = Array.isArray(state.feed)              ? state.feed              : [];
+  const userTotals = Array.isArray(dashboard.userTotals) ? dashboard.userTotals : [];
 
-  //console.log(feed)
-  console.log("feed length:", feed.length);
-  console.log("sample dateWatched values:", feed.slice(0, 5).map(p => p.dateWatched));
-  console.log("groupFeedByMonth result:", groupFeedByMonth(feed));
+  // For "Mine", re-derive genre counts and watched-by-month from the filtered feed
+  // (server data is for all users, so we recompute)
+  let displayGenres = genres;
+  let displayWatchedByMonth = watchedByMonth;
+  let displayTopRated = topRated;
+  let displayUserTotals = userTotals;
 
-  // ── Metric cards (computed client-side from feed) ──
+  if (isMyScope && currentUser) {
+    // Re-compute genres from filtered feed
+    const genreMap = {};
+    feed.forEach(p => {
+      if (p.genre) { genreMap[p.genre] = (genreMap[p.genre] || 0) + 1; }
+    });
+    displayGenres = Object.entries(genreMap)
+      .map(([genre, total]) => ({ genre, total }))
+      .sort((a, b) => b.total - a.total);
+
+    // Re-compute watchedByMonth from filtered feed
+    const monthMap = {};
+    feed.forEach(p => {
+      const iso = normalizeDateWatched(p.dateWatched);
+      const key = iso.slice(0, 7);
+      if (!/^\d{4}-\d{2}$/.test(key)) return;
+      if (!monthMap[key]) monthMap[key] = { month: key, total: 0, movies: [] };
+      monthMap[key].total++;
+      monthMap[key].movies.push({
+        postId: p.postId, username: p.username, name: p.name,
+        movieName: p.movieName, genre: p.genre, rating: p.rating,
+        dateWatched: p.dateWatched
+      });
+    });
+    displayWatchedByMonth = Object.keys(monthMap).sort()
+      .map(k => { monthMap[k].movies.sort((a,b) => a.movieName.localeCompare(b.movieName)); return monthMap[k]; });
+
+    // Re-compute topRated from filtered feed
+    const rMap = { 5:[], 4:[], 3:[], 2:[], 1:[] };
+    feed.forEach(p => { if (rMap[p.rating]) rMap[p.rating].push(p); });
+    displayTopRated = [5,4,3,2,1].map(stars => ({
+      stars,
+      total: rMap[stars].length,
+      movies: rMap[stars].slice().sort((a,b) => a.movieName.localeCompare(b.movieName))
+    }));
+
+    // User totals: just the current user
+    displayUserTotals = feed.length
+      ? [{ username: currentUser.username, name: currentUser.name || currentUser.username, totalPosts: feed.length }]
+      : [];
+  }
+
+  // ── Metric cards ──
   const totalPosts  = feed.length;
   const totalMins   = feed.reduce((s, p) => s + parseDurationToMinutes(p.duration), 0);
   const totalHrs    = Math.round(totalMins / 60);
   const avgRating   = totalPosts
     ? (feed.reduce((s, p) => s + Number(p.rating || 0), 0) / totalPosts).toFixed(1)
     : "—";
-  const activeUsers = new Set(feed.map((p) => p.username).filter(Boolean)).size;
+  const activeUsers = isMyScope ? 1 : new Set(feed.map(p => p.username).filter(Boolean)).size;
 
   if ($("dbMetricPosts"))     $("dbMetricPosts").textContent     = totalPosts;
   if ($("dbMetricHours"))     $("dbMetricHours").textContent     = totalHrs + "h";
   if ($("dbMetricAvgRating")) $("dbMetricAvgRating").textContent = avgRating !== "—" ? avgRating + " ★" : "—";
   if ($("dbMetricUsers"))     $("dbMetricUsers").textContent     = activeUsers;
 
-  // ── Genre bars (server data) ──
-  $("genreStatsList").innerHTML = renderGenreStats(genres);
+  // Update "Active Users" label when scoped
+  const usersLabel = document.querySelector("#dbMetricUsers + .db-metric-sub") ||
+    $("dbMetricUsers")?.closest(".db-metric-card")?.querySelector(".db-metric-sub");
+  if (usersLabel) usersLabel.textContent = isMyScope ? "just you" : "with posts";
 
-  // ── Rating donut chart ──
+  // ── Genre bars ──
+  $("genreStatsList").innerHTML = renderGenreStats(displayGenres);
+
+  // ── Rating donut ──
   renderRatingDonut(feed);
 
-  // ── Monthly bar/line chart ──
+  // ── Monthly chart ──
   renderMonthlyChart(feed);
 
-  // ── User totals (server data) ──
-  $("userTotalsList").innerHTML = userTotals.length
-    ? userTotals.map((item) => `
+  // ── User totals ──
+  $("userTotalsList").innerHTML = displayUserTotals.length
+    ? displayUserTotals.map(item => `
         <div class="dashboard-list-item">
           <div class="dashboard-item-title">${escapeHtml(item.name)}</div>
           <div class="dashboard-pill">${item.totalPosts} posts</div>
@@ -1230,19 +1349,19 @@ function renderDashboard() {
       `).join("")
     : `<div class="text-secondary-light small">No user post data yet.</div>`;
 
-  // ── Streaks (computed from feed) ──
+  // ── Streaks ──
   renderStreaks(feed);
 
-  // ── Top rated accordion (server data) ──
-  $("topRatedList").innerHTML = renderTopRatedByStars(topRated);
+  // ── Top rated ──
+  $("topRatedList").innerHTML = renderTopRatedByStars(displayTopRated);
 
-  // ── Rating trend line ──
+  // ── Rating trend ──
   renderRatingTrend(feed);
 
-  // ── Watched by month accordion (server data) ──
-  $("watchedStatsList").innerHTML = renderWatchedStatsByYear(watchedByMonth);
+  // ── Watched by month ──
+  $("watchedStatsList").innerHTML = renderWatchedStatsByYear(displayWatchedByMonth);
 
-  // ── Sub-genre cloud (computed from feed) ──
+  // ── Sub-genre cloud ──
   renderSubGenreCloud(feed);
 
   applyDashboardVisibility();
@@ -1361,6 +1480,13 @@ function renderRatingTrend(feed) {
   });
   const data = monthly.map(({ avg }) => avg);
 
+  // ★ FIX: derive y-axis min/max from actual data; fall back to 0–5 when empty
+  const hasData = data.length > 0;
+  const dataMin = hasData ? Math.min(...data) : 0;
+  const dataMax = hasData ? Math.max(...data) : 5;
+  const yMin    = hasData ? Math.max(0, Math.floor(dataMin) - 1) : 0;
+  const yMax    = hasData ? Math.min(5, Math.ceil(dataMax)  + 1) : 5;
+
   createChart("dbTrendChart", {
     type: "line",
     data: {
@@ -1372,7 +1498,7 @@ function renderRatingTrend(feed) {
         backgroundColor: "rgba(29,158,117,0.12)",
         borderWidth: 2,
         pointBackgroundColor: "#1D9E75",
-        pointRadius: 4,
+        pointRadius: hasData ? 4 : 0,
         fill: true,
         tension: 0.35,
       }],
@@ -1380,11 +1506,25 @@ function renderRatingTrend(feed) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        // ★ Show a friendly message when empty
+        ...(hasData ? {} : {
+          beforeDraw(chart) {
+            const { ctx, chartArea: { left, top, width, height } } = chart;
+            ctx.save();
+            ctx.fillStyle = "rgba(255,255,255,0.25)";
+            ctx.font = "13px Poppins, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("No rating data yet", left + width / 2, top + height / 2);
+            ctx.restore();
+          }
+        })
+      },
       scales: {
         y: {
-          min: 1,
-          max: 5,
+          min: yMin,
+          max: yMax,
           ticks: {
             stepSize: 1,
             color: "rgba(255,255,255,0.5)",
@@ -1807,6 +1947,7 @@ async function handleSavePost(event) {
 
     const wasEditing = state.isEditing;
     resetPostForm();
+    // Full refresh needed to get the real postId from the server
     await refreshFeed();
     if (!wasEditing) {
       setTimeout(() => {
@@ -1883,7 +2024,19 @@ function renderFeed(feed) { renderFeedPaginated(feed); }
 // Replace the existing renderPostCard() and renderCommentItem() functions
 // with these two. Everything else in app.js stays the same.
 // ─────────────────────────────────────────────────────────────────────────────
-
+/**
+ * Replace a single post card in the DOM with a freshly rendered version.
+ * Uses the current state.feed entry for that postId.
+ * Falls back to a full applyFeedFilter() if the card isn't found.
+ */
+function replacePostCard(postId) {
+  const existing = document.querySelector(`[data-post-id="${CSS.escape(postId)}"]`);
+  const postData = state.feed.find(p => p.postId === postId);
+  if (!existing) { applyFeedFilter(); return; }
+  if (!postData) { existing.remove(); return; }
+  const fresh = renderPostCard(postData);
+  existing.replaceWith(fresh);
+}
 function renderPostCard(post) {
   const card     = document.createElement("div");
   card.className = "glass-card post-card mb-4";
@@ -2003,31 +2156,78 @@ function renderPostCard(post) {
     const text      = commentInput.value.trim();
     const submitBtn = commentForm.querySelector("button[type='submit']");
     if (!text) return;
+
+    // ── Optimistic: build a temporary comment object ──
+    const tempId  = "temp-" + Date.now();
+    const tempComment = {
+      commentId:  tempId,
+      postId:     post.postId,
+      username:   state.currentUser.username,
+      name:       state.currentUser.name || state.currentUser.username,
+      avatar:     state.currentUser.avatar || "",
+      comment:    text,
+      createdAt:  new Date().toISOString(),
+    };
+
+    // Mutate state.feed in place
+    const postInState = state.feed.find(p => p.postId === post.postId);
+    if (postInState) postInState.comments = [...(postInState.comments || []), tempComment];
+
+    commentInput.value = "";
+    toggleButton(submitBtn, true);
+
+    // Re-render just this card
+    replacePostCard(post.postId);
+
     try {
-      toggleButton(submitBtn, true);
-      await withLoading(() => api("addComment", getSessionToken(), post.postId, text))();
-      commentInput.value = "";
+      await api("addComment", getSessionToken(), post.postId, text);
       showAlert("Comment posted successfully.", "success");
-      await refreshFeed();
+      // Background sync to get real commentId from server
+      silentRefresh();
     } catch (error) {
+      // Rollback
+      if (postInState) {
+        postInState.comments = (postInState.comments || []).filter(c => c.commentId !== tempId);
+      }
+      replacePostCard(post.postId);
       showAlert(error.message, "danger");
     } finally {
-      toggleButton(submitBtn, false);
+      // Re-find the submit button (card was replaced)
+      const newCard = document.querySelector(`[data-post-id="${CSS.escape(post.postId)}"]`);
+      const newBtn  = newCard?.querySelector(".pc-comment-form button[type='submit']");
+      if (newBtn) toggleButton(newBtn, false);
     }
   });
 
   card.querySelectorAll(".delete-comment-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const commentId = btn.dataset.commentId;
+
+      // ── Optimistic: remove from state.feed ──
+      const postInState = state.feed.find(p => p.postId === post.postId);
+      let removedComment = null;
+      let removedIndex   = -1;
+      if (postInState) {
+        removedIndex   = postInState.comments.findIndex(c => c.commentId === commentId);
+        if (removedIndex !== -1) {
+          removedComment = postInState.comments[removedIndex];
+          postInState.comments = postInState.comments.filter(c => c.commentId !== commentId);
+        }
+      }
+
+      replacePostCard(post.postId);
+
       try {
-        toggleButton(btn, true);
-        await withLoading(() => api("deleteComment", getSessionToken(), commentId))();
+        await api("deleteComment", getSessionToken(), commentId);
         showAlert("Comment deleted successfully.", "success");
-        await refreshFeed();
+        silentRefresh();
       } catch (error) {
+        // Rollback
+        if (postInState && removedComment && removedIndex !== -1) {
+          postInState.comments.splice(removedIndex, 0, removedComment);
+        }
+        replacePostCard(post.postId);
         showAlert(error.message, "danger");
-      } finally {
-        toggleButton(btn, false);
       }
     });
   });
@@ -2037,16 +2237,25 @@ function renderPostCard(post) {
   card.querySelector(".edit-post-btn")?.addEventListener("click", () => startEdit(post));
   card.querySelector(".delete-post-btn")?.addEventListener("click", async (event) => {
     if (!confirm(`Delete post for "${post.movieName}"?`)) return;
-    const btn = event.currentTarget;
+
+    // ── Optimistic: remove from state.feed ──
+    const idx = state.feed.findIndex(p => p.postId === post.postId);
+    let removed = null;
+    if (idx !== -1) { removed = state.feed[idx]; state.feed.splice(idx, 1); }
+
+    applyFeedFilter();   // re-render feed without this post
+    renderDashboard();   // update metric counts
+
     try {
-      toggleButton(btn, true);
-      await withLoading(() => api("deletePost", getSessionToken(), post.postId))();
+      await api("deletePost", getSessionToken(), post.postId);
       showAlert("Post deleted successfully.", "success");
-      await refreshFeed();
+      silentRefresh();
     } catch (error) {
+      // Rollback
+      if (removed && idx !== -1) state.feed.splice(idx, 0, removed);
+      applyFeedFilter();
+      renderDashboard();
       showAlert(error.message, "danger");
-    } finally {
-      toggleButton(btn, false);
     }
   });
 
@@ -2082,65 +2291,6 @@ function renderCommentItem(comment) {
     </div>
   `;
   return item;
-}
-
-function bindPostCardEvents(card, post, canEditPost) {
-  const commentForm  = card.querySelector(".comment-form");
-  const commentInput = card.querySelector(".comment-input");
-
-  commentForm?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const text      = commentInput.value.trim();
-    const submitBtn = commentForm.querySelector("button[type='submit']");
-    if (!text) return;
-
-    try {
-      toggleButton(submitBtn, true);
-      await withLoading(() => api("addComment", getSessionToken(), post.postId, text))();
-      commentInput.value = "";
-      showAlert("Comment posted successfully.", "success");
-      await refreshFeed();
-    } catch (error) {
-      showAlert(error.message, "danger");
-    } finally {
-      toggleButton(submitBtn, false);
-    }
-  });
-
-  card.querySelectorAll(".delete-comment-btn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const commentId = btn.dataset.commentId;
-      try {
-        toggleButton(btn, true);
-        await withLoading(() => api("deleteComment", getSessionToken(), commentId))();
-        showAlert("Comment deleted successfully.", "success");
-        await refreshFeed();
-      } catch (error) {
-        showAlert(error.message, "danger");
-      } finally {
-        toggleButton(btn, false);
-      }
-    });
-  });
-
-  if (!canEditPost) return;
-
-  card.querySelector(".edit-post-btn")?.addEventListener("click", () => startEdit(post));
-
-  card.querySelector(".delete-post-btn")?.addEventListener("click", async (event) => {
-    if (!confirm(`Delete post for "${post.movieName}"?`)) return;
-    const btn = event.currentTarget;
-    try {
-      toggleButton(btn, true);
-      await withLoading(() => api("deletePost", getSessionToken(), post.postId))();
-      showAlert("Post deleted successfully.", "success");
-      await refreshFeed();
-    } catch (error) {
-      showAlert(error.message, "danger");
-    } finally {
-      toggleButton(btn, false);
-    }
-  });
 }
 
 // ─────────────────────────────────────────
