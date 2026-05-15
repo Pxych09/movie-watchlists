@@ -37,6 +37,10 @@ const RATING_COLORS = ["#E24B4A", "#D85A30", "#BA7517", "#1D9E75", "#7F77DD"];
 const state = {
   currentUser: null,
   feed: [],
+  feedFilter: "all",      // "all" | "mine"
+  feedSort: "newest",     // "newest" | "oldest" | "rating" | "comments"
+  feedPage: 0,            // current infinite-scroll page (0-based)
+  feedPageSize: 10,       // posts per page
   todos: [],
   todoDrafts: [],
   selectedTodoId: "",
@@ -94,6 +98,19 @@ function bindEvents() {
   bind("subGenreSearch", "input",   handleSubGenreSearch);
   bind("savedTodoSearch","input",   handleSavedTodoSearch);
   bind("spinTodoBtn",    "click",   handleSpinTodoRoulette);
+
+  bind("feedSort", "change", handleFeedSort);
+
+  // Feed filter tabs (event delegation)
+  document.getElementById("feedFilterTabs")?.addEventListener("click", (e) => {
+    const btn = e.target.closest(".feed-tab");
+    if (!btn) return;
+    document.querySelectorAll(".feed-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.feedFilter = btn.dataset.filter;
+    state.feedPage   = 0;
+    applyFeedFilter();
+  });
 
     // Scroll to top
   const scrollBtn = $("scrollTopBtn");
@@ -571,6 +588,13 @@ async function handleLogout() {
   state.subGenres      = [];
   state.dashboardMonthTab = "count";
   state.notifShowUnreadOnly = false;
+  state.feedFilter = "all";
+  state.feedSort   = "newest";
+  state.feedPage   = 0;
+  // Reset toolbar UI
+  document.querySelectorAll(".feed-tab").forEach((b, i) => b.classList.toggle("active", i === 0));
+  const sortEl = $("feedSort");
+  if (sortEl) sortEl.value = "newest";
 
   clearSession();
   $("loginForm")?.reset();
@@ -719,7 +743,6 @@ async function refreshFeed() {
 // ─────────────────────────────────────────
 function handleSavedTodoSearch() { renderSavedTodos(); }
 function handleSubGenreSearch()  { renderSubGenrePreview(); }
-function handleFeedSearch()      { applyFeedFilter(); }
 
 // ─────────────────────────────────────────
 // ROULETTE
@@ -827,22 +850,64 @@ function handleSpinTodoRoulette() {
 // ─────────────────────────────────────────
 // FEED FILTER
 // ─────────────────────────────────────────
+// ─────────────────────────────────────────
+// FEED SEARCH HANDLER
+// ─────────────────────────────────────────
+function handleFeedSearch() {
+  state.feedPage = 0;
+  applyFeedFilter();
+}
+
+function handleFeedSort() {
+  state.feedSort = $("feedSort")?.value || "newest";
+  state.feedPage = 0;
+  applyFeedFilter();
+}
+
+// ─────────────────────────────────────────
+// FEED FILTER + SORT + PAGINATE
+// ─────────────────────────────────────────
 function applyFeedFilter() {
   const query = ($("feedSearch")?.value || "").trim().toLowerCase();
 
-  if (!query) { renderFeed(state.feed); return; }
+  // 1. Text search
+  let result = query
+    ? state.feed.filter((post) => {
+        const haystack = [
+          post.movieName, post.genre,
+          ...(post.subGenres || []),
+          post.caption, post.username, post.name, post.duration,
+          ...(post.comments || []).map((c) => `${c.name} ${c.username} ${c.comment}`)
+        ].join(" ").toLowerCase();
+        return haystack.includes(query);
+      })
+    : [...state.feed];
 
-  const filteredFeed = state.feed.filter((post) => {
-    const haystack = [
-      post.movieName, post.genre,
-      ...(post.subGenres || []),
-      post.caption, post.username, post.name, post.duration,
-      ...(post.comments || []).map((c) => `${c.name} ${c.username} ${c.comment}`)
-    ].join(" ").toLowerCase();
-    return haystack.includes(query);
-  });
+  // 2. User filter
+  if (state.feedFilter === "mine" && state.currentUser) {
+    result = result.filter((p) => p.username === state.currentUser.username);
+  }
 
-  renderFeed(filteredFeed);
+  // 3. Sort
+  result = sortFeed(result, state.feedSort);
+
+  // 4. Render paginated
+  renderFeedPaginated(result);
+}
+
+function sortFeed(feed, mode) {
+  const arr = [...feed];
+  switch (mode) {
+    case "oldest":
+      return arr.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    case "rating":
+      return arr.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+    case "comments":
+      return arr.sort((a, b) => (b.comments?.length || 0) - (a.comments?.length || 0));
+    case "newest":
+    default:
+      return arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
 }
 
 // ─────────────────────────────────────────
@@ -946,7 +1011,10 @@ function renderSavedTodos() {
         <input class="align-self-center form-check-input todo-item-check" type="checkbox" ${checked ? "checked" : ""}>
         <div class="ms-2">
           <div class="todo-item-title">${escapeHtml(todo.movieName)}</div>
-          <div class="todo-item-meta">added by: ${escapeHtml(todo.createdBy || "-")}</div>
+          <div class="todo-item-meta">
+            added by: ${escapeHtml(todo.createdBy || "-")}
+            ${todo.createdAt ? `<span class="todo-item-ts">&nbsp;·&nbsp;${formatDate(todo.createdAt)}</span>` : ""}
+          </div>
         </div>
       </div>
     `;
@@ -1737,8 +1805,20 @@ async function handleSavePost(event) {
       }
     })();
 
+    const wasEditing = state.isEditing;
     resetPostForm();
     await refreshFeed();
+    if (!wasEditing) {
+      setTimeout(() => {
+        const firstCard = $("feedList")?.querySelector(".post-card");
+        if (firstCard) {
+          firstCard.scrollIntoView({ behavior: "smooth", block: "start" });
+          firstCard.classList.add("post-highlight");
+          setTimeout(() => firstCard.classList.remove("post-highlight"), 1800);
+        }
+      }, 120);
+    }
+    
   } catch (error) {
     showAlert(error.message, "danger");
   } finally {
@@ -1747,20 +1827,56 @@ async function handleSavePost(event) {
 }
 
 // ─────────────────────────────────────────
-// RENDER FEED
+// RENDER FEED (paginated / infinite scroll)
 // ─────────────────────────────────────────
-function renderFeed(feed) {
+let _infiniteObserver = null;   // module-level so we can disconnect/reconnect
+
+function renderFeedPaginated(feed) {
   const feedList       = $("feedList");
   const emptyFeed      = $("emptyFeed");
   const feedCountBadge = $("feedCountBadge");
+  const sentinel       = $("feedSentinel");
   if (!feedList || !emptyFeed || !feedCountBadge) return;
+
+  // Disconnect previous observer
+  if (_infiniteObserver) { _infiniteObserver.disconnect(); _infiniteObserver = null; }
 
   feedList.innerHTML = "";
   feedCountBadge.textContent = `${feed.length} post${feed.length !== 1 ? "s" : ""}`;
   emptyFeed.classList.toggle("d-none", feed.length > 0);
+  if (!feed.length) { if (sentinel) sentinel.style.display = "none"; return; }
 
-  feed.forEach((post) => feedList.appendChild(renderPostCard(post)));
+  // Store filtered+sorted feed for the observer to page through
+  feedList._pagedFeed = feed;
+  feedList._pagedIndex = 0;
+
+  const renderNextPage = () => {
+    const { _pagedFeed: f, _pagedIndex: idx } = feedList;
+    if (idx >= f.length) { if (sentinel) sentinel.style.display = "none"; return; }
+    const slice = f.slice(idx, idx + state.feedPageSize);
+    slice.forEach((post) => feedList.appendChild(renderPostCard(post)));
+    feedList._pagedIndex += slice.length;
+    if (feedList._pagedIndex >= f.length) {
+      if (sentinel) sentinel.style.display = "none";
+    } else {
+      if (sentinel) sentinel.style.display = "block";
+    }
+  };
+
+  // First page
+  renderNextPage();
+
+  // Set up IntersectionObserver for subsequent pages
+  if (sentinel && "IntersectionObserver" in window) {
+    _infiniteObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) renderNextPage();
+    }, { rootMargin: "200px" });
+    _infiniteObserver.observe(sentinel);
+  }
 }
+
+// Keep old name as alias so nothing else breaks
+function renderFeed(feed) { renderFeedPaginated(feed); }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DROP-IN REPLACEMENTS for app.js
