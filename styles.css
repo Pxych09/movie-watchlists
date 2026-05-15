@@ -32,8 +32,9 @@
 }
 
 .smx-font { font-size: .75rem !important; }
+.mdx-font, .todo-item-title { font-size: .85rem !important; }
 .lgx-font { font-size: 1.25rem !important; }
-#feedSearch, .search-icon { font-size: .75rem !important; }
+#feedSearch, .search-icon, select, option { font-size: .75rem !important; }
 .cedarville-cursive-regular {
   font-family: "Cedarville Cursive", cursive;
   font-weight: 400;
@@ -1336,7 +1337,7 @@ textarea.custom-input {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--border);
   color: var(--text);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   transition: all 0.2s ease;
 }
 
@@ -2179,8 +2180,6 @@ textarea.custom-input {
   flex-direction: column;
 }
 
-.guide-section {}
-
 .guide-section-header {
   display: flex;
   align-items: center;
@@ -2354,6 +2353,205 @@ textarea.custom-input {
   color: var(--muted);
 }
 
+/* GUIDELINE - GENRES */
+.guide-grid{
+  display:grid;
+  gap: 1em;
+  grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+}
+
+.guide-card{
+  padding:18px;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.03),
+    0 10px 30px rgba(0,0,0,.35);
+}
+
+.guide-card-header > * {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.guide-subgenres{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:10px 18px;
+  list-style:none;
+  margin: 0;
+}
+
+.guide-subgenres li{
+  position:relative;
+  padding-left:14px;
+  font-size:14px;
+  opacity:.9;
+  margin-left: -1rem;
+}
+
+.guide-subgenres li::before{
+  content:"•";
+  position:absolute;
+  left:0;
+  color:#fff;
+  opacity:.6;
+}
+
+.guide-sidebar{
+  margin-top: 1em;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.guide-side-card{
+  padding:20px;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.guide-side-card h3{
+  margin: 0;
+  margin-bottom:18px;
+  font-size: 1rem;
+  letter-spacing:1px;
+}
+
+.guide-tag-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.guide-tag{
+  padding:10px 14px;
+  border-radius:999px;
+  font-size: 10px;
+  background:rgba(255,255,255,.08);
+  border:1px double rgba(255,255,255,.08);
+}
+
+.guide-ratings{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.guide-rating{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 14px;
+  border-radius:12px;
+  background:rgba(255,255,255,.05);
+  font-size:12px;
+}
+
+.guide-rating span:first-child{
+  font-weight:700;
+}
+
+.guide-tip{
+  margin-top:30px;
+  text-align:center;
+  opacity:.7;
+  font-size:14px;
+  letter-spacing:.5px;
+}
+
+.guide-card .guide-feature-card {
+  border: 1px solid rgba(14, 121, 107, 0.5) !important;
+}
+/* COLORS */
+.guide-action{
+  border-color:#ff4d4d;
+  box-shadow:0 0 30px rgba(255,77,77,.12);
+}
+
+.guide-adventure{
+  border-color:#ff9d00;
+  box-shadow:0 0 30px rgba(255,157,0,.12);
+}
+
+.guide-comedy{
+  border-color:#ffd500;
+  box-shadow:0 0 30px rgba(255,213,0,.12);
+}
+
+.guide-drama{
+  border-color:#b15cff;
+  box-shadow:0 0 30px rgba(177,92,255,.12);
+}
+
+.guide-horror{
+  border-color:#e50000;
+  box-shadow:0 0 30px rgba(0,229,176,.12);
+}
+
+.guide-thriller{
+  border-color:#00a6ff;
+  box-shadow:0 0 30px rgba(0,166,255,.12);
+}
+
+.guide-scifi{
+  border-color:#5ca8ff;
+  box-shadow:0 0 30px rgba(92,168,255,.12);
+}
+
+.guide-fantasy{
+  border-color:#39ff5a;
+  box-shadow:0 0 30px rgba(57,255,90,.12);
+}
+
+.guide-romance{
+  border-color:#ff4da6;
+  box-shadow:0 0 30px rgba(255,77,166,.12);
+}
+
+.guide-mystery{
+  border-color:#ffb347;
+  box-shadow:0 0 30px rgba(255,179,71,.12);
+}
+
+.guide-crime{
+  border-color:#3ca3ff;
+  box-shadow:0 0 30px rgba(60,163,255,.12);
+}
+
+.guide-animation{
+  border-color:#bfff00;
+  box-shadow:0 0 30px rgba(191,255,0,.12);
+}
+
+.guide-family{
+  border-color:#c06cff;
+  box-shadow:0 0 30px rgba(192,108,255,.12);
+}
+
+.guide-musical{
+  border-color:#b8cd00;
+  box-shadow:0 0 30px rgba(245, 255, 108, 0.12);
+}
+.guide-western{
+  border-color:#b96511;
+  box-shadow:0 0 30px rgba(245, 255, 108, 0.12);
+}
+.guide-historical{
+  border-color:#3140e7;
+  box-shadow:0 0 30px rgba(245, 255, 108, 0.12);
+}
+.guide-documentary{
+  border-color:#0eb05a;
+  box-shadow:0 0 30px rgba(245, 255, 108, 0.12);
+}
+
+
+
 @media (max-width: 991px) {
   .guide-features-grid {
     grid-template-columns: 1fr;
@@ -2366,5 +2564,20 @@ textarea.custom-input {
   }
   .guide-stars {
     min-width: 75px;
+  }
+  .form-label {
+    font-size: .85rem !important;
+  }
+  .search-subgenre {
+    border: 1px solid #048e7e;
+  }
+  .subgenre-preview-pill {
+    font-size: .75rem;
+    background-color: var(--muted);
+    color: var(--bg2);
+    filter: contrast(85%);
+  }
+  .guide-subgenres{
+    grid-template-columns:1fr;
   }
 }
