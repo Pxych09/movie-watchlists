@@ -324,8 +324,6 @@ body {
   flex-wrap: wrap;
   position: relative;
   z-index: 1000;
-  background-image: url('https://img.freepik.com/free-vector/shiny-film-negative-cinema-background-with-text-space_1017-52787.jpg?semt=ais_hybrid&w=740&q=80');
-  background-size: cover;
   box-shadow: 0 8px 32px rgba(0,0,0,0.18);
 }
 
@@ -1086,6 +1084,22 @@ textarea.custom-input {
 }
 
 /* ─────────────────────────────────────────
+   DASHBOARD — "Other" user picker
+───────────────────────────────────────── */
+.db-other-picker {
+  margin-top: 0.55rem;
+}
+
+.db-other-select {
+  font-size: 0.75rem !important;
+  padding: 0.38rem 0.85rem !important;
+  border-radius: 10px !important;
+  width: auto;
+  min-width: 160px;
+  max-width: 100%;
+}
+
+/* ─────────────────────────────────────────
    FEED — ERROR / RETRY CARD
 ───────────────────────────────────────── */
 .feed-error-card {
@@ -1578,27 +1592,6 @@ textarea.custom-input {
 /* ─────────────────────────────────────────
    BORDER UTILITIES
 ───────────────────────────────────────── */
-.border-double-primary {
-  border: 2px double var(--bg2);
-  box-shadow: 1px 1px 2px .35px var(--primary);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-}
-
-.border-double-primary:hover {
-  box-shadow: -1px -1px 2px .35px var(--primary);
-  transform: translate(1px, 1px);
-}
-
-.border-double-secondary {
-  border: 2px double #15343c;
-  box-shadow: 0 0 0 0 transparent, -2px -2px 6px 0 #15343c;
-  transition: all 0.35s ease;
-}
-
-.border-double-secondary:hover {
-  box-shadow: 0 0 0 0 transparent, 2px 2px 6px 0 var(--bg2);
-  transform: translate(-2px, -2px);
-}
 
 /* ─────────────────────────────────────────
    SCROLL TO TOP
@@ -2728,4 +2721,27 @@ textarea.custom-input {
   .guide-subgenres{
     grid-template-columns:1fr;
   }
+}
+/* ─────────────────────────────────────────
+   TODO → FORM link flash
+───────────────────────────────────────── */
+@keyframes todoLinkPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.55); }
+  70%  { box-shadow: 0 0 0 14px rgba(20, 184, 166, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0); }
+}
+
+.todo-linked-flash {
+  animation: todoLinkPulse 1.2s ease;
+}
+.app-nav {
+  background-image: url('https://img.freepik.com/free-vector/shiny-film-negative-cinema-background-with-text-space_1017-52787.jpg?semt=ais_hybrid&w=740&q=80');
+  background-size: cover;
+}
+.film-bg,
+.post-card {
+  background-image: url('https://img.freepik.com/free-vector/shiny-film-negative-cinema-background-with-text-space_1017-52787.jpg?semt=ais_hybrid&w=740&q=80');
+  background-size: cover;
+  background-color: rgba(0, 0, 0, 0.6);
+  background-blend-mode: darken;
 }
