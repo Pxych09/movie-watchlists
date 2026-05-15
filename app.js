@@ -2132,6 +2132,7 @@ function replacePostCard(postId) {
   const fresh = renderPostCard(postData);
   existing.replaceWith(fresh);
 }
+
 function renderPostCard(post) {
   const card     = document.createElement("div");
   card.className = "glass-card post-card mb-4";
@@ -2186,9 +2187,9 @@ function renderPostCard(post) {
     : "";
 
   // Updated-at label
-  const editedHtml = (post.updatedAt && post.updatedAt !== post.createdAt)
-    ? `<span class="pc-edited">edited ${formatDateTime(post.updatedAt)}</span>`
-    : "";
+const editedHtml = (post.updatedAt && post.updatedAt !== post.createdAt)
+  ? `<span class="pc-edited d-block" title="Edited ${formatDateTime(post.updatedAt)}">(Last edited ${timeAgo(post.updatedAt)})</span>`
+  : "";
 
   card.innerHTML = `
     <div class="pc-header">
@@ -2526,7 +2527,29 @@ function formatDate(value) {
   if (Number.isNaN(d.getTime())) return value;
   return d.toLocaleDateString("en-PH", { year:"numeric", month:"short", day:"numeric" });
 }
+function timeAgo(value) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "";
 
+  const diffMs   = Date.now() - d.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHrs  = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHrs  / 24);
+  const diffWks  = Math.floor(diffDays / 7);
+  const diffMths = Math.floor(diffDays / 30);
+  const diffYrs  = Math.floor(diffDays / 365);
+
+  if (diffSecs <  60)  return "just now";
+  if (diffMins <  60)  return diffMins + "m ago";
+  if (diffHrs  <  24)  return diffHrs  + "hr ago";
+  if (diffDays <   2)  return "1d ago";
+  if (diffDays <   7)  return diffDays + "d ago";
+  if (diffWks  <   5)  return diffWks  + "w ago";
+  if (diffMths <  12)  return diffMths + "mo ago";
+  return diffYrs + "yr ago";
+}
 function formatDateTime(value) {
   if (!value) return "-";
   const d = new Date(value);
