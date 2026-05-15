@@ -174,7 +174,7 @@
                 <div id="toolsHeaderCard" class="glass-card d-flex justify-content-between align-items-center mb-3 con-tools border-double-primary">
                   <span class="fw-bold">Tools</span>
                   <button id="toggleSidebarBtn" class="btn btn-sm btn-outline-light custom-outline-btn" type="button">
-                    Show Tools
+                    <i class="bi bi-eye-slash"></i>
                   </button>
                 </div>
             <div id="sidebarContent" class="left-stack d-none">
@@ -190,7 +190,7 @@
 
                   <div class="col-12">
                     <label for="movieName" class="form-label">Movie Name</label>
-                    <input id="movieName" type="text" class="form-control custom-input" placeholder="E.g. 'Piranha 3D'" required>
+                    <input id="movieName" type="text" class="form-control custom-input smx-font" placeholder="E.g. 'Piranha 3D'" required>
                   </div>
 
                   <div class="col-12">
@@ -236,17 +236,17 @@
 
                   <div class="col-md-6">
                     <label for="duration" class="form-label">Duration</label>
-                    <input id="duration" type="text" class="form-control custom-input" placeholder="E.g. 2h 15m" required>
+                    <input id="duration" type="text" class="form-control custom-input smx-font" placeholder="E.g. 2h 15m" required>
                   </div>
 
                   <div class="col-12">
                     <label for="dateWatched" class="form-label">Date Watched</label>
-                    <input id="dateWatched" type="date" class="form-control custom-input" required>
+                    <input id="dateWatched" type="date" class="form-control custom-input smx-font" required>
                   </div>
 
                   <div class="col-12">
                     <label for="caption" class="form-label">Caption</label>
-                    <textarea id="caption" class="form-control custom-input" rows="4" placeholder="Share your thoughts about the movie..."></textarea>
+                    <textarea id="caption" class="form-control custom-input smx-font" rows="4" placeholder="Share your thoughts about the movie..."></textarea>
                   </div>
 
                   <div class="col-12">
@@ -266,16 +266,14 @@
                 <div class="todo-roulette-card mb-3">
                   <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
                     <div class="small fw-semibold">Spin the Wheel</div>
-                    <button id="spinTodoBtn" type="button" class="btn btn-sm btn-primary custom-btn px-3 py-2">
-                      <i class="bi bi-arrow-repeat me-1"></i>Spin
-                    </button>
+                    <button id="spinTodoBtn" type="button" class="btn btn-outline-light custom-outline-btn"><i class="bi bi-arrow-repeat"></i></button>
                   </div>
 
                   <div class="todo-slot-shell">
                     <div class="todo-slot-pointer"></div>
                     <div class="todo-slot-window">
                       <div id="todoSlotTrack" class="todo-slot-track">
-                        <div class="todo-slot-item is-empty">No candidates yet.</div>
+                        <div class="todo-slot-item is-empty smx-font">No candidates yet.</div>
                       </div>
                     </div>
                   </div>
@@ -290,7 +288,7 @@
                   <input
                     id="savedTodoSearch"
                     type="search"
-                    class="form-control custom-input search-input"
+                    class="form-control custom-input search-input mdx-font"
                     placeholder="Search saved watchlists..."
                   >
                 </div>
@@ -310,19 +308,17 @@
                   <input
                     id="todoInput"
                     type="text"
-                    class="form-control custom-input"
+                    class="form-control custom-input smx-font"
                     placeholder="Add movie title or number..."
                   >
-                  <button id="addTodoBtn" type="button" class="btn btn-primary custom-btn todo-add-btn">+</button>
+                  <button id="addTodoBtn" type="button" class="btn btn-outline-light custom-outline-btn"><i class="bi bi-plus-circle"></i></button>
+                  <button id="saveTodoBtn" type="button" class="btn btn-outline-light custom-outline-btn"><i class="bi bi-bookmark"></i></button>
                 </div>
 
                 <div id="draftTodoList" class="todo-draft-list mb-3">
                   <div class="text-secondary small text-center">|&nbsp;No draft items yet.</div>
                 </div>
 
-                <button id="saveTodoBtn" type="button" class="btn btn-outline-light custom-outline-btn w-100">
-                  Save
-                </button>
               </div>
 
               <div class="glass-card p-4 mb-4">
@@ -336,7 +332,7 @@
                   <input
                     id="subGenreSearch"
                     type="search"
-                    class="form-control custom-input search-input"
+                    class="form-control custom-input search-input mdx-font"
                     placeholder="Search existing sub-genres..."
                   >
                 </div>
@@ -345,10 +341,10 @@
                   <input
                     id="subGenreInput"
                     type="text"
-                    class="form-control custom-input"
+                    class="form-control custom-input smx-font search-subgenre"
                     placeholder="Add sub-genre..."
                   >
-                  <button id="addSubGenreBtn" type="button" class="btn btn-primary custom-btn todo-add-btn">+</button>
+                  <button id="addSubGenreBtn" type="button" class="btn btn-outline-light custom-outline-btn"><i class="bi bi-plus-circle"></i></button>
                 </div>
 
                 <div id="subGenrePreviewList" class="subgenre-preview-list">
@@ -365,9 +361,9 @@
             <!-- ─── GUIDELINES ─── -->
             <div id="guidelinesCard" class="glass-card p-4 mb-4 border-double-primary">
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                <span class="fw-bold"><i class="bi bi-journal-text me-2"></i>Guidelines</span>
+                <span class="fw-bold">Guidelines</span>
                 <button id="toggleGuidelinesBtn" class="btn btn-sm btn-outline-light custom-outline-btn" type="button">
-                  Hide Guidelines
+                  <i class="bi bi-eye"></i>
                 </button>
               </div>
 
@@ -491,7 +487,7 @@
                 <div class="guide-divider"></div>
 
                 <!-- Ratings scale -->
-                <div class="guide-section mb-2">
+                <div class="guide-section mb-4">
                   <div class="guide-section-header">
                     <i class="bi bi-star-half"></i>
                     <span>Rating Scale</span>
@@ -505,6 +501,408 @@
                   </div>
                 </div>
 
+                <div class="guide-divider"></div>
+
+                <div class="guide-section mb-2">
+                  <div class="guide-section-header">
+                    <i class="bi bi-film mdx-font"></i>
+                    <span class="mdx-font">The Complete Guide To Movie & TV Genre</span>
+                  </div>
+                    <div class="guide-grid">
+                      <div class="guide-card guide-action">
+
+                        <div class="guide-feature-card mb-3">
+                          <span>Action 💥</span>
+                          <div class="guide-feature-desc">Fast-paced stories focused on physical conflict, danger, combat, or survival.</div>
+                        </div>
+
+                        <ul class="guide-subgenres">
+                          <li>Adventure</li>
+                          <li>Martial Arts</li>
+                          <li>Superhero</li>
+                          <li>Military</li>
+                          <li>War</li>
+                          <li>Espionage / Spy</li>
+                          <li>Disaster</li>
+                          <li>Heist</li>
+                          <li>Vigilante</li>
+                          <li>Revenge</li>
+                          <li>Car Chase / Racing</li>
+                          <li>Sci-Fi</li>
+                          <li>Survival</li>
+                          <li>Thriller</li>
+                        </ul>
+                      </div>
+
+                      <div class="guide-card guide-adventure">
+                        <div class="guide-feature-card mb-3">
+                          <span>Adventure 🧭</span>
+                          <div class="guide-feature-desc">Journey-based stories focused on exploration and discovery.</div>
+                        </div>
+                        <ul class="guide-subgenres">
+                          <li>Treasure Hunt</li>
+                          <li>Jungle</li>
+                          <li>Expedition</li>
+                          <li>Space</li>
+                          <li>Survival</li>
+                          <li>Pirate</li>
+                          <li>Quest</li>
+                          <li>Road Trip</li>
+                          <li>Tresure Map</li>
+                          <li>Sea</li>
+                          <li>Fantasy</li>
+                        </ul>
+                      </div>
+
+                      <div class="guide-card guide-comedy">
+                        <div class="guide-feature-card mb-3">
+                          <span>Comedy 😂</span>
+                          <div class="guide-feature-desc">Stories intended primarily to make audiences laugh.</div>
+                        </div>
+                        <ul class="guide-subgenres">
+                          <li>Romantic (RomCom)</li>
+                          <li>Situational (SitCom)</li>
+                          <li>Satire</li>
+                          <li>Parody / Spoof</li>
+                          <li>Buddy</li>
+                          <li>Teen</li>
+                          <li>Dark</li>
+                          <li>Mockumentary</li>
+                          <li>Workplace</li>
+                          <li>Buddy</li>
+                          <li>Family</li>
+                          <li>Cringe</li>
+                        </ul>
+                      </div>
+
+                      <div class="guide-card guide-drama">
+                        <div class="guide-feature-card mb-3">
+                          <span>Drama 🎭</span>
+                          <div class="guide-feature-desc">Emotionally focused stories centered on character development.</div>
+                        </div>
+                        <ul class="guide-subgenres">
+                          <li>Family</li>
+                          <li>Crime</li>
+                          <li>Medical</li>
+                          <li>Melodrama</li>
+                          <li>Political</li>
+                          <li>Legal</li>
+                          <li>Historical</li>
+                          <li>Teen</li>
+                          <li>Tragedy</li>
+                          <li>Romantic</li>
+                          <li>Psychological</li>
+                          <li>Social</li>
+                          <li>Slice of Life</li>
+                          <li>Horror Comedy</li>
+                          <li>Coming-of-Age</li>
+                        </ul>
+                      </div>
+
+                      <div class="guide-card guide-horror">
+                        <div class="guide-feature-card mb-3">
+                          <span>Horror ☠️</span>
+                          <div class="guide-feature-desc">Stories designed to create fear, tension, or dread.</div>
+                        </div>
+                        <ul class="guide-subgenres">
+                          <li>Supernatural</li>
+                          <li>Found Footage</li>
+                          <li>Psychological</li>
+                          <li>Monster</li>
+                          <li>Zombie</li>
+                          <li>Slasher</li>
+                          <li>Gothic</li>
+                          <li>Folklore</li>
+                          <li>Possession</li>
+                          <li>Creature</li>
+                          <li>Paranormal</li>
+                          <li>Survival</li>
+                          <li>Cosmic</li>
+                          <li>Haunted House</li>
+                          <li>Creature Feature</li>
+                          <li>Horror Comedy</li>
+                          <li>Vampire</li>
+                          <li>Werewolf</li>
+                        </ul>
+                      </div>
+
+                      <div class="guide-card guide-thriller">
+                        <div class="guide-feature-card mb-3">
+                          <span>Thriller 🎯</span>
+                          <div class="guide-feature-desc">Suspense-driven stories focused on tension and uncertainty.</div>
+                        </div>
+                        <ul class="guide-subgenres">
+                          <li>Psychological</li>
+                          <li>Crime</li>
+                          <li>Mystery</li>
+                          <li>Political</li>
+                          <li>Conspiracy</li>
+                          <li>Spy</li>
+                          <li>Erotic</li>
+                          <li>Tech</li>
+                          <li>Survival</li>
+                          <li>Action Thriller</li>
+                          <li>Supernatural</li>
+                        </ul>
+                      </div>
+
+                      <div class="guide-card guide-scifi">
+                        <div class="guide-feature-card mb-3">
+                          <span>Sci-Fi 🪐</span>
+                          <div class="guide-feature-desc">Stories involving advanced science, technology, or futuristic concepts.</div>
+                        </div>
+                        <ul class="guide-subgenres">
+                          <li>Alien</li>
+                          <li>Biopunk</li>
+                          <li>Cyberpunk</li>
+                          <li>Steampunk</li>
+                          <li>Futuristic</li>
+                          <li>AI / Robot</li>
+                          <li>Hard</li>
+                          <li>Soft</li>
+                          <li>Time Travel</li>
+                          <li>Dystopian</li>
+                          <li>Mecha</li>
+                          <li>Military</li>
+                          <li>Parallel Universe</li>
+                          <li>Sci-Fi Horror</li>
+                          <li>Sci-Fi Thriller</li>
+                        </ul>
+                      </div>
+
+                      <div class="guide-card guide-fantasy">
+                        <div class="guide-feature-card mb-3">
+                          <span>Fantasy 🐉</span>
+                          <div class="guide-feature-desc">Stories featuring magical or supernatural worlds/elements.</div>
+                        </div>
+                        <ul class="guide-subgenres">
+                          <li>High-Level Fantasy</li>
+                          <li>Low-Level Fantasy</li>
+                          <li>Dark Fantasy</li>
+                          <li>Urban Fantasy</li>
+                          <li>Adventure</li>
+                          <li>Fairy Tale</li>
+                          <li>Grimdark</li>
+                          <li>Epic</li>
+                          <li>Portal</li>
+                          <li>Mythological</li>
+                          <li>Supernatural</li>
+                          <li>Sword & Sorcery</li>
+                        </ul>
+                      </div>
+
+                      <div class="guide-card guide-romance">
+                        <div class="guide-feature-card mb-3">
+                          <span>Romance 💖</span>
+                          <div class="guide-feature-desc">Stories centered on relationships and emotional connection.</div>
+                        </div>
+                        <ul class="guide-subgenres">
+                          <li>Romantic Drama</li>
+                          <li>Romantic Comedy</li>
+                          <li>Tragic</li>
+                          <li>Teen</li>
+                          <li>Historical</li>
+                          <li>Fantasy</li>
+                          <li>Forbidden Love</li>
+                          <li>Love Triangle</li>
+                          <li>Slice of Life</li>
+                        </ul>
+                      </div>
+
+                      <div class="guide-card guide-mystery">
+                        <div class="guide-feature-card mb-3">
+                          <span>Mystery 🔎</span>
+                          <div class="guide-feature-desc">Stories focused on solving unknown events or secrets.</div>
+                        </div>
+                        <ul class="guide-subgenres">
+                          <li>Detective</li>
+                          <li>Murder</li>
+                          <li>Noir</li>
+                          <li>Cozy</li>
+                          <li>Whodunit</li>
+                          <li>Crime</li>
+                          <li>Psychological</li>
+                          <li>Supernatural</li>
+                        </ul>
+                      </div>
+
+                      <div class="guide-card guide-crime">
+                        <div class="guide-feature-card mb-3">
+                          <span>Crime 🚔</span>
+                          <div class="guide-feature-desc">Stories centered on criminal activity or law enforcement.</div>
+                        </div>
+                        <ul class="guide-subgenres">
+                          <li>Gangster</li>
+                          <li>Mafia</li>
+                          <li>Detective</li>
+                          <li>Police Procedural</li>
+                          <li>Prison</li>
+                          <li>Heist</li>
+                          <li>Neo-Noir</li>
+                          <li>Crime Thriller</li>
+                          <li>Organized Crime</li>
+                          <li>True Crime</li>
+                          <li>Documentary</li>
+                        </ul>
+                      </div>
+
+                      <div class="guide-card guide-animation">
+                        <div class="guide-feature-card mb-3">
+                          <span>Animation 🎬</span>
+                          <div class="guide-feature-desc">Animated storytelling format (often combined with genres above).</div>
+                        </div>
+                        <ul class="guide-subgenres">
+                          <li>Adult Animation</li>
+                          <li>Anime</li>
+                          <li>CGI</li>
+                          <li>Stop Motion</li>
+                          <li>Family</li>
+                          <li>Educational</li>
+                          <li>Musical</li>
+                          <li>Metaphysical</li>
+                        </ul>
+                      </div>
+
+                      <div class="guide-card guide-family">
+                        <div class="guide-feature-card mb-3">
+                          <span>Family 👪</span>
+                          <div class="guide-feature-desc">Content suitable for broad age groups.</div>
+                        </div>
+                        <ul class="guide-subgenres">
+                          <li>Family Adventure</li>
+                          <li>Family Comedy</li>
+                          <li>Fantasy Family</li>
+                          <li>Educational</li>
+                          <li>Animal Adventure</li>
+                        </ul>
+                      </div>
+
+                      <div class="guide-card guide-musical">
+                        <div class="guide-feature-card mb-3">
+                          <span>Musical 🎼</span>
+                          <div class="guide-feature-desc">Stories incorporating songs/music into storytelling.</div>
+                        </div>
+                        <ul class="guide-subgenres">
+                          <li>Rock</li>
+                          <li>Jukebox</li>
+                          <li>Dance</li>
+                          <li>Musical Drama</li>
+                          <li>Animated Musical</li>
+                        </ul>
+                      </div>
+                      
+                      <div class="guide-card guide-western">
+                        <div class="guide-feature-card mb-3">
+                          <span>Western 🤠</span>
+                          <div class="guide-feature-desc">Stories inspired by frontier/cowboy settings.</div>
+                        </div>
+                        <ul class="guide-subgenres">
+                          <li>Spaghetti Western</li>
+                          <li>Revisionist Western</li>
+                          <li>Neo-Western</li>
+                          <li>Western Action</li>
+                          <li>Western Drama</li>
+                        </ul>
+                      </div>
+                      
+                      <div class="guide-card guide-historical">
+                        <div class="guide-feature-card mb-3">
+                          <span>Historical 🔬</span>
+                          <div class="guide-feature-desc">Stories set in real historical periods.</div>
+                        </div>
+                        <ul class="guide-subgenres">
+                          <li>Historical Epic</li>
+                          <li>Period Drama</li>
+                          <li>War History</li>
+                          <li>Biographical History</li>
+                          <li>Historical Romance</li>
+                        </ul>
+                      </div>
+                      
+                      <div class="guide-card guide-documentary">
+                        <div class="guide-feature-card mb-3">
+                          <span>Documentary 📜</span>
+                          <div class="guide-feature-desc">Non-fiction storytelling based on real events.</div>
+                        </div>
+                        <ul class="guide-subgenres">
+                          <li>Nature Documentary</li>
+                          <li>Biography</li>
+                          <li>True Crime</li>
+                          <li>Mockumentary</li>
+                          <li>Investigative Documentary</li>
+                        </ul>
+                      </div>
+
+                    </div>
+
+                  <aside class="guide-sidebar">
+
+                    <div class="guide-side-card">
+                      <h3>Popular Tags</h3>
+
+                      <div class="guide-tag-list">
+                        <div class="guide-tag">Dark</div>
+                        <div class="guide-tag">Gritty</div>
+                        <div class="guide-tag">Emotional</div>
+                        <div class="guide-tag">Wholesome</div>
+                        <div class="guide-tag">Violent</div>
+                        <div class="guide-tag">Mind-Bending</div>
+                        <div class="guide-tag">Atmospheric</div>
+                        <div class="guide-tag">Slow Burn</div>
+                        <div class="guide-tag">Psychological</div>
+                        <div class="guide-tag">Supernatural</div>
+                      </div>
+                    </div>
+
+                    <div class="guide-side-card">
+                      <h3>Anime Specific</h3>
+
+                      <div class="guide-tag-list">
+                        <div class="guide-tag">Shounen</div>
+                        <div class="guide-tag">Seinen</div>
+                        <div class="guide-tag">Isekai</div>
+                        <div class="guide-tag">Mecha</div>
+                        <div class="guide-tag">Ecchi</div>
+                        <div class="guide-tag">Harem</div>
+                        <div class="guide-tag">Slice of Life</div>
+                        <div class="guide-tag">Magical Girl</div>
+                      </div>
+                    </div>
+
+                    <div class="guide-side-card">
+                      <h3>Audience Ratings</h3>
+
+                      <div class="guide-ratings">
+                        <div class="guide-rating">
+                          <span>Kids</span>
+                          <span>Young children</span>
+                        </div>
+
+                        <div class="guide-rating">
+                          <span>Family</span>
+                          <span>All ages</span>
+                        </div>
+
+                        <div class="guide-rating">
+                          <span>Teen</span>
+                          <span>Teenagers</span>
+                        </div>
+
+                        <div class="guide-rating">
+                          <span>Adult</span>
+                          <span>Adults only</span>
+                        </div>
+
+                        <div class="guide-rating">
+                          <span>Mature</span>
+                          <span>18+</span>
+                        </div>
+                      </div>
+                    </div>
+
+                  </aside>
+                </div>
+
               </div><!-- /guidelinesContent -->
             </div><!-- /guidelinesCard -->
 
@@ -513,7 +911,7 @@
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <span class="fw-bold">Dashboard</span>
                 <button id="toggleDashboardBtn" class="btn btn-sm btn-outline-light custom-outline-btn" type="button">
-                  Hide Dashboard
+                  <i class="bi bi-eye"></i>
                 </button>
               </div>
 
