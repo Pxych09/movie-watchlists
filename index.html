@@ -911,7 +911,14 @@
             <!-- ─── DASHBOARD ─── -->
             <div id="dashboardCard" class="glass-card p-4 mb-4 border-double-primary">
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                <span class="fw-bold">Dashboard</span>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="fw-bold">Dashboard</span>
+                  <!-- ★ NEW: scope toggle -->
+                  <div class="db-scope-tabs" id="dbScopeTabs">
+                    <button class="db-scope-tab active" data-scope="all">All</button>
+                    <button class="db-scope-tab" data-scope="mine">Mine</button>
+                  </div>
+                </div>
                 <button id="toggleDashboardBtn" class="btn btn-sm btn-outline-light custom-outline-btn" type="button">
                   <i class="bi bi-eye"></i>
                 </button>
@@ -1075,18 +1082,23 @@
   <!-- end toolbar -->
 </div>
 
-<div id="emptyFeed" class="glass-card p-5 text-center d-none">
-  <i class="bi bi-camera-reels empty-icon"></i>
-  <p class="mb-0 text-secondary-light">No posts yet. Be the first to share a movie.</p>
-</div>
-
-<div id="feedList" class="feed-list"></div>
-<!-- ★ NEW: infinite scroll sentinel -->
-<div id="feedSentinel" class="feed-sentinel"></div>
+        <div id="feedList" class="feed-list"></div>
+        <!-- ★ NEW: infinite scroll sentinel -->
+        <div id="feedSentinel" class="feed-sentinel"></div>
 
             <div id="emptyFeed" class="glass-card p-5 text-center d-none">
               <i class="bi bi-camera-reels empty-icon"></i>
               <p class="mb-0 text-secondary-light">No posts yet. Be the first to share a movie.</p>
+            </div>
+
+            <!-- ★ NEW: feed error + retry -->
+            <div id="feedError" class="glass-card p-5 text-center d-none feed-error-card">
+              <i class="bi bi-wifi-off feed-error-icon"></i>
+              <p class="feed-error-title">Couldn't load posts</p>
+              <p class="feed-error-sub mb-3">Check your connection or try again.</p>
+              <button id="feedRetryBtn" class="btn btn-outline-light custom-outline-btn" type="button">
+                <i class="bi bi-arrow-clockwise me-2"></i>Retry
+              </button>
             </div>
 
             <div id="feedList" class="feed-list"></div>
