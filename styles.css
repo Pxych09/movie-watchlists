@@ -2737,6 +2737,7 @@ textarea.custom-input {
 .app-nav {
   background-image: url('https://img.freepik.com/free-vector/shiny-film-negative-cinema-background-with-text-space_1017-52787.jpg?semt=ais_hybrid&w=740&q=80');
   background-size: cover;
+  box-shadow: 1px 1px 4px 4px rgba(31, 184, 255, 0.167), 1px 1px 4px 4px rgba(0, 0, 0, 0.139); 
 }
 .film-bg,
 .post-card {
