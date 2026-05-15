@@ -1040,23 +1040,49 @@
             </div><!-- /dashboard glass-card -->
 
             <!-- ─── FEED ─── -->
-            <div class="glass-card p-4 mb-4 border-double-primary">
-              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                <!-- <h3 class="h5 fw-bold mb-0">Movie Feed</h3> -->
-                <span class="fw-bold">Movie Feed</span>
-                <span id="feedCountBadge" class="badge text-bg-light">0 posts</span>
-              </div>
+<!-- ─── FEED ─── -->
+<div class="glass-card p-4 mb-4 border-double-primary">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <span class="fw-bold">Movie Feed</span>
+    <span id="feedCountBadge" class="badge text-bg-light">0 posts</span>
+  </div>
 
-              <div class="position-relative">
-                <i class="bi bi-search search-icon"></i>
-                <input
-                  id="feedSearch"
-                  type="search"
-                  class="form-control custom-input search-input"
-                  placeholder="Search by movie, genre, or user"
-                >
-              </div>
-            </div>
+  <div class="position-relative mb-3">
+    <i class="bi bi-search search-icon"></i>
+    <input
+      id="feedSearch"
+      type="search"
+      class="form-control custom-input search-input"
+      placeholder="Search by movie, genre, or user"
+    >
+  </div>
+
+  <!-- ★ NEW: filter + sort toolbar -->
+  <div class="feed-toolbar">
+    <div class="feed-filter-tabs" id="feedFilterTabs">
+      <button class="feed-tab active" data-filter="all">All Posts</button>
+      <button class="feed-tab" data-filter="mine">My Posts</button>
+    </div>
+    <div class="feed-sort-wrap">
+      <select id="feedSort" class="form-select custom-input feed-sort-select">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="rating">Highest rated</option>
+        <option value="comments">Most comments</option>
+      </select>
+    </div>
+  </div>
+  <!-- end toolbar -->
+</div>
+
+<div id="emptyFeed" class="glass-card p-5 text-center d-none">
+  <i class="bi bi-camera-reels empty-icon"></i>
+  <p class="mb-0 text-secondary-light">No posts yet. Be the first to share a movie.</p>
+</div>
+
+<div id="feedList" class="feed-list"></div>
+<!-- ★ NEW: infinite scroll sentinel -->
+<div id="feedSentinel" class="feed-sentinel"></div>
 
             <div id="emptyFeed" class="glass-card p-5 text-center d-none">
               <i class="bi bi-camera-reels empty-icon"></i>
