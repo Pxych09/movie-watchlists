@@ -38,6 +38,9 @@ const state = {
   currentUser: null,
   feed: [],
   feedFilter: "all",      // "all" | "mine"
+  subGenreSortAZ: false,
+  subGenreSortDir: "asc",   // "asc" | "desc"
+  subGenreDrafts: [],
   feedSort: "newest",     // "newest" | "oldest" | "rating" | "comments"
   feedPage: 0,            // current infinite-scroll page (0-based)
   feedPageSize: 10,       // posts per page
@@ -95,9 +98,35 @@ function bindEvents() {
   bind("addTodoBtn",     "click",   handleAddTodoDraft);
   bind("saveTodoBtn",    "click",   handleSaveTodoDrafts);
   bind("todoInput",      "keydown", handleTodoInputKeydown);
-  bind("addSubGenreBtn", "click",   handleAddSubGenre);
-  bind("subGenreInput",  "keydown", handleSubGenreInputKeydown);
-  bind("subGenreSearch", "input",   handleSubGenreSearch);
+
+  bind("addSubGenreBtn",    "click",   handleAddSubGenreDraft);
+  bind("saveSubGenreBtn",   "click",   handleSaveSubGenreDrafts);
+  bind("subGenreInput",     "keydown", handleSubGenreInputKeydown);
+  bind("subGenreSearch",    "input",   handleSubGenreSearch);
+
+  bind("subGenreFilterInput",  "input",  () => renderSubGenreCheckboxes());
+  bind("subGenreShowSelected", "change", () => renderSubGenreCheckboxes());
+
+  const sortBtn = $("subGenreSortBtn");
+  if (sortBtn) {
+    sortBtn.addEventListener("click", () => {
+      if (!state.subGenreSortAZ) {
+        // First click: activate A→Z
+        state.subGenreSortAZ  = true;
+        state.subGenreSortDir = "asc";
+      } else if (state.subGenreSortDir === "asc") {
+        // Second click: flip to Z→A
+        state.subGenreSortDir = "desc";
+      } else {
+        // Third click: reset / unsort
+        state.subGenreSortAZ  = false;
+        state.subGenreSortDir = "asc";
+      }
+      updateSubGenreSortBtn(sortBtn);
+      renderSubGenreCheckboxes();
+    });
+  }
+    
   bind("savedTodoSearch","input",   handleSavedTodoSearch);
   bind("spinTodoBtn",    "click",   handleSpinTodoRoulette);
   
@@ -654,7 +683,17 @@ async function handleLogout() {
 
   if ($("subGenrePreviewList")) $("subGenrePreviewList").innerHTML = `<div class="text-secondary-light small">No sub-genres yet.</div>`;
   if ($("subGenreCount"))       $("subGenreCount").textContent = "0 items";
-  if ($("subGenreInput"))       $("subGenreInput").value = "";
+  
+  if ($("subGenreInput"))        $("subGenreInput").value = "";
+  if ($("subGenreFilterInput"))  $("subGenreFilterInput").value = "";
+  if ($("subGenreShowSelected")) $("subGenreShowSelected").checked = false;
+  state.subGenreSortAZ  = false;
+  state.subGenreSortDir = "asc";
+  state.subGenreDrafts  = [];
+  const subSortBtn = $("subGenreSortBtn");
+  if (subSortBtn) updateSubGenreSortBtn(subSortBtn);
+  if ($("subGenreDraftList"))  $("subGenreDraftList").innerHTML = `<div class="text-secondary small">No draft items yet.</div>`;
+  if ($("subGenreDraftCount")) $("subGenreDraftCount").textContent = "0 drafts";
 
   if ($("topRatedList"))     $("topRatedList").innerHTML = "";
   if ($("watchedStatsList")) $("watchedStatsList").innerHTML = "";
@@ -1824,29 +1863,95 @@ function groupWatchedStatsByYear(items) {
 // SUB-GENRES (sidebar)
 // ─────────────────────────────────────────
 function handleSubGenreInputKeydown(event) {
-  if (event.key === "Enter") { event.preventDefault(); handleAddSubGenre(); }
+  if (event.key === "Enter") { event.preventDefault(); handleAddSubGenreDraft(); }
 }
 
-async function handleAddSubGenre() {
+function handleAddSubGenreDraft() {
   const input = $("subGenreInput");
-  const value = input?.value.trim() || "";
+  const value = (input?.value || "").trim();
   if (!value) return;
 
-  const exists = (state.subGenres || []).some(
+  // Duplicate check against already-saved sub-genres
+  const existsInDB = (state.subGenres || []).some(
     (item) => (item.name || "").trim().toLowerCase() === value.toLowerCase()
   );
+  if (existsInDB) {
+    showAlert(`"${value}" already exists in sub-genres.`, "warning");
+    return;
+  }
 
-  if (exists) { showAlert(`"${value}" already exists in sub-genres.`, "warning"); return; }
+  // Duplicate check within current drafts
+  const existsInDraft = state.subGenreDrafts.some(
+    (d) => d.toLowerCase() === value.toLowerCase()
+  );
+  if (existsInDraft) {
+    showAlert(`"${value}" is already in your draft list.`, "warning");
+    return;
+  }
+
+  state.subGenreDrafts.push(value);
+  input.value = "";
+  renderSubGenreDrafts();
+}
+
+async function handleSaveSubGenreDrafts() {
+  if (!state.subGenreDrafts.length) {
+    showAlert("Add at least one sub-genre draft first.", "danger");
+    return;
+  }
 
   try {
-    await withLoading(() => api("addSubGenre", getSessionToken(), value))();
-    input.value = "";
+    await withLoading(async () => {
+      for (const name of state.subGenreDrafts) {
+        await api("addSubGenre", getSessionToken(), name);
+      }
+    })();
+    state.subGenreDrafts = [];
+    renderSubGenreDrafts();
     if ($("subGenreSearch")) $("subGenreSearch").value = "";
     await refreshFeed();
-    showAlert("Sub-genre added successfully.", "success");
+    showAlert(
+      `${state.subGenreDrafts.length === 0 ? "Sub-genres" : "Sub-genre"} saved successfully.`,
+      "success"
+    );
   } catch (error) {
     showAlert(error.message, "danger");
   }
+}
+
+function renderSubGenreDrafts() {
+  const list  = $("subGenreDraftList");
+  const count = $("subGenreDraftCount");
+  if (!list || !count) return;
+
+  count.textContent = `${state.subGenreDrafts.length} draft${state.subGenreDrafts.length !== 1 ? "s" : ""}`;
+
+  if (!state.subGenreDrafts.length) {
+    list.innerHTML = `<div class="text-secondary small">No draft items yet.</div>`;
+    return;
+  }
+
+  list.innerHTML = "";
+  state.subGenreDrafts.forEach((name, index) => {
+    const item = document.createElement("div");
+    item.className = "todo-item";
+    item.innerHTML = `
+      <div class="todo-item-left">
+        <div>
+          <div class="todo-item-title">${escapeHtml(name)}</div>
+          <div class="todo-item-meta">Draft sub-genre</div>
+        </div>
+      </div>
+      <button type="button" class="todo-remove-btn align-self-center" data-sg-draft-index="${index}">
+        <i class="bi bi-x-circle"></i>
+      </button>
+    `;
+    item.querySelector(".todo-remove-btn")?.addEventListener("click", () => {
+      state.subGenreDrafts.splice(index, 1);
+      renderSubGenreDrafts();
+    });
+    list.appendChild(item);
+  });
 }
 
 // ─────────────────────────────────────────
@@ -2437,19 +2542,67 @@ function renderSubGenreCheckboxes() {
   const group = $("subGenreGroup");
   if (!group) return;
 
-  const selected = new Set(getSelectedSubGenres());
+  const selected      = new Set(getSelectedSubGenres());
+  const filterQuery   = ($("subGenreFilterInput")?.value || "").trim().toLowerCase();
+  const showSelected  = $("subGenreShowSelected")?.checked || false;
 
   if (!state.subGenres.length) {
-    group.innerHTML = `<div class="text-secondary-light small">No sub-genres available yet.</div>`;
+    group.innerHTML = `<div class="subgenre-empty-msg">No sub-genres available yet.</div>`;
     return;
   }
 
-  group.innerHTML = state.subGenres.map((item) => `
+  let items = [...state.subGenres];
+
+  // "Selected only" filter
+  if (showSelected) {
+    items = items.filter((item) => selected.has(item.name));
+  }
+
+  // Text search filter
+  if (filterQuery) {
+    items = items.filter((item) => (item.name || "").toLowerCase().includes(filterQuery));
+  }
+
+  // A–Z / Z–A sort
+  if (state.subGenreSortAZ) {
+    items = items.slice().sort((a, b) => {
+      const cmp = (a.name || "").localeCompare(b.name || "");
+      return state.subGenreSortDir === "desc" ? -cmp : cmp;
+    });
+  }
+
+  if (!items.length) {
+    const msg = showSelected
+      ? "No sub-genres selected yet."
+      : "No matching sub-genres.";
+    group.innerHTML = `<div class="subgenre-empty-msg">${msg}</div>`;
+    return;
+  }
+
+  group.innerHTML = items.map((item) => `
     <label class="subgenre-chip">
       <input type="checkbox" name="subGenre" value="${escapeHtml(item.name)}" ${selected.has(item.name) ? "checked" : ""}>
       <span>${escapeHtml(item.name)}</span>
     </label>
   `).join("");
+}
+
+function updateSubGenreSortBtn(btn) {
+  if (!btn) return;
+  const icon = btn.querySelector("i");
+  if (!state.subGenreSortAZ) {
+    btn.classList.remove("is-active");
+    btn.title = "Sort A–Z";
+    if (icon) icon.className = "bi bi-sort-alpha-down";
+  } else if (state.subGenreSortDir === "asc") {
+    btn.classList.add("is-active");
+    btn.title = "Sort Z–A";
+    if (icon) icon.className = "bi bi-sort-alpha-down";
+  } else {
+    btn.classList.add("is-active");
+    btn.title = "Clear sort";
+    if (icon) icon.className = "bi bi-sort-alpha-up-alt";
+  }
 }
 
 // ─────────────────────────────────────────
@@ -2486,6 +2639,8 @@ function resetPostForm() {
   $("postForm")?.reset();
   $("postId").value = "";
   setSelectedSubGenres([]);
+  if ($("subGenreFilterInput"))  $("subGenreFilterInput").value = "";
+  if ($("subGenreShowSelected")) $("subGenreShowSelected").checked = false;
   $("formTitle").textContent = "Create Post";
   $("submitBtn").innerHTML   = `<i class="bi bi-send me-2"></i>Post Movie`;
   $("cancelEditBtn").classList.add("d-none");
