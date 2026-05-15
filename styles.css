@@ -1938,11 +1938,11 @@ textarea.custom-input {
 }
 
 .pc-edited {
-  margin-left: 0.45rem;
+  /* margin-left: 0.45rem; */
   font-style: italic;
   opacity: 0.65;
   font-size: 0.68rem;
-  color: wheat;
+  color: rgb(164, 162, 157);
 }
 
 /* ── Edit / Delete buttons ── */
