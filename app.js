@@ -51,7 +51,8 @@ const state = {
     userTotals: []
   },
   dashboardHidden: true,
-  dashboardScope: "all",   // "all" | "mine"
+  dashboardScope: "all",        // "all" | "mine" | "other"
+  dashboardOtherUser: "",       // username string when scope === "other"
   guidelinesHidden: false,
   isEditing: false,
   alertTimers: new Map(),
@@ -101,14 +102,32 @@ function bindEvents() {
   bind("spinTodoBtn",    "click",   handleSpinTodoRoulette);
   
     // Dashboard scope tabs
-  document.getElementById("dbScopeTabs")?.addEventListener("click", (e) => {
-    const btn = e.target.closest(".db-scope-tab");
-    if (!btn) return;
-    document.querySelectorAll(".db-scope-tab").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    state.dashboardScope = btn.dataset.scope;
-    renderDashboard();
-  });
+// Dashboard scope tabs
+document.getElementById("dbScopeTabs")?.addEventListener("click", (e) => {
+  const btn = e.target.closest(".db-scope-tab");
+  if (!btn) return;
+  document.querySelectorAll(".db-scope-tab").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  state.dashboardScope = btn.dataset.scope;
+
+  const picker = $("dbOtherPicker");
+  if (state.dashboardScope === "other") {
+    populateOtherUserPicker();
+    picker?.classList.remove("d-none");
+    // Don't render yet — wait for the user to pick someone
+    return;
+  }
+
+  picker?.classList.add("d-none");
+  state.dashboardOtherUser = "";
+  renderDashboard();
+});
+
+// "Other" user select
+document.getElementById("dbOtherSelect")?.addEventListener("change", (e) => {
+  state.dashboardOtherUser = e.target.value;
+  if (state.dashboardOtherUser) renderDashboard();
+});
 
   // Feed retry button
   bind("feedRetryBtn", "click", () => refreshFeed());
@@ -123,8 +142,7 @@ function bindEvents() {
     btn.classList.add("active");
     state.feedFilter = btn.dataset.filter;
     state.feedPage   = 0;
-    state.dashboardScope = "all";
-    document.querySelectorAll(".db-scope-tab").forEach((b, i) => b.classList.toggle("active", i === 0));
+    
     $("feedError")?.classList.add("d-none");
     applyFeedFilter();
   });
@@ -608,6 +626,12 @@ async function handleLogout() {
   state.feedFilter = "all";
   state.feedSort   = "newest";
   state.feedPage   = 0;
+  state.dashboardScope = "all";
+    document.querySelectorAll(".db-scope-tab").forEach((b, i) => b.classList.toggle("active", i === 0));
+    state.dashboardOtherUser = "";
+  $("dbOtherPicker")?.classList.add("d-none");
+  const otherSel = $("dbOtherSelect");
+  if (otherSel) otherSel.innerHTML = `<option value="">— pick a user —</option>`;
   // Reset toolbar UI
   document.querySelectorAll(".feed-tab").forEach((b, i) => b.classList.toggle("active", i === 0));
   const sortEl = $("feedSort");
@@ -1101,13 +1125,32 @@ function handleSavedTodoToggle(todo, checked) {
   if (checked) {
     state.selectedTodoId = todo.todoId;
     $("movieName").value = todo.movieName || "";
+
+    // ★ Scroll to the Create Post form and briefly highlight it
+    const formCard = $("postForm")?.closest(".glass-card");
+    if (formCard) {
+      // Force-open the sidebar first if it's hidden
+      const sidebar = $("sidebarContent");
+      if (sidebar?.classList.contains("d-none")) {
+        sidebar.classList.remove("d-none");
+        $("toggleSidebarBtn").innerHTML = `<i class="bi bi-eye"></i>`;
+        localStorage.setItem("toolsPanelVisible", "true");
+        const toggle = $("toolsToggle");
+        if (toggle) toggle.setAttribute("aria-checked", "true");
+      }
+
+      setTimeout(() => {
+        formCard.scrollIntoView({ behavior: "smooth", block: "start" });
+        formCard.classList.add("todo-linked-flash");
+        setTimeout(() => formCard.classList.remove("todo-linked-flash"), 1200);
+      }, 60);
+    }
   } else if (state.selectedTodoId === todo.todoId) {
     state.selectedTodoId = "";
     $("movieName").value = "";
   }
   renderSavedTodos();
 }
-
 // ─────────────────────────────────────────
 // DASHBOARD — CLIENT-SIDE COMPUTATIONS
 // ─────────────────────────────────────────
@@ -1248,13 +1291,33 @@ function renderDashboard() {
 
   const dashboard      = state.dashboard || {};
   const allFeed        = Array.isArray(state.feed) ? state.feed : [];
-  const isMyScope      = state.dashboardScope === "mine";
-  const currentUser    = state.currentUser;
+  const isMyScope    = state.dashboardScope === "mine";
+  const isOtherScope = state.dashboardScope === "other";
+  const currentUser  = state.currentUser;
 
-  // Filter feed for "Mine" scope
+  // Filter feed by scope
   const feed = isMyScope && currentUser
     ? allFeed.filter(p => p.username === currentUser.username)
-    : allFeed;
+    : isOtherScope && state.dashboardOtherUser
+      ? allFeed.filter(p => p.username === state.dashboardOtherUser)
+      : allFeed;
+
+  // If "Other" but no user selected yet, show an empty-ish dashboard
+  if (isOtherScope && !state.dashboardOtherUser) {
+    ["dbMetricPosts","dbMetricHours","dbMetricAvgRating","dbMetricUsers"]
+      .forEach(id => { if ($(id)) $(id).textContent = "—"; });
+    $("genreStatsList").innerHTML  = `<div class="text-secondary-light small">Select a user above.</div>`;
+    $("userTotalsList").innerHTML  = `<div class="text-secondary-light small">Select a user above.</div>`;
+    $("topRatedList").innerHTML    = `<div class="text-secondary-light small">Select a user above.</div>`;
+    $("watchedStatsList").innerHTML = `<div class="text-secondary-light small">Select a user above.</div>`;
+    $("dbStreakList").innerHTML    = `<div class="text-secondary-light small">Select a user above.</div>`;
+    $("dbSubGenreCloud").innerHTML = `<div class="text-secondary-light small">Select a user above.</div>`;
+    destroyChart("dbRatingChart");
+    destroyChart("dbMonthChart");
+    destroyChart("dbTrendChart");
+    applyDashboardVisibility();
+    return;
+  }
 
   // Filter server-side aggregates for "Mine" scope
   const genres = Array.isArray(dashboard.genres) ? dashboard.genres : [];
@@ -1269,7 +1332,12 @@ function renderDashboard() {
   let displayTopRated = topRated;
   let displayUserTotals = userTotals;
 
-  if (isMyScope && currentUser) {
+if ((isMyScope && currentUser) || (isOtherScope && state.dashboardOtherUser)) {
+    // Determine display name for the scoped user
+    const scopedUsername = isMyScope ? currentUser.username : state.dashboardOtherUser;
+    const scopedName     = isMyScope
+      ? (currentUser.name || currentUser.username)
+      : (state.feed.find(p => p.username === scopedUsername)?.name || scopedUsername);
     // Re-compute genres from filtered feed
     const genreMap = {};
     feed.forEach(p => {
@@ -1305,9 +1373,9 @@ function renderDashboard() {
       movies: rMap[stars].slice().sort((a,b) => a.movieName.localeCompare(b.movieName))
     }));
 
-    // User totals: just the current user
+// User totals: just the scoped user
     displayUserTotals = feed.length
-      ? [{ username: currentUser.username, name: currentUser.name || currentUser.username, totalPosts: feed.length }]
+      ? [{ username: scopedUsername, name: scopedName, totalPosts: feed.length }]
       : [];
   }
 
@@ -1328,7 +1396,12 @@ function renderDashboard() {
   // Update "Active Users" label when scoped
   const usersLabel = document.querySelector("#dbMetricUsers + .db-metric-sub") ||
     $("dbMetricUsers")?.closest(".db-metric-card")?.querySelector(".db-metric-sub");
-  if (usersLabel) usersLabel.textContent = isMyScope ? "just you" : "with posts";
+  
+  if (usersLabel) {
+    if (isMyScope)       usersLabel.textContent = "just you";
+    else if (isOtherScope) usersLabel.textContent = "this user";
+    else                 usersLabel.textContent = "with posts";
+  }
 
   // ── Genre bars ──
   $("genreStatsList").innerHTML = renderGenreStats(displayGenres);
@@ -1365,6 +1438,28 @@ function renderDashboard() {
   renderSubGenreCloud(feed);
 
   applyDashboardVisibility();
+}
+
+function populateOtherUserPicker() {
+  const select = $("dbOtherSelect");
+  if (!select) return;
+
+  // Collect all unique users from feed except the current user
+  const others = [...new Map(
+    state.feed
+      .filter(p => p.username !== state.currentUser?.username)
+      .map(p => [p.username, { username: p.username, name: p.name || p.username }])
+  ).values()].sort((a, b) => a.name.localeCompare(b.name));
+
+  select.innerHTML = `<option value="">— pick a user —</option>` +
+    others.map(u => `<option value="${escapeHtml(u.username)}">${escapeHtml(u.name)}</option>`).join("");
+
+  // Re-select previously chosen user if still valid
+  if (state.dashboardOtherUser) {
+    const still = others.find(u => u.username === state.dashboardOtherUser);
+    if (still) select.value = state.dashboardOtherUser;
+    else       state.dashboardOtherUser = "";
+  }
 }
 
 // ── Rating donut ──
