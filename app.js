@@ -182,7 +182,7 @@ function bindToolsToggle() {
     const headerCard = $("toolsHeaderCard");
     if (content)    content.classList.toggle("d-none", !visible);
     if (headerCard) headerCard.classList.toggle("d-none", !visible);
-    if (btn)        btn.textContent = visible ? "Hide Tools" : "Show Tools";
+    if (btn)        btn.innerHTML = visible ? `<i class="bi bi-eye"></i>`: `<i class="bi bi-eye-slash"></i>`;
 
     if (save) localStorage.setItem(TOOLS_STORAGE_KEY, String(visible));
   }
@@ -261,7 +261,7 @@ function applyGuidelinesVisibility(visible) {
   const btn     = $("toggleGuidelinesBtn");
   if (!content || !btn) return;
   content.classList.toggle("d-none", !visible);
-  btn.textContent = visible ? "Hide Guidelines" : "Show Guidelines";
+  btn.innerHTML = visible ? `<i class="bi bi-eye"></i>`: `<i class="bi bi-eye-slash"></i>`;
 }
 // ─────────────────────────────────────────
 // API
@@ -595,7 +595,7 @@ async function handleLogout() {
   if ($("watchedStatsList")) $("watchedStatsList").innerHTML = "";
   if ($("userTotalsList"))   $("userTotalsList").innerHTML = "";
   if ($("dashboardContent")) $("dashboardContent").classList.remove("d-none");
-  if ($("toggleDashboardBtn")) $("toggleDashboardBtn").textContent = "Hide Dashboard";
+  if ($("toggleDashboardBtn")) $("toggleDashboardBtn").innerHTML = `<i class="bi bi-eye"></i>`;
   if ($("sidebarContent")) $("sidebarContent").classList.add("d-none");
   if ($("toggleSidebarBtn")) $("toggleSidebarBtn").textContent = "Show Tools";
   if ($("genreStatsList"))   $("genreStatsList").innerHTML = "";
@@ -628,7 +628,7 @@ async function handleLogout() {
   if ($("subGenreSearch")) $("subGenreSearch").value = "";
   state.guidelinesHidden = false;
   if ($("guidelinesContent")) $("guidelinesContent").classList.remove("d-none");
-  if ($("toggleGuidelinesBtn")) $("toggleGuidelinesBtn").textContent = "Hide Guidelines";
+  if ($("toggleGuidelinesBtn")) $("toggleGuidelinesBtn").innerHTML = `<i class="bi bi-eye"></i>`;
   const guidelinesCard = $("guidelinesCard");
   if (guidelinesCard) guidelinesCard.classList.remove("d-none");
 
@@ -1568,7 +1568,7 @@ function toggleSidebar() {
   const isHidden = content.classList.toggle("d-none");
   const visible  = !isHidden;
   if (headerCard) headerCard.classList.toggle("d-none", !visible);
-  btn.textContent = isHidden ? "Show Tools" : "Hide Tools";
+  btn.innerHTML = isHidden ? `<i class="bi bi-eye-slash"></i>`: `<i class="bi bi-eye"></i>`;
   localStorage.setItem(TOOLS_STORAGE_KEY, String(visible));
   const toggle = $("toolsToggle");
   if (toggle) toggle.setAttribute("aria-checked", String(visible));
@@ -1580,7 +1580,7 @@ function applyDashboardVisibility() {
   if (!content || !btn) return;
 
   content.classList.toggle("d-none", state.dashboardHidden);
-  btn.textContent = state.dashboardHidden ? "Show Dashboard" : "Hide Dashboard";
+  btn.innerHTML = state.dashboardHidden ? `<i class="bi bi-eye-slash"></i>`: `<i class="bi bi-eye"></i>`;
   bindDashboardMonthToggles();
 }
 
@@ -1796,7 +1796,7 @@ function renderPostCard(post) {
     ? `<span class="pc-meta-chip"><i class="bi bi-clock"></i> ${escapeHtml(post.duration)}</span>`
     : "";
   const watchedHtml  = post.dateWatched
-    ? `<span class="pc-meta-chip"><i class="bi bi-eye"></i> Watched ${escapeHtml(formatDate(post.dateWatched))}</span>`
+    ? `<span class="pc-meta-chip"><i class="bi bi-eye"></i> ${escapeHtml(formatDate(post.dateWatched))}</span>`
     : "";
 
   // Genre + sub-genre pill row
@@ -2113,7 +2113,7 @@ function startEdit(post) {
   const btn     = $("toggleSidebarBtn");
   if (content && content.classList.contains("d-none")) {  // ← add
     content.classList.remove("d-none");                   // ← add
-    if (btn) btn.textContent = "Hide Tools";              // ← add
+    if (btn) btn.innerHTML = `<i class="bi bi-eye"></i>`;              // ← add
   }
 
   window.scrollTo({ top: 0, behavior: "smooth" });
