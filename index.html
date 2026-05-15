@@ -51,7 +51,7 @@
       </section>
 
       <main id="appSection" class="d-none">
-        <nav class="app-nav mb-4 mt-2 border-double-secondary">
+        <nav class="app-nav mb-4 mt-2">
           <div class="d-flex align-items-center gap-3">
             <img id="profileAvatar" class="profile-avatar d-none" alt="avatar">
             <div class="app-logo small-logo" id="fallbackAvatar">
@@ -913,15 +913,26 @@
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2">
                   <span class="fw-bold">Dashboard</span>
-                  <!-- ★ NEW: scope toggle -->
-                  <div class="db-scope-tabs" id="dbScopeTabs">
-                    <button class="db-scope-tab active" data-scope="all">All</button>
-                    <button class="db-scope-tab" data-scope="mine">Mine</button>
-                  </div>
                 </div>
-                <button id="toggleDashboardBtn" class="btn btn-sm btn-outline-light custom-outline-btn" type="button">
+                <button id="toggleDashboardBtn" class="btn btn-sm btn-outline-light custom-outline-btn" type="button" hidden="true" aria-hidden="true">
                   <i class="bi bi-eye"></i>
                 </button>
+              </div>
+
+              <div class="d-flex align-items-center justify-content-between mt-2">
+                <!-- ★ NEW: scope toggle -->
+                <div class="db-scope-tabs" id="dbScopeTabs">
+                  <button class="db-scope-tab active" data-scope="all">All</button>
+                  <button class="db-scope-tab" data-scope="mine">Mine</button>
+                  <button class="db-scope-tab" data-scope="other">Other</button>
+                </div>
+
+                <!-- ★ NEW: user picker — shown only when "Other" is active -->
+                <div id="dbOtherPicker" class="db-other-picker d-none my-auto">
+                  <select id="dbOtherSelect" class="form-select custom-input db-other-select">
+                    <option value="">— pick a user —</option>
+                  </select>
+                </div>
               </div>
 
               <div id="dashboardContent" class="dashboard-content">
@@ -1047,40 +1058,39 @@
             </div><!-- /dashboard glass-card -->
 
             <!-- ─── FEED ─── -->
-<!-- ─── FEED ─── -->
-<div class="glass-card p-4 mb-4 border-double-primary">
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-    <span class="fw-bold">Movie Feed</span>
-    <span id="feedCountBadge" class="badge text-bg-light">0 posts</span>
-  </div>
+            <div class="glass-card p-4 mb-4 border-double-primary film-bg">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <span class="fw-bold">Movie Feed</span>
+                <span id="feedCountBadge" class="badge text-bg-light">0 posts</span>
+              </div>
 
-  <div class="position-relative mb-3">
-    <i class="bi bi-search search-icon"></i>
-    <input
-      id="feedSearch"
-      type="search"
-      class="form-control custom-input search-input"
-      placeholder="Search by movie, genre, or user"
-    >
-  </div>
+              <div class="position-relative mb-3">
+                <i class="bi bi-search search-icon"></i>
+                <input
+                  id="feedSearch"
+                  type="search"
+                  class="form-control custom-input search-input"
+                  placeholder="Search by movie, genre, or user"
+                >
+              </div>
 
-  <!-- ★ NEW: filter + sort toolbar -->
-  <div class="feed-toolbar">
-    <div class="feed-filter-tabs" id="feedFilterTabs">
-      <button class="feed-tab active" data-filter="all">All Posts</button>
-      <button class="feed-tab" data-filter="mine">My Posts</button>
-    </div>
-    <div class="feed-sort-wrap">
-      <select id="feedSort" class="form-select custom-input feed-sort-select">
-        <option value="newest">Newest first</option>
-        <option value="oldest">Oldest first</option>
-        <option value="rating">Highest rated</option>
-        <option value="comments">Most comments</option>
-      </select>
-    </div>
-  </div>
-  <!-- end toolbar -->
-</div>
+              <!-- ★ NEW: filter + sort toolbar -->
+              <div class="feed-toolbar">
+                <div class="feed-filter-tabs" id="feedFilterTabs">
+                  <button class="feed-tab active" data-filter="all">All Posts</button>
+                  <button class="feed-tab" data-filter="mine">My Posts</button>
+                </div>
+                <div class="feed-sort-wrap">
+                  <select id="feedSort" class="form-select custom-input feed-sort-select">
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="rating">Highest rated</option>
+                    <option value="comments">Most comments</option>
+                  </select>
+                </div>
+              </div>
+              <!-- end toolbar -->
+            </div>
 
         <div id="feedList" class="feed-list"></div>
         <!-- ★ NEW: infinite scroll sentinel -->
