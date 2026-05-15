@@ -187,12 +187,7 @@
 
                 <form id="postForm" class="row g-3">
                   <input type="hidden" id="postId">
-
-                  <div class="col-12">
-                    <label for="movieName" class="form-label">Movie Name</label>
-                    <input id="movieName" type="text" class="form-control custom-input smx-font" placeholder="E.g. 'Piranha 3D'" required>
-                  </div>
-
+                  
                   <div class="col-12">
                     <label for="genre" class="form-label">Genre</label>
                     <select id="genre" class="form-select custom-input" required>
@@ -218,10 +213,37 @@
                   </div>
 
                   <div class="col-12">
-                    <label class="form-label d-block mb-2">Sub-Genre</label>
-                    <div id="subGenreGroup" class="subgenre-group">
-                      <div class="text-secondary-light small">No sub-genres available yet.</div>
+                    <label class="form-label d-block mb-1">Sub-Genre</label>
+                    <div class="subgenre-panel">
+                      <div class="subgenre-panel-toolbar">
+                        <div class="position-relative flex-grow-1">
+                          <i class="bi bi-search search-icon"></i>
+                          <input
+                            id="subGenreFilterInput"
+                            type="search"
+                            class="form-control custom-input search-input smx-font"
+                            placeholder="Filter sub-genres..."
+                          >
+                        </div>
+                        <label class="subgenre-selected-toggle" title="Show selected only">
+                          <input type="checkbox" id="subGenreShowSelected">
+                          <span class="subgenre-selected-toggle-inner">
+                            <i class="bi bi-check2-square"></i>
+                          </span>
+                        </label>
+                        <button type="button" id="subGenreSortBtn" class="btn btn-outline-light custom-outline-btn subgenre-sort-btn" title="Sort A–Z">
+                          <i class="bi bi-sort-alpha-down"></i>
+                        </button>
+                      </div>
+                      <div id="subGenreGroup" class="subgenre-group subgenre-group--panel">
+                        <div class="text-secondary-light small">No sub-genres available yet.</div>
+                      </div>
                     </div>
+                  </div>
+
+                  <div class="col-12">
+                    <label for="movieName" class="form-label">Movie Name</label>
+                    <input id="movieName" type="text" class="form-control custom-input smx-font" placeholder="E.g. 'Piranha 3D'" required>
                   </div>
 
                   <div class="col-md-6">
@@ -323,36 +345,55 @@
 
               </div>
 
-              <div class="glass-card p-4 mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h3 class="h5 fw-bold mb-0">Sub-Genres</h3>
-                  <span id="subGenreCount" class="badge text-bg-light">0 items</span>
-                </div>
+                <div class="glass-card p-4 mb-4">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h5 fw-bold mb-0">Sub-Genres</h3>
+                    <span id="subGenreCount" class="badge text-bg-light">0 items</span>
+                  </div>
 
-                <div class="position-relative mb-3">
-                  <i class="bi bi-search search-icon"></i>
-                  <input
-                    id="subGenreSearch"
-                    type="search"
-                    class="form-control custom-input search-input mdx-font"
-                    placeholder="Search existing sub-genres..."
-                  >
-                </div>
+                  <!-- Search saved sub-genres -->
+                  <div class="position-relative mb-3">
+                    <i class="bi bi-search search-icon"></i>
+                    <input
+                      id="subGenreSearch"
+                      type="search"
+                      class="form-control custom-input search-input mdx-font"
+                      placeholder="Search existing sub-genres..."
+                    >
+                  </div>
 
-                <div class="d-flex gap-2 mb-3">
-                  <input
-                    id="subGenreInput"
-                    type="text"
-                    class="form-control custom-input smx-font search-subgenre"
-                    placeholder="Add sub-genre..."
-                  >
-                  <button id="addSubGenreBtn" type="button" class="btn btn-outline-light custom-outline-btn"><i class="bi bi-plus-circle"></i></button>
-                </div>
+                  <!-- Saved sub-genre pills -->
+                  <div id="subGenrePreviewList" class="subgenre-preview-list mb-3">
+                    <div class="text-secondary-light small">No sub-genres yet.</div>
+                  </div>
 
-                <div id="subGenrePreviewList" class="subgenre-preview-list">
-                  <div class="text-secondary-light small">No sub-genres yet.</div>
+                  <!-- Draft count badge row -->
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-semibold text-secondary-light">Draft Queue</span>
+                    <span id="subGenreDraftCount" class="badge text-bg-light">0 drafts</span>
+                  </div>
+
+                  <!-- Add input row -->
+                  <div class="d-flex gap-2 mb-3">
+                    <input
+                      id="subGenreInput"
+                      type="text"
+                      class="form-control custom-input smx-font search-subgenre"
+                      placeholder="Add sub-genre to draft..."
+                    >
+                    <button id="addSubGenreBtn" type="button" class="btn btn-outline-light custom-outline-btn" title="Add to draft">
+                      <i class="bi bi-plus-circle"></i>
+                    </button>
+                    <button id="saveSubGenreBtn" type="button" class="btn btn-outline-light custom-outline-btn" title="Save all drafts">
+                      <i class="bi bi-bookmark"></i>
+                    </button>
+                  </div>
+
+                  <!-- Draft list -->
+                  <div id="subGenreDraftList" class="todo-draft-list">
+                    <div class="text-secondary small">No draft items yet.</div>
+                  </div>
                 </div>
-              </div>
 
                 </div>  <!-- end #sidebarContent -->
             </div>
