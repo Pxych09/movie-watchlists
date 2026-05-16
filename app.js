@@ -63,6 +63,8 @@ const state = {
   notifications: [],
   notifOpen: false,
   subGenres: [],
+  // FIX 2: track selected sub-genres in state instead of reading from DOM
+  selectedSubGenres: new Set(),
   todoRouletteTimer: null,
   todoRouletteSpinning: false,
   todoRouletteValue: "",
@@ -95,6 +97,7 @@ function bindEvents() {
   bind("notifBtn",       "click",   toggleNotifications);
   bind("toggleDashboardBtn", "click", toggleDashboard);
   bind("toggleSidebarBtn",   "click", toggleSidebar);
+  bind("togglePostBtn",      "click", togglePost);
   bind("addTodoBtn",     "click",   handleAddTodoDraft);
   bind("saveTodoBtn",    "click",   handleSaveTodoDrafts);
   bind("todoInput",      "keydown", handleTodoInputKeydown);
@@ -107,18 +110,34 @@ function bindEvents() {
   bind("subGenreFilterInput",  "input",  () => renderSubGenreCheckboxes());
   bind("subGenreShowSelected", "change", () => renderSubGenreCheckboxes());
 
+  // FIX 2: use event delegation on the subGenreGroup container so clicks
+  // survive re-renders and always update state.selectedSubGenres
+  const subGenreGroup = $("subGenreGroup");
+  if (subGenreGroup) {
+    subGenreGroup.addEventListener("change", (e) => {
+      const cb = e.target.closest('input[name="subGenre"]');
+      if (!cb) return;
+      if (cb.checked) {
+        state.selectedSubGenres.add(cb.value);
+      } else {
+        state.selectedSubGenres.delete(cb.value);
+      }
+      // If "show selected only" is active, re-render so deselected items disappear
+      if ($("subGenreShowSelected")?.checked) {
+        renderSubGenreCheckboxes();
+      }
+    });
+  }
+
   const sortBtn = $("subGenreSortBtn");
   if (sortBtn) {
     sortBtn.addEventListener("click", () => {
       if (!state.subGenreSortAZ) {
-        // First click: activate A→Z
         state.subGenreSortAZ  = true;
         state.subGenreSortDir = "asc";
       } else if (state.subGenreSortDir === "asc") {
-        // Second click: flip to Z→A
         state.subGenreSortDir = "desc";
       } else {
-        // Third click: reset / unsort
         state.subGenreSortAZ  = false;
         state.subGenreSortDir = "asc";
       }
@@ -130,33 +149,31 @@ function bindEvents() {
   bind("savedTodoSearch","input",   handleSavedTodoSearch);
   bind("spinTodoBtn",    "click",   handleSpinTodoRoulette);
   
-    // Dashboard scope tabs
-// Dashboard scope tabs
-document.getElementById("dbScopeTabs")?.addEventListener("click", (e) => {
-  const btn = e.target.closest(".db-scope-tab");
-  if (!btn) return;
-  document.querySelectorAll(".db-scope-tab").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-  state.dashboardScope = btn.dataset.scope;
+  // Dashboard scope tabs
+  document.getElementById("dbScopeTabs")?.addEventListener("click", (e) => {
+    const btn = e.target.closest(".db-scope-tab");
+    if (!btn) return;
+    document.querySelectorAll(".db-scope-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.dashboardScope = btn.dataset.scope;
 
-  const picker = $("dbOtherPicker");
-  if (state.dashboardScope === "other") {
-    populateOtherUserPicker();
-    picker?.classList.remove("d-none");
-    // Don't render yet — wait for the user to pick someone
-    return;
-  }
+    const picker = $("dbOtherPicker");
+    if (state.dashboardScope === "other") {
+      populateOtherUserPicker();
+      picker?.classList.remove("d-none");
+      return;
+    }
 
-  picker?.classList.add("d-none");
-  state.dashboardOtherUser = "";
-  renderDashboard();
-});
+    picker?.classList.add("d-none");
+    state.dashboardOtherUser = "";
+    renderDashboard();
+  });
 
-// "Other" user select
-document.getElementById("dbOtherSelect")?.addEventListener("change", (e) => {
-  state.dashboardOtherUser = e.target.value;
-  if (state.dashboardOtherUser) renderDashboard();
-});
+  // "Other" user select
+  document.getElementById("dbOtherSelect")?.addEventListener("change", (e) => {
+    state.dashboardOtherUser = e.target.value;
+    if (state.dashboardOtherUser) renderDashboard();
+  });
 
   // Feed retry button
   bind("feedRetryBtn", "click", () => refreshFeed());
@@ -176,7 +193,7 @@ document.getElementById("dbOtherSelect")?.addEventListener("change", (e) => {
     applyFeedFilter();
   });
 
-    // Scroll to top
+  // Scroll to top
   const scrollBtn = $("scrollTopBtn");
   if (scrollBtn) {
     window.addEventListener("scroll", () => {
@@ -230,10 +247,44 @@ document.getElementById("dbOtherSelect")?.addEventListener("change", (e) => {
   });
 
   mobileLogoutBtn?.addEventListener("click", handleLogout);
+  bindPostToggle();
   bindToolsToggle();
   bindDashboardToggle();
   bindGuidelinesToggle();
+}
 
+// ─────────────────────────────────────────
+// POST PANEL TOGGLE
+// ─────────────────────────────────────────
+const POST_STORAGE_KEY = "postPanelVisible";
+
+function bindPostToggle() {
+  const toggle = $("postToggle");
+  if (!toggle) return;
+
+  const saved     = localStorage.getItem(POST_STORAGE_KEY);
+  const isVisible = saved === null ? false : saved === "true";
+  applyPostState(isVisible, false);
+
+  toggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const current = toggle.getAttribute("aria-checked") === "true";
+    applyPostState(!current, true);
+  });
+}
+
+function applyPostState(visible, save) {
+  const toggle     = $("postToggle");
+  const content    = $("postContent");
+  const btn        = $("togglePostBtn");
+  const headerCard = $("postHeaderCard");
+
+  if (toggle)     toggle.setAttribute("aria-checked", String(visible));
+  if (content)    content.classList.toggle("d-none", !visible);
+  if (headerCard) headerCard.classList.toggle("d-none", !visible);
+  if (btn)        btn.innerHTML = visible ? `<i class="bi bi-eye"></i>` : `<i class="bi bi-eye-slash"></i>`;
+
+  if (save) localStorage.setItem(POST_STORAGE_KEY, String(visible));
 }
 
 // ─────────────────────────────────────────
@@ -245,6 +296,7 @@ function bindToolsToggle() {
   const toggle = $("toolsToggle");
   if (!toggle) return;
 
+  // FIX 1: read from localStorage but will be overridden to false on login
   const saved     = localStorage.getItem(TOOLS_STORAGE_KEY);
   const isVisible = saved === null ? false : saved === "true";
   applyToolsState(isVisible, false);
@@ -254,19 +306,21 @@ function bindToolsToggle() {
     const current = toggle.getAttribute("aria-checked") === "true";
     applyToolsState(!current, true);
   });
+}
 
-  function applyToolsState(visible, save) {
-    toggle.setAttribute("aria-checked", String(visible));
+// FIX 1: extracted so login can call it directly
+function applyToolsState(visible, save) {
+  const toggle     = $("toolsToggle");
+  const content    = $("sidebarContent");
+  const btn        = $("toggleSidebarBtn");
+  const headerCard = $("toolsHeaderCard");
 
-    const content    = $("sidebarContent");
-    const btn        = $("toggleSidebarBtn");
-    const headerCard = $("toolsHeaderCard");
-    if (content)    content.classList.toggle("d-none", !visible);
-    if (headerCard) headerCard.classList.toggle("d-none", !visible);
-    if (btn)        btn.innerHTML = visible ? `<i class="bi bi-eye"></i>`: `<i class="bi bi-eye-slash"></i>`;
+  if (toggle)     toggle.setAttribute("aria-checked", String(visible));
+  if (content)    content.classList.toggle("d-none", !visible);
+  if (headerCard) headerCard.classList.toggle("d-none", !visible);
+  if (btn)        btn.innerHTML = visible ? `<i class="bi bi-eye"></i>` : `<i class="bi bi-eye-slash"></i>`;
 
-    if (save) localStorage.setItem(TOOLS_STORAGE_KEY, String(visible));
-  }
+  if (save) localStorage.setItem(TOOLS_STORAGE_KEY, String(visible));
 }
 
 // ─────────────────────────────────────────
@@ -287,16 +341,19 @@ function bindDashboardToggle() {
     const current = toggle.getAttribute("aria-checked") === "true";
     applyDashboardToggleState(!current, true);
   });
-
-  function applyDashboardToggleState(visible, save) {
-    toggle.setAttribute("aria-checked", String(visible));
-    state.dashboardHidden = !visible;
-    const dashboardCard = $("dashboardCard");
-    if (dashboardCard) dashboardCard.classList.toggle("d-none", !visible);
-    applyDashboardVisibility();
-    if (save) localStorage.setItem(DASHBOARD_STORAGE_KEY, String(visible));
-  }
 }
+
+// FIX 1: extracted so login can call it directly
+function applyDashboardToggleState(visible, save) {
+  const toggle = $("dashboardToggle");
+  if (toggle) toggle.setAttribute("aria-checked", String(visible));
+  state.dashboardHidden = !visible;
+  const dashboardCard = $("dashboardCard");
+  if (dashboardCard) dashboardCard.classList.toggle("d-none", !visible);
+  applyDashboardVisibility();
+  if (save) localStorage.setItem(DASHBOARD_STORAGE_KEY, String(visible));
+}
+
 // ─────────────────────────────────────────
 // GUIDELINES PANEL TOGGLE
 // ─────────────────────────────────────────
@@ -315,15 +372,17 @@ function bindGuidelinesToggle() {
     const current = toggle.getAttribute("aria-checked") === "true";
     applyGuidelinesToggleState(!current, true);
   });
+}
 
-  function applyGuidelinesToggleState(visible, save) {
-    toggle.setAttribute("aria-checked", String(visible));
-    state.guidelinesHidden = !visible;
-    const guidelinesCard = $("guidelinesCard");
-    if (guidelinesCard) guidelinesCard.classList.toggle("d-none", !visible);
-    applyGuidelinesVisibility(visible);
-    if (save) localStorage.setItem(GUIDELINES_STORAGE_KEY, String(visible));
-  }
+// FIX 1: extracted so login can call it directly
+function applyGuidelinesToggleState(visible, save) {
+  const toggle = $("guidelinesToggle");
+  if (toggle) toggle.setAttribute("aria-checked", String(visible));
+  state.guidelinesHidden = !visible;
+  const guidelinesCard = $("guidelinesCard");
+  if (guidelinesCard) guidelinesCard.classList.toggle("d-none", !visible);
+  applyGuidelinesVisibility(visible);
+  if (save) localStorage.setItem(GUIDELINES_STORAGE_KEY, String(visible));
 }
 
 function toggleGuidelines() {
@@ -342,8 +401,24 @@ function applyGuidelinesVisibility(visible) {
   const btn     = $("toggleGuidelinesBtn");
   if (!content || !btn) return;
   content.classList.toggle("d-none", !visible);
-  btn.innerHTML = visible ? `<i class="bi bi-eye"></i>`: `<i class="bi bi-eye-slash"></i>`;
+  btn.innerHTML = visible ? `<i class="bi bi-eye"></i>` : `<i class="bi bi-eye-slash"></i>`;
 }
+
+// ─────────────────────────────────────────
+// FIX 1: reset all panel toggles to OFF for a fresh session
+// ─────────────────────────────────────────
+function resetPanelTogglesToDefault() {
+  localStorage.removeItem(POST_STORAGE_KEY);
+  localStorage.removeItem(TOOLS_STORAGE_KEY);
+  localStorage.removeItem(DASHBOARD_STORAGE_KEY);
+  localStorage.removeItem(GUIDELINES_STORAGE_KEY);
+
+  applyPostState(false, false);
+  applyToolsState(false, false);
+  applyDashboardToggleState(false, false);
+  applyGuidelinesToggleState(false, false);
+}
+
 // ─────────────────────────────────────────
 // API
 // ─────────────────────────────────────────
@@ -582,7 +657,6 @@ function showSection(isLoggedIn) {
 
   window.removeAlert = function (id) { removeToast(id); };
 
-  // hideAlerts() is called on logout — clears all toasts at once
   window.hideAlerts = function () {
     const stack = document.getElementById("toastStack");
     if (!stack) return;
@@ -617,6 +691,10 @@ async function handleLogin(event) {
     state.currentUser = user;
     saveSession(user);
     setProfile(user);
+
+    // FIX 1: always start with all panels OFF on a fresh login
+    resetPanelTogglesToDefault();
+
     showSection(true);
     await refreshFeed();
     showAlert(`Welcome back, ${user.name || user.username}!`, "success");
@@ -650,14 +728,16 @@ async function handleLogout() {
   state.todoDrafts     = [];
   state.selectedTodoId = "";
   state.subGenres      = [];
+  // FIX 2: clear selected sub-genres on logout
+  state.selectedSubGenres = new Set();
   state.dashboardMonthTab = "count";
   state.notifShowUnreadOnly = false;
   state.feedFilter = "all";
   state.feedSort   = "newest";
   state.feedPage   = 0;
   state.dashboardScope = "all";
-    document.querySelectorAll(".db-scope-tab").forEach((b, i) => b.classList.toggle("active", i === 0));
-    state.dashboardOtherUser = "";
+  document.querySelectorAll(".db-scope-tab").forEach((b, i) => b.classList.toggle("active", i === 0));
+  state.dashboardOtherUser = "";
   $("dbOtherPicker")?.classList.add("d-none");
   const otherSel = $("dbOtherSelect");
   if (otherSel) otherSel.innerHTML = `<option value="">— pick a user —</option>`;
@@ -700,6 +780,10 @@ async function handleLogout() {
   if ($("userTotalsList"))   $("userTotalsList").innerHTML = "";
   if ($("dashboardContent")) $("dashboardContent").classList.remove("d-none");
   if ($("toggleDashboardBtn")) $("toggleDashboardBtn").innerHTML = `<i class="bi bi-eye"></i>`;
+
+  // Reset Post panel
+  applyPostState(false, false);
+
   if ($("sidebarContent")) $("sidebarContent").classList.add("d-none");
   if ($("toggleSidebarBtn")) $("toggleSidebarBtn").textContent = "Show Tools";
   if ($("genreStatsList"))   $("genreStatsList").innerHTML = "";
@@ -750,6 +834,11 @@ async function restoreSession() {
   try {
     state.currentUser = JSON.parse(saved);
     setProfile(state.currentUser);
+
+    // FIX 1: also reset toggles on session restore (e.g. after a session expiry
+    // that left the user auto-logged-out and now logging back in)
+    resetPanelTogglesToDefault();
+
     showSection(true);
     await refreshFeed();
   } catch (error) {
@@ -785,7 +874,6 @@ function setProfile(user) {
 async function refreshFeed() {
   if (!state.currentUser) return;
 
-  // Hide error card, show skeletons
   $("feedError")?.classList.add("d-none");
 
   showFeedSkeleton(3);
@@ -808,7 +896,6 @@ async function refreshFeed() {
     state.subGenres     = Array.isArray(subGenres)     ? subGenres     : [];
     state.dashboard     = dashboard || { genres: [], topRated: [], watchedByMonth: [], userTotals: [] };
 
-    // Clear error card on success
     $("feedError")?.classList.add("d-none");
 
     renderSavedTodos();
@@ -819,14 +906,12 @@ async function refreshFeed() {
     applyFeedFilter();
     renderNotifications();
   } catch (error) {
-    // Show error / retry card instead of leaving skeletons
     showFeedError(error.message);
     showAlert(error.message, "danger");
     if (/Session expired/i.test(error.message)) await handleLogout();
   }
 }
 
-// Silent refresh — no skeletons, no overlay. Used after optimistic actions succeed.
 async function silentRefresh() {
   if (!state.currentUser) return;
   try {
@@ -839,23 +924,20 @@ async function silentRefresh() {
     renderDashboard();
     applyFeedFilter();
   } catch (_) {
-    // silent — the optimistic update already showed the change
+    // silent
   }
 }
 
 function showFeedError(message) {
-  // Clear skeletons
   const feedList = $("feedList");
   if (feedList) feedList.innerHTML = "";
   $("emptyFeed")?.classList.add("d-none");
   if ($("feedCountBadge")) $("feedCountBadge").textContent = "0 posts";
 
-  // Show error card
   const card = $("feedError");
   if (!card) return;
   card.classList.remove("d-none");
 
-  // Update sub-text with the actual error (capped)
   const sub = card.querySelector(".feed-error-sub");
   if (sub && message) {
     sub.textContent = message.length > 120 ? message.slice(0, 117) + "…" : message;
@@ -972,9 +1054,6 @@ function handleSpinTodoRoulette() {
 }
 
 // ─────────────────────────────────────────
-// FEED FILTER
-// ─────────────────────────────────────────
-// ─────────────────────────────────────────
 // FEED SEARCH HANDLER
 // ─────────────────────────────────────────
 function handleFeedSearch() {
@@ -994,7 +1073,6 @@ function handleFeedSort() {
 function applyFeedFilter() {
   const query = ($("feedSearch")?.value || "").trim().toLowerCase();
 
-  // 1. Text search
   let result = query
     ? state.feed.filter((post) => {
         const haystack = [
@@ -1007,15 +1085,11 @@ function applyFeedFilter() {
       })
     : [...state.feed];
 
-  // 2. User filter
   if (state.feedFilter === "mine" && state.currentUser) {
     result = result.filter((p) => p.username === state.currentUser.username);
   }
 
-  // 3. Sort
   result = sortFeed(result, state.feedSort);
-
-  // 4. Render paginated
   renderFeedPaginated(result);
 }
 
@@ -1165,17 +1239,12 @@ function handleSavedTodoToggle(todo, checked) {
     state.selectedTodoId = todo.todoId;
     $("movieName").value = todo.movieName || "";
 
-    // ★ Scroll to the Create Post form and briefly highlight it
     const formCard = $("postForm")?.closest(".glass-card");
     if (formCard) {
-      // Force-open the sidebar first if it's hidden
-      const sidebar = $("sidebarContent");
-      if (sidebar?.classList.contains("d-none")) {
-        sidebar.classList.remove("d-none");
-        $("toggleSidebarBtn").innerHTML = `<i class="bi bi-eye"></i>`;
-        localStorage.setItem("toolsPanelVisible", "true");
-        const toggle = $("toolsToggle");
-        if (toggle) toggle.setAttribute("aria-checked", "true");
+      // Open the Post panel if it's hidden
+      const postContent = $("postContent");
+      if (postContent?.classList.contains("d-none")) {
+        applyPostState(true, true);
       }
 
       setTimeout(() => {
@@ -1190,11 +1259,10 @@ function handleSavedTodoToggle(todo, checked) {
   }
   renderSavedTodos();
 }
+
 // ─────────────────────────────────────────
 // DASHBOARD — CLIENT-SIDE COMPUTATIONS
 // ─────────────────────────────────────────
-
-/** Parse "2h 15m", "1h", "45m", "120" → total minutes */
 function parseDurationToMinutes(str) {
   if (!str) return 0;
   const s = String(str);
@@ -1207,63 +1275,19 @@ function parseDurationToMinutes(str) {
   return (h ? parseInt(h[1], 10) * 60 : 0) + (m ? parseInt(m[1], 10) : 0);
 }
 
-/** Group feed posts by YYYY-MM key */
-// function groupFeedByMonth(feed) {
-//   const byMonth = {};
-//   feed.forEach((post) => {
-//     const raw = post.dateWatched || "";
-//     const key = String(raw).slice(0, 7); // "YYYY-MM"
-//     if (!/^\d{4}-\d{2}$/.test(key)) return;
-//     if (!byMonth[key]) byMonth[key] = [];
-//     byMonth[key].push(post);
-//   });
-//   return byMonth;
-// }
 function groupFeedByMonth(feed) {
   const byMonth = {};
   feed.forEach((post) => {
-    const iso = normalizeDateWatched(post.dateWatched); // "YYYY-MM-DD"
-    const key = iso.slice(0, 7); // "YYYY-MM"
+    const iso = normalizeDateWatched(post.dateWatched);
+    const key = iso.slice(0, 7);
     if (!/^\d{4}-\d{2}$/.test(key)) return;
     if (!byMonth[key]) byMonth[key] = [];
     byMonth[key].push(post);
   });
   return byMonth;
 }
-// function groupFeedByMonth(feed) {
-//   const byMonth = {};
-//   feed.forEach((post) => {
-//     const raw = post.dateWatched;
-//     if (!raw) return;
 
-//     let key;
-//     if (raw instanceof Date || (typeof raw === "object" && raw !== null)) {
-//       // Already a Date object
-//       const d = new Date(raw);
-//       if (isNaN(d.getTime())) return;
-//       key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-//     } else {
-//       const s = String(raw);
-//       // Full date string like "Mon May 11 2026 00:00:00 GMT+0800..."
-//       if (!/^\d{4}-\d{2}/.test(s)) {
-//         const d = new Date(s);
-//         if (isNaN(d.getTime())) return;
-//         key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-//       } else {
-//         key = s.slice(0, 7);
-//       }
-//     }
-
-//     if (!/^\d{4}-\d{2}$/.test(key)) return;
-//     if (!byMonth[key]) byMonth[key] = [];
-//     byMonth[key].push(post);
-//   });
-//   return byMonth;
-// }
-
-/** Compute watching streaks and longest gap per user from the full feed */
 function computeStreakData(feed) {
-  // Group posts by username → sorted dates
   const byUser = {};
   feed.forEach((post) => {
     if (!post.username) return;
@@ -1282,7 +1306,6 @@ function computeStreakData(feed) {
     for (let i = 1; i < dates.length; i++) {
       const diffDays = Math.round((dates[i] - dates[i - 1]) / 86_400_000);
       maxGapDays = Math.max(maxGapDays, diffDays);
-      // "Streak" = watched within 8 days of previous watch
       if (diffDays <= 8) {
         currentStreak++;
         maxStreak = Math.max(maxStreak, currentStreak);
@@ -1300,7 +1323,6 @@ function computeStreakData(feed) {
   }).sort((a, b) => b.streak - a.streak);
 }
 
-/** Compute per-month average ratings from the full feed */
 function computeMonthlyAvgRating(feed) {
   const byMonth = groupFeedByMonth(feed);
   return Object.keys(byMonth).sort().map((month) => {
@@ -1310,7 +1332,6 @@ function computeMonthlyAvgRating(feed) {
   });
 }
 
-/** Count sub-genre occurrences across all posts */
 function computeSubGenreCounts(feed) {
   const counts = {};
   feed.forEach((post) => {
@@ -1334,14 +1355,12 @@ function renderDashboard() {
   const isOtherScope = state.dashboardScope === "other";
   const currentUser  = state.currentUser;
 
-  // Filter feed by scope
   const feed = isMyScope && currentUser
     ? allFeed.filter(p => p.username === currentUser.username)
     : isOtherScope && state.dashboardOtherUser
       ? allFeed.filter(p => p.username === state.dashboardOtherUser)
       : allFeed;
 
-  // If "Other" but no user selected yet, show an empty-ish dashboard
   if (isOtherScope && !state.dashboardOtherUser) {
     ["dbMetricPosts","dbMetricHours","dbMetricAvgRating","dbMetricUsers"]
       .forEach(id => { if ($(id)) $(id).textContent = "—"; });
@@ -1358,26 +1377,22 @@ function renderDashboard() {
     return;
   }
 
-  // Filter server-side aggregates for "Mine" scope
   const genres = Array.isArray(dashboard.genres) ? dashboard.genres : [];
   const topRated = Array.isArray(dashboard.topRated) ? dashboard.topRated : [];
   const watchedByMonth = Array.isArray(dashboard.watchedByMonth) ? dashboard.watchedByMonth : [];
   const userTotals = Array.isArray(dashboard.userTotals) ? dashboard.userTotals : [];
 
-  // For "Mine", re-derive genre counts and watched-by-month from the filtered feed
-  // (server data is for all users, so we recompute)
   let displayGenres = genres;
   let displayWatchedByMonth = watchedByMonth;
   let displayTopRated = topRated;
   let displayUserTotals = userTotals;
 
-if ((isMyScope && currentUser) || (isOtherScope && state.dashboardOtherUser)) {
-    // Determine display name for the scoped user
+  if ((isMyScope && currentUser) || (isOtherScope && state.dashboardOtherUser)) {
     const scopedUsername = isMyScope ? currentUser.username : state.dashboardOtherUser;
     const scopedName     = isMyScope
       ? (currentUser.name || currentUser.username)
       : (state.feed.find(p => p.username === scopedUsername)?.name || scopedUsername);
-    // Re-compute genres from filtered feed
+
     const genreMap = {};
     feed.forEach(p => {
       if (p.genre) { genreMap[p.genre] = (genreMap[p.genre] || 0) + 1; }
@@ -1386,7 +1401,6 @@ if ((isMyScope && currentUser) || (isOtherScope && state.dashboardOtherUser)) {
       .map(([genre, total]) => ({ genre, total }))
       .sort((a, b) => b.total - a.total);
 
-    // Re-compute watchedByMonth from filtered feed
     const monthMap = {};
     feed.forEach(p => {
       const iso = normalizeDateWatched(p.dateWatched);
@@ -1403,7 +1417,6 @@ if ((isMyScope && currentUser) || (isOtherScope && state.dashboardOtherUser)) {
     displayWatchedByMonth = Object.keys(monthMap).sort()
       .map(k => { monthMap[k].movies.sort((a,b) => a.movieName.localeCompare(b.movieName)); return monthMap[k]; });
 
-    // Re-compute topRated from filtered feed
     const rMap = { 5:[], 4:[], 3:[], 2:[], 1:[] };
     feed.forEach(p => { if (rMap[p.rating]) rMap[p.rating].push(p); });
     displayTopRated = [5,4,3,2,1].map(stars => ({
@@ -1412,13 +1425,11 @@ if ((isMyScope && currentUser) || (isOtherScope && state.dashboardOtherUser)) {
       movies: rMap[stars].slice().sort((a,b) => a.movieName.localeCompare(b.movieName))
     }));
 
-// User totals: just the scoped user
     displayUserTotals = feed.length
       ? [{ username: scopedUsername, name: scopedName, totalPosts: feed.length }]
       : [];
   }
 
-  // ── Metric cards ──
   const totalPosts  = feed.length;
   const totalMins   = feed.reduce((s, p) => s + parseDurationToMinutes(p.duration), 0);
   const totalHrs    = Math.round(totalMins / 60);
@@ -1432,26 +1443,20 @@ if ((isMyScope && currentUser) || (isOtherScope && state.dashboardOtherUser)) {
   if ($("dbMetricAvgRating")) $("dbMetricAvgRating").textContent = avgRating !== "—" ? avgRating + " ★" : "—";
   if ($("dbMetricUsers"))     $("dbMetricUsers").textContent     = activeUsers;
 
-  // Update "Active Users" label when scoped
   const usersLabel = document.querySelector("#dbMetricUsers + .db-metric-sub") ||
     $("dbMetricUsers")?.closest(".db-metric-card")?.querySelector(".db-metric-sub");
   
   if (usersLabel) {
-    if (isMyScope)       usersLabel.textContent = "just you";
+    if (isMyScope)         usersLabel.textContent = "just you";
     else if (isOtherScope) usersLabel.textContent = "this user";
-    else                 usersLabel.textContent = "with posts";
+    else                   usersLabel.textContent = "with posts";
   }
 
-  // ── Genre bars ──
   $("genreStatsList").innerHTML = renderGenreStats(displayGenres);
 
-  // ── Rating donut ──
   renderRatingDonut(feed);
-
-  // ── Monthly chart ──
   renderMonthlyChart(feed);
 
-  // ── User totals ──
   $("userTotalsList").innerHTML = displayUserTotals.length
     ? displayUserTotals.map(item => `
         <div class="dashboard-list-item">
@@ -1461,19 +1466,14 @@ if ((isMyScope && currentUser) || (isOtherScope && state.dashboardOtherUser)) {
       `).join("")
     : `<div class="text-secondary-light small">No user post data yet.</div>`;
 
-  // ── Streaks ──
   renderStreaks(feed);
 
-  // ── Top rated ──
   $("topRatedList").innerHTML = renderTopRatedByStars(displayTopRated);
 
-  // ── Rating trend ──
   renderRatingTrend(feed);
 
-  // ── Watched by month ──
   $("watchedStatsList").innerHTML = renderWatchedStatsByYear(displayWatchedByMonth);
 
-  // ── Sub-genre cloud ──
   renderSubGenreCloud(feed);
 
   applyDashboardVisibility();
@@ -1483,7 +1483,6 @@ function populateOtherUserPicker() {
   const select = $("dbOtherSelect");
   if (!select) return;
 
-  // Collect all unique users from feed except the current user
   const others = [...new Map(
     state.feed
       .filter(p => p.username !== state.currentUser?.username)
@@ -1493,7 +1492,6 @@ function populateOtherUserPicker() {
   select.innerHTML = `<option value="">— pick a user —</option>` +
     others.map(u => `<option value="${escapeHtml(u.username)}">${escapeHtml(u.name)}</option>`).join("");
 
-  // Re-select previously chosen user if still valid
   if (state.dashboardOtherUser) {
     const still = others.find(u => u.username === state.dashboardOtherUser);
     if (still) select.value = state.dashboardOtherUser;
@@ -1501,7 +1499,6 @@ function populateOtherUserPicker() {
   }
 }
 
-// ── Rating donut ──
 function renderRatingDonut(feed) {
   const counts = [0, 0, 0, 0, 0];
   feed.forEach((p) => {
@@ -1509,7 +1506,6 @@ function renderRatingDonut(feed) {
     if (r >= 1 && r <= 5) counts[r - 1]++;
   });
 
-  // Legend
   const legendEl = $("ratingLegend");
   if (legendEl) {
     const labels = ["1★", "2★", "3★", "4★", "5★"];
@@ -1548,7 +1544,6 @@ function renderRatingDonut(feed) {
   });
 }
 
-// ── Monthly bar chart (count or avg rating) ──
 function renderMonthlyChart(feed) {
   const byMonth  = groupFeedByMonth(feed);
   const months   = Object.keys(byMonth).sort();
@@ -1605,7 +1600,6 @@ function renderMonthlyChart(feed) {
   });
 }
 
-// ── Avg rating trend line ──
 function renderRatingTrend(feed) {
   const monthly = computeMonthlyAvgRating(feed);
   const labels  = monthly.map(({ month }) => {
@@ -1614,7 +1608,6 @@ function renderRatingTrend(feed) {
   });
   const data = monthly.map(({ avg }) => avg);
 
-  // ★ FIX: derive y-axis min/max from actual data; fall back to 0–5 when empty
   const hasData = data.length > 0;
   const dataMin = hasData ? Math.min(...data) : 0;
   const dataMax = hasData ? Math.max(...data) : 5;
@@ -1642,7 +1635,6 @@ function renderRatingTrend(feed) {
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        // ★ Show a friendly message when empty
         ...(hasData ? {} : {
           beforeDraw(chart) {
             const { ctx, chartArea: { left, top, width, height } } = chart;
@@ -1680,7 +1672,6 @@ function renderRatingTrend(feed) {
   });
 }
 
-// ── Streak rows ──
 function renderStreaks(feed) {
   const el = $("dbStreakList");
   if (!el) return;
@@ -1700,7 +1691,6 @@ function renderStreaks(feed) {
   `).join("");
 }
 
-// ── Sub-genre cloud ──
 function renderSubGenreCloud(feed) {
   const el = $("dbSubGenreCloud");
   if (!el) return;
@@ -1721,7 +1711,7 @@ function renderSubGenreCloud(feed) {
 }
 
 // ─────────────────────────────────────────
-// DASHBOARD TAB SWITCH (exposed globally for onclick)
+// DASHBOARD TAB SWITCH
 // ─────────────────────────────────────────
 function switchDashboardTab(mode) {
   state.dashboardMonthTab = mode;
@@ -1733,11 +1723,10 @@ function switchDashboardTab(mode) {
 
   renderMonthlyChart(state.feed);
 }
-// Make it available globally for the onclick attribute in HTML
 window.switchDashboardTab = switchDashboardTab;
 
 // ─────────────────────────────────────────
-// GENRE STATS (server data, bar style)
+// GENRE STATS
 // ─────────────────────────────────────────
 function renderGenreStats(genres) {
   if (!genres.length) return `<div class="text-secondary-light small">No genre data yet.</div>`;
@@ -1760,7 +1749,7 @@ function renderGenreStats(genres) {
 }
 
 // ─────────────────────────────────────────
-// TOP RATED ACCORDION (server data)
+// TOP RATED ACCORDION
 // ─────────────────────────────────────────
 function renderTopRatedByStars(groups) {
   if (!groups.length) return `<div class="text-secondary-light small">No rating data yet.</div>`;
@@ -1798,7 +1787,7 @@ function renderTopRatedByStars(groups) {
 }
 
 // ─────────────────────────────────────────
-// WATCHED BY MONTH ACCORDION (server data)
+// WATCHED BY MONTH ACCORDION
 // ─────────────────────────────────────────
 function renderWatchedStatsByYear(items) {
   if (!items.length) return `<div class="text-secondary-light small">No monthly watched data yet.</div>`;
@@ -1871,7 +1860,6 @@ function handleAddSubGenreDraft() {
   const value = (input?.value || "").trim();
   if (!value) return;
 
-  // Duplicate check against already-saved sub-genres
   const existsInDB = (state.subGenres || []).some(
     (item) => (item.name || "").trim().toLowerCase() === value.toLowerCase()
   );
@@ -1880,7 +1868,6 @@ function handleAddSubGenreDraft() {
     return;
   }
 
-  // Duplicate check within current drafts
   const existsInDraft = state.subGenreDrafts.some(
     (d) => d.toLowerCase() === value.toLowerCase()
   );
@@ -1968,6 +1955,20 @@ function toggleDashboard() {
   applyDashboardVisibility();
 }
 
+function togglePost() {
+  const content    = $("postContent");
+  const btn        = $("togglePostBtn");
+  const headerCard = $("postHeaderCard");
+  if (!content || !btn) return;
+  const isHidden = content.classList.toggle("d-none");
+  const visible  = !isHidden;
+  if (headerCard) headerCard.classList.toggle("d-none", !visible);
+  btn.innerHTML = isHidden ? `<i class="bi bi-eye-slash"></i>` : `<i class="bi bi-eye"></i>`;
+  localStorage.setItem(POST_STORAGE_KEY, String(visible));
+  const toggle = $("postToggle");
+  if (toggle) toggle.setAttribute("aria-checked", String(visible));
+}
+
 function toggleSidebar() {
   const content    = $("sidebarContent");
   const btn        = $("toggleSidebarBtn");
@@ -1976,7 +1977,7 @@ function toggleSidebar() {
   const isHidden = content.classList.toggle("d-none");
   const visible  = !isHidden;
   if (headerCard) headerCard.classList.toggle("d-none", !visible);
-  btn.innerHTML = isHidden ? `<i class="bi bi-eye-slash"></i>`: `<i class="bi bi-eye"></i>`;
+  btn.innerHTML = isHidden ? `<i class="bi bi-eye-slash"></i>` : `<i class="bi bi-eye"></i>`;
   localStorage.setItem(TOOLS_STORAGE_KEY, String(visible));
   const toggle = $("toolsToggle");
   if (toggle) toggle.setAttribute("aria-checked", String(visible));
@@ -1988,7 +1989,7 @@ function applyDashboardVisibility() {
   if (!content || !btn) return;
 
   content.classList.toggle("d-none", state.dashboardHidden);
-  btn.innerHTML = state.dashboardHidden ? `<i class="bi bi-eye-slash"></i>`: `<i class="bi bi-eye"></i>`;
+  btn.innerHTML = state.dashboardHidden ? `<i class="bi bi-eye-slash"></i>` : `<i class="bi bi-eye"></i>`;
   bindDashboardMonthToggles();
 }
 
@@ -2033,11 +2034,9 @@ function renderNotifications() {
   const items       = Array.isArray(state.notifications) ? state.notifications : [];
   const unreadCount = items.filter(n => !n.isRead).length;
 
-  // Bell badge
   notifBadge.textContent = String(unreadCount);
   notifBadge.classList.toggle("d-none", unreadCount === 0);
 
-  // Panel header badge
   if (notifPanelBadge) {
     notifPanelBadge.textContent = unreadCount > 0
       ? `${unreadCount} unread`
@@ -2045,7 +2044,6 @@ function renderNotifications() {
     notifPanelBadge.classList.toggle("is-empty", unreadCount === 0);
   }
 
-  // Toggle button state — "Show unread" / "Show all"
   const showingUnread = state.notifShowUnreadOnly || false;
   if (toggleBtn) {
     toggleBtn.textContent = showingUnread ? "Show all" : `Unread (${unreadCount})`;
@@ -2057,7 +2055,6 @@ function renderNotifications() {
     };
   }
 
-  // Filter list
   const visible = showingUnread ? items.filter(n => !n.isRead) : items;
 
   if (!visible.length) {
@@ -2118,6 +2115,7 @@ async function handleSavePost(event) {
   const postId      = $("postId")?.value.trim() || "";
   const movieName   = $("movieName")?.value.trim() || "";
   const genre       = $("genre")?.value || "";
+  // FIX 2: read from state instead of DOM
   const subGenres   = getSelectedSubGenres();
   const rating      = $("rating")?.value || "";
   const dateWatched = $("dateWatched")?.value || "";
@@ -2147,7 +2145,6 @@ async function handleSavePost(event) {
 
     const wasEditing = state.isEditing;
     resetPostForm();
-    // Full refresh needed to get the real postId from the server
     await refreshFeed();
     if (!wasEditing) {
       setTimeout(() => {
@@ -2170,7 +2167,7 @@ async function handleSavePost(event) {
 // ─────────────────────────────────────────
 // RENDER FEED (paginated / infinite scroll)
 // ─────────────────────────────────────────
-let _infiniteObserver = null;   // module-level so we can disconnect/reconnect
+let _infiniteObserver = null;
 
 function renderFeedPaginated(feed) {
   const feedList       = $("feedList");
@@ -2179,7 +2176,6 @@ function renderFeedPaginated(feed) {
   const sentinel       = $("feedSentinel");
   if (!feedList || !emptyFeed || !feedCountBadge) return;
 
-  // Disconnect previous observer
   if (_infiniteObserver) { _infiniteObserver.disconnect(); _infiniteObserver = null; }
 
   feedList.innerHTML = "";
@@ -2187,7 +2183,6 @@ function renderFeedPaginated(feed) {
   emptyFeed.classList.toggle("d-none", feed.length > 0);
   if (!feed.length) { if (sentinel) sentinel.style.display = "none"; return; }
 
-  // Store filtered+sorted feed for the observer to page through
   feedList._pagedFeed = feed;
   feedList._pagedIndex = 0;
 
@@ -2204,10 +2199,8 @@ function renderFeedPaginated(feed) {
     }
   };
 
-  // First page
   renderNextPage();
 
-  // Set up IntersectionObserver for subsequent pages
   if (sentinel && "IntersectionObserver" in window) {
     _infiniteObserver = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) renderNextPage();
@@ -2216,19 +2209,8 @@ function renderFeedPaginated(feed) {
   }
 }
 
-// Keep old name as alias so nothing else breaks
 function renderFeed(feed) { renderFeedPaginated(feed); }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DROP-IN REPLACEMENTS for app.js
-// Replace the existing renderPostCard() and renderCommentItem() functions
-// with these two. Everything else in app.js stays the same.
-// ─────────────────────────────────────────────────────────────────────────────
-/**
- * Replace a single post card in the DOM with a freshly rendered version.
- * Uses the current state.feed entry for that postId.
- * Falls back to a full applyFeedFilter() if the card isn't found.
- */
 function replacePostCard(postId) {
   const existing = document.querySelector(`[data-post-id="${CSS.escape(postId)}"]`);
   const postData = state.feed.find(p => p.postId === postId);
@@ -2248,20 +2230,17 @@ function renderPostCard(post) {
     .map((sg) => `<span class="pc-pill pc-pill--sub">${escapeHtml(sg)}</span>`)
     .join("");
 
-  // Avatar: image or coloured initial
   const displayName  = post.name || post.username || "?";
   const initials     = displayName.trim().charAt(0).toUpperCase();
   const avatarHtml   = post.avatar
     ? `<img src="${escapeHtml(post.avatar)}" class="pc-avatar pc-avatar--img" alt="avatar">`
     : `<div class="pc-avatar pc-avatar--init">${escapeHtml(initials)}</div>`;
 
-  // Star row  ★★★★☆
   const rating    = Number(post.rating || 0);
   const starsHtml = [1,2,3,4,5]
     .map((n) => `<span class="pc-star${n <= rating ? " pc-star--on" : ""}">${n <= rating ? "★" : "☆"}</span>`)
     .join("");
 
-  // Metadata chips (clock icon + duration, eye icon + watched date)
   const durationHtml = post.duration
     ? `<span class="pc-meta-chip"><i class="bi bi-clock"></i> ${escapeHtml(post.duration)}</span>`
     : "";
@@ -2269,17 +2248,14 @@ function renderPostCard(post) {
     ? `<span class="pc-meta-chip"><i class="bi bi-eye"></i> ${escapeHtml(formatDate(post.dateWatched))}</span>`
     : "";
 
-  // Genre + sub-genre pill row
   const genrePills = post.genre
     ? `<span class="pc-pill pc-pill--genre">${escapeHtml(post.genre)}</span>`
     : "";
 
-  // Caption (blockquote style)
   const captionHtml = post.caption
     ? `<blockquote class="pc-caption">${escapeHtml(post.caption)}</blockquote>`
     : "";
 
-  // Edit/delete actions
   const actionsHtml = canEditPost
     ? `<div class="pc-actions">
          <button class="pc-action-btn pc-action-btn--edit edit-post-btn" type="button" title="Edit">
@@ -2291,10 +2267,9 @@ function renderPostCard(post) {
        </div>`
     : "";
 
-  // Updated-at label
-const editedHtml = (post.updatedAt && post.updatedAt !== post.createdAt)
-  ? `<span class="pc-edited d-block" title="Edited ${formatDateTime(post.updatedAt)}">(Last edited ${timeAgo(post.updatedAt)})</span>`
-  : "";
+  const editedHtml = (post.updatedAt && post.updatedAt !== post.createdAt)
+    ? `<span class="pc-edited d-block" title="Edited ${formatDateTime(post.updatedAt)}">(Last edited ${timeAgo(post.updatedAt)})</span>`
+    : "";
 
   card.innerHTML = `
     <div class="pc-header">
@@ -2343,13 +2318,45 @@ const editedHtml = (post.updatedAt && post.updatedAt !== post.createdAt)
   `;
 
   const commentsList = card.querySelector(".pc-comments-list");
-  if (!post.comments.length) {
-    commentsList.innerHTML = `<p class="pc-no-comments">No comments yet.</p>`;
-  } else {
-    post.comments.forEach((c) => commentsList.appendChild(renderCommentItem(c)));
+  const COMMENTS_PREVIEW = 2;
+
+  function renderCommentList() {
+    commentsList.innerHTML = "";
+    if (!post.comments.length) {
+      commentsList.innerHTML = `<p class="pc-no-comments">No comments yet.</p>`;
+      return;
+    }
+
+    const isExpanded = commentsList.dataset.expanded === "true";
+    const visible = isExpanded ? post.comments : post.comments.slice(0, COMMENTS_PREVIEW);
+    const hidden = post.comments.length - COMMENTS_PREVIEW;
+
+    visible.forEach((c) => commentsList.appendChild(renderCommentItem(c)));
+
+    if (post.comments.length > COMMENTS_PREVIEW) {
+      const toggleBtn = document.createElement("button");
+      toggleBtn.type = "button";
+      toggleBtn.style.cssText = `
+        background: none; border: none; padding: 0.25rem 0;
+        font-size: 0.75rem; font-family: 'Poppins', sans-serif;
+        color: rgba(255,255,255,0.4); cursor: pointer;
+        transition: color 0.15s; display: block; margin-top: 0.25rem;
+      `;
+      toggleBtn.textContent = isExpanded
+        ? "Show less"
+        : `Show ${hidden} more comment${hidden !== 1 ? "s" : ""}…`;
+      toggleBtn.addEventListener("mouseenter", () => toggleBtn.style.color = "rgba(255,255,255,0.75)");
+      toggleBtn.addEventListener("mouseleave", () => toggleBtn.style.color = "rgba(255,255,255,0.4)");
+      toggleBtn.addEventListener("click", () => {
+        commentsList.dataset.expanded = isExpanded ? "false" : "true";
+        renderCommentList();
+      });
+      commentsList.appendChild(toggleBtn);
+    }
   }
 
-  // Re-wire comment form to use the new selector name
+  renderCommentList();
+
   const commentForm  = card.querySelector(".pc-comment-form");
   const commentInput = card.querySelector(".comment-input");
   commentForm?.addEventListener("submit", async (event) => {
@@ -2358,7 +2365,6 @@ const editedHtml = (post.updatedAt && post.updatedAt !== post.createdAt)
     const submitBtn = commentForm.querySelector("button[type='submit']");
     if (!text) return;
 
-    // ── Optimistic: build a temporary comment object ──
     const tempId  = "temp-" + Date.now();
     const tempComment = {
       commentId:  tempId,
@@ -2370,30 +2376,30 @@ const editedHtml = (post.updatedAt && post.updatedAt !== post.createdAt)
       createdAt:  new Date().toISOString(),
     };
 
-    // Mutate state.feed in place
     const postInState = state.feed.find(p => p.postId === post.postId);
+    
     if (postInState) postInState.comments = [...(postInState.comments || []), tempComment];
 
     commentInput.value = "";
     toggleButton(submitBtn, true);
 
-    // Re-render just this card
+    // Auto-expand so the new optimistic comment is visible
+    const cl = card.querySelector(".pc-comments-list");
+    if (cl) cl.dataset.expanded = "true";
+
     replacePostCard(post.postId);
 
     try {
       await api("addComment", getSessionToken(), post.postId, text);
       showAlert("Comment posted successfully.", "success");
-      // Background sync to get real commentId from server
       silentRefresh();
     } catch (error) {
-      // Rollback
       if (postInState) {
         postInState.comments = (postInState.comments || []).filter(c => c.commentId !== tempId);
       }
       replacePostCard(post.postId);
       showAlert(error.message, "danger");
     } finally {
-      // Re-find the submit button (card was replaced)
       const newCard = document.querySelector(`[data-post-id="${CSS.escape(post.postId)}"]`);
       const newBtn  = newCard?.querySelector(".pc-comment-form button[type='submit']");
       if (newBtn) toggleButton(newBtn, false);
@@ -2404,7 +2410,6 @@ const editedHtml = (post.updatedAt && post.updatedAt !== post.createdAt)
     btn.addEventListener("click", async () => {
       const commentId = btn.dataset.commentId;
 
-      // ── Optimistic: remove from state.feed ──
       const postInState = state.feed.find(p => p.postId === post.postId);
       let removedComment = null;
       let removedIndex   = -1;
@@ -2423,7 +2428,6 @@ const editedHtml = (post.updatedAt && post.updatedAt !== post.createdAt)
         showAlert("Comment deleted successfully.", "success");
         silentRefresh();
       } catch (error) {
-        // Rollback
         if (postInState && removedComment && removedIndex !== -1) {
           postInState.comments.splice(removedIndex, 0, removedComment);
         }
@@ -2439,20 +2443,18 @@ const editedHtml = (post.updatedAt && post.updatedAt !== post.createdAt)
   card.querySelector(".delete-post-btn")?.addEventListener("click", async (event) => {
     if (!confirm(`Delete post for "${post.movieName}"?`)) return;
 
-    // ── Optimistic: remove from state.feed ──
     const idx = state.feed.findIndex(p => p.postId === post.postId);
     let removed = null;
     if (idx !== -1) { removed = state.feed[idx]; state.feed.splice(idx, 1); }
 
-    applyFeedFilter();   // re-render feed without this post
-    renderDashboard();   // update metric counts
+    applyFeedFilter();
+    renderDashboard();
 
     try {
       await api("deletePost", getSessionToken(), post.postId);
       showAlert("Post deleted successfully.", "success");
       silentRefresh();
     } catch (error) {
-      // Rollback
       if (removed && idx !== -1) state.feed.splice(idx, 0, removed);
       applyFeedFilter();
       renderDashboard();
@@ -2463,7 +2465,6 @@ const editedHtml = (post.updatedAt && post.updatedAt !== post.createdAt)
   return card;
 }
 
-// ── Comment item ─────────────────────────────────────────────────────────────
 function renderCommentItem(comment) {
   const item = document.createElement("div");
   item.className = "pc-comment-item";
@@ -2496,18 +2497,18 @@ function renderCommentItem(comment) {
 
 // ─────────────────────────────────────────
 // SUB-GENRE CHECKBOXES / PREVIEW (sidebar)
+// FIX 2: all selection reads/writes go through state.selectedSubGenres
 // ─────────────────────────────────────────
+
+/** Read selection from state (source of truth) */
 function getSelectedSubGenres() {
-  return Array.from(document.querySelectorAll('input[name="subGenre"]:checked'))
-    .map((input) => input.value.trim())
-    .filter(Boolean);
+  return [...state.selectedSubGenres];
 }
 
+/** Set selection in state and re-render checkboxes */
 function setSelectedSubGenres(values) {
-  const selected = new Set(Array.isArray(values) ? values : []);
-  document.querySelectorAll('input[name="subGenre"]').forEach((input) => {
-    input.checked = selected.has(input.value);
-  });
+  state.selectedSubGenres = new Set(Array.isArray(values) ? values : []);
+  renderSubGenreCheckboxes();
 }
 
 function renderSubGenrePreview() {
@@ -2542,7 +2543,8 @@ function renderSubGenreCheckboxes() {
   const group = $("subGenreGroup");
   if (!group) return;
 
-  const selected      = new Set(getSelectedSubGenres());
+  // FIX 2: read from state, not DOM — survives re-renders
+  const selected      = state.selectedSubGenres;
   const filterQuery   = ($("subGenreFilterInput")?.value || "").trim().toLowerCase();
   const showSelected  = $("subGenreShowSelected")?.checked || false;
 
@@ -2553,17 +2555,14 @@ function renderSubGenreCheckboxes() {
 
   let items = [...state.subGenres];
 
-  // "Selected only" filter
   if (showSelected) {
     items = items.filter((item) => selected.has(item.name));
   }
 
-  // Text search filter
   if (filterQuery) {
     items = items.filter((item) => (item.name || "").toLowerCase().includes(filterQuery));
   }
 
-  // A–Z / Z–A sort
   if (state.subGenreSortAZ) {
     items = items.slice().sort((a, b) => {
       const cmp = (a.name || "").localeCompare(b.name || "");
@@ -2579,12 +2578,15 @@ function renderSubGenreCheckboxes() {
     return;
   }
 
+  // FIX 2: render checkboxes reflecting state.selectedSubGenres
   group.innerHTML = items.map((item) => `
     <label class="subgenre-chip">
       <input type="checkbox" name="subGenre" value="${escapeHtml(item.name)}" ${selected.has(item.name) ? "checked" : ""}>
       <span>${escapeHtml(item.name)}</span>
     </label>
   `).join("");
+  // NOTE: change events bubble up to the delegated listener on #subGenreGroup
+  // bound in bindEvents(), so no per-checkbox listeners needed here.
 }
 
 function updateSubGenreSortBtn(btn) {
@@ -2623,12 +2625,10 @@ function startEdit(post) {
   $("submitBtn").innerHTML   = `<i class="bi bi-save me-2"></i>Save Changes`;
   $("cancelEditBtn").classList.remove("d-none");
 
-    // Force-open the tools sidebar if it's hidden
-  const content = $("sidebarContent");
-  const btn     = $("toggleSidebarBtn");
-  if (content && content.classList.contains("d-none")) {  // ← add
-    content.classList.remove("d-none");                   // ← add
-    if (btn) btn.innerHTML = `<i class="bi bi-eye"></i>`;              // ← add
+  // Open the Post panel if it's hidden
+  const postContent = $("postContent");
+  if (postContent && postContent.classList.contains("d-none")) {
+    applyPostState(true, true);
   }
 
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -2638,9 +2638,11 @@ function resetPostForm() {
   state.isEditing = false;
   $("postForm")?.reset();
   $("postId").value = "";
-  setSelectedSubGenres([]);
+  // FIX 2: clear via state, which re-renders checkboxes
+  state.selectedSubGenres = new Set();
   if ($("subGenreFilterInput"))  $("subGenreFilterInput").value = "";
   if ($("subGenreShowSelected")) $("subGenreShowSelected").checked = false;
+  renderSubGenreCheckboxes();
   $("formTitle").textContent = "Create Post";
   $("submitBtn").innerHTML   = `<i class="bi bi-send me-2"></i>Post Movie`;
   $("cancelEditBtn").classList.add("d-none");
@@ -2682,6 +2684,7 @@ function formatDate(value) {
   if (Number.isNaN(d.getTime())) return value;
   return d.toLocaleDateString("en-PH", { year:"numeric", month:"short", day:"numeric" });
 }
+
 function timeAgo(value) {
   if (!value) return "";
   const d = new Date(value);
@@ -2705,28 +2708,24 @@ function timeAgo(value) {
   if (diffMths <  12)  return diffMths + "mo ago";
   return diffYrs + "yr ago";
 }
+
 function formatDateTime(value) {
   if (!value) return "-";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
   return d.toLocaleString("en-PH", { year:"numeric", month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
 }
+
 function normalizeDateWatched(raw) {
   if (!raw) return "";
-  const d = new Date(raw); // handles Date objects, ISO strings, and full date strings
+  const d = new Date(raw);
   if (isNaN(d.getTime())) return "";
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
-// function normalizeDateForInput(value) {
-//   if (!value) return "";
-//   if (/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return String(value);
-//   const d = new Date(value);
-//   if (Number.isNaN(d.getTime())) return "";
-//   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-// }
+
 function normalizeDateForInput(value) {
   if (!value) return "";
-  return normalizeDateWatched(value); // reuse the same logic
+  return normalizeDateWatched(value);
 }
 
 function escapeHtml(str) {
