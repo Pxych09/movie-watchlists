@@ -15,8 +15,6 @@
         <i class="bi bi-arrow-up"></i>
     </button>
 
-    <!-- <div id="globalAlertWrap" class="global-alert-wrap" aria-live="polite" aria-atomic="true"></div> -->
-
     <div id="loadingOverlay" class="loading-overlay d-none" aria-hidden="true">
       <div class="text-center">
         <div class="spinner-border text-light mb-3" style="width:3rem;height:3rem;" role="status"></div>
@@ -63,287 +61,320 @@
             </div>
           </div>
 
-        <div class="d-flex align-items-center gap-2">
-          <div class="notif-wrap">
-            <button id="notifBtn" class="btn btn-outline-light custom-outline-btn notif-btn" type="button" aria-label="Notifications">
-              <i class="bi bi-bell"></i>
-              <span id="notifBadge" class="notif-badge d-none">0</span>
-            </button>
+          <div class="d-flex align-items-center gap-2">
+            <div class="notif-wrap">
+              <button id="notifBtn" class="btn btn-outline-light custom-outline-btn notif-btn" type="button" aria-label="Notifications">
+                <i class="bi bi-bell"></i>
+                <span id="notifBadge" class="notif-badge d-none">0</span>
+              </button>
 
-            <div id="notifDropdown" class="notif-panel" role="dialog" aria-label="Notifications">
-              <div class="notif-panel-header">
-                <div class="notif-panel-title">
-                  Notifications
-                  <span id="notifPanelBadge" class="notif-panel-badge is-empty" hidden="true" aria-hidden="true">0 unread</span>
+              <div id="notifDropdown" class="notif-panel" role="dialog" aria-label="Notifications">
+                <div class="notif-panel-header">
+                  <div class="notif-panel-title">
+                    Notifications
+                    <span id="notifPanelBadge" class="notif-panel-badge is-empty" hidden="true" aria-hidden="true">0 unread</span>
+                  </div>
+                  <button id="notifToggleReadBtn" class="notif-panel-toggle" type="button">
+                    Show all
+                  </button>
                 </div>
-                <button id="notifToggleReadBtn" class="notif-panel-toggle" type="button">
-                  Show all
+                <div id="notifList" class="notif-list">
+                  <div class="notif-empty">
+                    <i class="bi bi-bell-slash"></i>
+                    No notifications yet.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Desktop nav actions -->
+          <div class="d-flex align-items-center gap-2 app-nav-actions">
+            <a href="./miniseries.html" class="btn btn-outline-light custom-outline-btn" type="button" title="Your Mini Series">
+              <i class="bi bi-tv me-1"></i><span class="d-none d-sm-inline"> Mini Series</span>
+            </a>
+            <button id="logoutBtn" class="btn btn-outline-light custom-outline-btn" type="button">
+              <i class="bi bi-box-arrow-right"></i>
+            </button>
+            <button id="guidelinesNavBtn" class="btn btn-outline-light custom-outline-btn" type="button" title="Guidelines">
+              <i class="bi bi-journal-text me-1"></i><span class="d-none d-sm-inline"> Guidelines</span>
+            </button>
+          </div>
+
+          <!-- Mobile hamburger + dropdown -->
+          <div style="position:relative;">
+            <button id="mobileNavBtn" class="app-nav-menu-btn" aria-label="Open menu" aria-expanded="false">
+              <i class="bi bi-list"></i>
+            </button>
+            <div id="mobileNavDropdown" class="app-nav-dropdown" role="menu">
+              <a href="./miniseries.html" class="app-nav-dropdown-item" role="menuitem">
+                <i class="bi bi-tv"></i> Mini Series
+              </a>
+
+              <!-- Post toggle -->
+              <div class="app-nav-dropdown-item ms-nav-dropdown-toggle-row" role="menuitem">
+                <div style="display:flex;align-items:center;gap:0.6rem;flex:1;">
+                  <i class="bi bi-plus-square"></i>
+                  <span style="font-size:0.82rem;font-weight:500;">Post</span>
+                </div>
+                <button
+                  type="button"
+                  id="postToggle"
+                  class="ms-panel-toggle"
+                  role="switch"
+                  aria-checked="false"
+                  aria-label="Toggle Post panel"
+                >
+                  <span class="ms-panel-toggle-thumb"></span>
                 </button>
               </div>
-              <div id="notifList" class="notif-list">
-                <div class="notif-empty">
-                  <i class="bi bi-bell-slash"></i>
-                  No notifications yet.
+
+              <!-- Tools toggle -->
+              <div class="app-nav-dropdown-item ms-nav-dropdown-toggle-row" role="menuitem">
+                <div style="display:flex;align-items:center;gap:0.6rem;flex:1;">
+                  <i class="bi bi-tools"></i>
+                  <span style="font-size:0.82rem;font-weight:500;">Tools</span>
                 </div>
+                <button
+                  type="button"
+                  id="toolsToggle"
+                  class="ms-panel-toggle"
+                  role="switch"
+                  aria-checked="false"
+                  aria-label="Toggle Tools panel"
+                >
+                  <span class="ms-panel-toggle-thumb"></span>
+                </button>
               </div>
+
+              <div class="app-nav-dropdown-item ms-nav-dropdown-toggle-row" role="menuitem">
+                <div style="display:flex;align-items:center;gap:0.6rem;flex:1;">
+                  <i class="bi bi-bar-chart-line"></i>
+                  <span style="font-size:0.82rem;font-weight:500;">Dashboard</span>
+                </div>
+                <button
+                  type="button"
+                  id="dashboardToggle"
+                  class="ms-panel-toggle"
+                  role="switch"
+                  aria-checked="false"
+                  aria-label="Toggle Dashboard panel"
+                >
+                  <span class="ms-panel-toggle-thumb"></span>
+                </button>
+              </div>
+              <div class="app-nav-dropdown-item ms-nav-dropdown-toggle-row" role="menuitem">
+                <div style="display:flex;align-items:center;gap:0.6rem;flex:1;">
+                  <i class="bi bi-journal-text"></i>
+                  <span style="font-size:0.82rem;font-weight:500;">Guidelines</span>
+                </div>
+                <button
+                  type="button"
+                  id="guidelinesToggle"
+                  class="ms-panel-toggle"
+                  role="switch"
+                  aria-checked="false"
+                  aria-label="Toggle Guidelines panel"
+                >
+                  <span class="ms-panel-toggle-thumb"></span>
+                </button>
+              </div>
+              <button id="mobileLogoutBtn" class="app-nav-dropdown-item is-danger" role="menuitem" type="button">
+                <i class="bi bi-box-arrow-right"></i> Log Out
+              </button>
             </div>
           </div>
-        </div>
-
-        <!-- Desktop nav actions -->
-        <div class="d-flex align-items-center gap-2 app-nav-actions">
-          <a href="./miniseries.html" class="btn btn-outline-light custom-outline-btn" type="button" title="Your Mini Series">
-            <i class="bi bi-tv me-1"></i><span class="d-none d-sm-inline"> Mini Series</span>
-          </a>
-          <button id="logoutBtn" class="btn btn-outline-light custom-outline-btn" type="button">
-            <i class="bi bi-box-arrow-right"></i>
-          </button>
-          <button id="guidelinesNavBtn" class="btn btn-outline-light custom-outline-btn" type="button" title="Guidelines">
-            <i class="bi bi-journal-text me-1"></i><span class="d-none d-sm-inline"> Guidelines</span>
-          </button>
-        </div>
-
-        <!-- Mobile hamburger + dropdown -->
-        <div style="position:relative;">
-          <button id="mobileNavBtn" class="app-nav-menu-btn" aria-label="Open menu" aria-expanded="false">
-            <i class="bi bi-list"></i>
-          </button>
-          <div id="mobileNavDropdown" class="app-nav-dropdown" role="menu">
-            <a href="./miniseries.html" class="app-nav-dropdown-item" role="menuitem">
-              <i class="bi bi-tv"></i> Mini Series
-            </a>
-            <div class="app-nav-dropdown-item ms-nav-dropdown-toggle-row" role="menuitem">
-              <div style="display:flex;align-items:center;gap:0.6rem;flex:1;">
-                <i class="bi bi-tools"></i>
-                <span style="font-size:0.82rem;font-weight:500;">Tools</span>
-              </div>
-              <button
-                type="button"
-                id="toolsToggle"
-                class="ms-panel-toggle"
-                role="switch"
-                aria-checked="true"
-                aria-label="Toggle Tools panel"
-              >
-                <span class="ms-panel-toggle-thumb"></span>
-              </button>
-            </div>
-            <div class="app-nav-dropdown-item ms-nav-dropdown-toggle-row" role="menuitem">
-              <div style="display:flex;align-items:center;gap:0.6rem;flex:1;">
-                <i class="bi bi-bar-chart-line"></i>
-                <span style="font-size:0.82rem;font-weight:500;">Dashboard</span>
-              </div>
-              <button
-                type="button"
-                id="dashboardToggle"
-                class="ms-panel-toggle"
-                role="switch"
-                aria-checked="true"
-                aria-label="Toggle Dashboard panel"
-              >
-                <span class="ms-panel-toggle-thumb"></span>
-              </button>
-            </div>
-            <div class="app-nav-dropdown-item ms-nav-dropdown-toggle-row" role="menuitem">
-              <div style="display:flex;align-items:center;gap:0.6rem;flex:1;">
-                <i class="bi bi-journal-text"></i>
-                <span style="font-size:0.82rem;font-weight:500;">Guidelines</span>
-              </div>
-              <button
-                type="button"
-                id="guidelinesToggle"
-                class="ms-panel-toggle"
-                role="switch"
-                aria-checked="true"
-                aria-label="Toggle Guidelines panel"
-              >
-                <span class="ms-panel-toggle-thumb"></span>
-              </button>
-            </div>
-            <button id="mobileLogoutBtn" class="app-nav-dropdown-item is-danger" role="menuitem" type="button">
-              <i class="bi bi-box-arrow-right"></i> Log Out
-            </button>
-          </div>
-        </div>
 
         </nav>
 
         <section class="row g-4">
           <div class="col-lg-4">
             <div class="sticky-side left-stack">
-                <div id="toolsHeaderCard" class="glass-card d-flex justify-content-between align-items-center mb-3 con-tools border-double-primary">
-                  <span class="fw-bold">Tools</span>
-                  <button id="toggleSidebarBtn" class="btn btn-sm btn-outline-light custom-outline-btn" type="button">
-                    <i class="bi bi-eye-slash"></i>
-                  </button>
-                </div>
-            <div id="sidebarContent" class="left-stack d-none">
 
-              <div class="glass-card p-4 mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h3 id="formTitle" class="h5 fw-bold mb-0">Create Post</h3>
-                  <button id="cancelEditBtn" type="button" class="btn btn-sm btn-secondary d-none">Cancel</button>
-                </div>
+              <!-- ─── CREATE POST PANEL ─── -->
+              <div id="postHeaderCard" class="glass-card d-flex justify-content-between align-items-center mb-3 con-tools border-double-primary d-none">
+                <span class="fw-bold">Post</span>
+                <button id="togglePostBtn" class="btn btn-sm btn-outline-light custom-outline-btn" type="button">
+                  <i class="bi bi-eye-slash"></i>
+                </button>
+              </div>
 
-                <form id="postForm" class="row g-3">
-                  <input type="hidden" id="postId">
-                  
-                  <div class="col-12">
-                    <label for="genre" class="form-label">Genre</label>
-                    <select id="genre" class="form-select custom-input" required>
-                      <option value="">Select Genre</option>
-                      <option>Action</option>
-                      <option>Adventure</option>
-                      <option>Animation</option>
-                      <option>Comedy</option>
-                      <option>Crime</option>
-                      <option>Documentary</option>
-                      <option>Drama</option>
-                      <option>Family</option>
-                      <option>Fantasy</option>
-                      <option>Historical</option>
-                      <option>Horror</option>
-                      <option>Musical</option>
-                      <option>Mystery</option>
-                      <option>Romance</option>
-                      <option>Sci-Fi</option>
-                      <option>Thriller</option>
-                      <option>Western</option>
-                    </select>
+              <div id="postContent" class="left-stack d-none">
+                <div class="glass-card p-4 mb-4">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 id="formTitle" class="h5 fw-bold mb-0">Create Post</h3>
+                    <button id="cancelEditBtn" type="button" class="btn btn-sm px-4 btn-danger-soft d-none">Cancel</button>
                   </div>
 
-                  <div class="col-12">
-                    <label class="form-label d-block mb-1">Sub-Genre</label>
-                    <div class="subgenre-panel">
-                      <div class="subgenre-panel-toolbar">
-                        <div class="position-relative flex-grow-1">
-                          <i class="bi bi-search search-icon"></i>
-                          <input
-                            id="subGenreFilterInput"
-                            type="search"
-                            class="form-control custom-input search-input smx-font"
-                            placeholder="Filter sub-genres..."
-                          >
+                  <form id="postForm" class="row g-3">
+                    <input type="hidden" id="postId">
+                    
+                    <div class="col-12">
+                      <label for="genre" class="form-label">Genre</label>
+                      <select id="genre" class="form-select custom-input" required>
+                        <option value="">Select Genre</option>
+                        <option>Action</option>
+                        <option>Adventure</option>
+                        <option>Animation</option>
+                        <option>Comedy</option>
+                        <option>Crime</option>
+                        <option>Documentary</option>
+                        <option>Drama</option>
+                        <option>Family</option>
+                        <option>Fantasy</option>
+                        <option>Historical</option>
+                        <option>Horror</option>
+                        <option>Musical</option>
+                        <option>Mystery</option>
+                        <option>Romance</option>
+                        <option>Sci-Fi</option>
+                        <option>Thriller</option>
+                        <option>Western</option>
+                      </select>
+                    </div>
+
+                    <div class="col-12">
+                      <label class="form-label d-block mb-1">Sub-Genre</label>
+                      <div class="subgenre-panel">
+                        <div class="subgenre-panel-toolbar">
+                          <div class="position-relative flex-grow-1">
+                            <i class="bi bi-search search-icon"></i>
+                            <input
+                              id="subGenreFilterInput"
+                              type="search"
+                              class="form-control custom-input search-input smx-font"
+                              placeholder="Filter sub-genres..."
+                            >
+                          </div>
+                          <label class="subgenre-selected-toggle" title="Show selected only">
+                            <input type="checkbox" id="subGenreShowSelected">
+                            <span class="subgenre-selected-toggle-inner">
+                              <i class="bi bi-check2-square"></i>
+                            </span>
+                          </label>
+                          <button type="button" id="subGenreSortBtn" class="btn btn-outline-light custom-outline-btn subgenre-sort-btn" title="Sort A–Z">
+                            <i class="bi bi-sort-alpha-down"></i>
+                          </button>
                         </div>
-                        <label class="subgenre-selected-toggle" title="Show selected only">
-                          <input type="checkbox" id="subGenreShowSelected">
-                          <span class="subgenre-selected-toggle-inner">
-                            <i class="bi bi-check2-square"></i>
-                          </span>
-                        </label>
-                        <button type="button" id="subGenreSortBtn" class="btn btn-outline-light custom-outline-btn subgenre-sort-btn" title="Sort A–Z">
-                          <i class="bi bi-sort-alpha-down"></i>
-                        </button>
+                        <div id="subGenreGroup" class="subgenre-group subgenre-group--panel">
+                          <div class="text-secondary-light small">No sub-genres available yet.</div>
+                        </div>
                       </div>
-                      <div id="subGenreGroup" class="subgenre-group subgenre-group--panel">
-                        <div class="text-secondary-light small">No sub-genres available yet.</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="movieName" class="form-label">Movie Name</label>
+                      <input id="movieName" type="text" class="form-control custom-input smx-font" placeholder="E.g. 'Piranha 3D'" required>
+                    </div>
+
+                    <div class="col-md-6">
+                      <label for="rating" class="form-label">Rating</label>
+                      <select id="rating" class="form-select custom-input" required>
+                        <option value="">Select Rating</option>
+                        <option value="1">1 ⭐</option>
+                        <option value="2">2 ⭐⭐</option>
+                        <option value="3">3 ⭐⭐⭐</option>
+                        <option value="4">4 ⭐⭐⭐⭐</option>
+                        <option value="5">5 ⭐⭐⭐⭐⭐</option>
+                      </select>
+                    </div>
+
+                    <div class="col-md-6">
+                      <label for="duration" class="form-label">Duration</label>
+                      <input id="duration" type="text" class="form-control custom-input smx-font" placeholder="E.g. 2h 15m" required>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="dateWatched" class="form-label">Date Watched</label>
+                      <input id="dateWatched" type="date" class="form-control custom-input smx-font" required>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="caption" class="form-label">Caption</label>
+                      <textarea id="caption" class="form-control custom-input smx-font" rows="4" placeholder="Share your thoughts about the movie..."></textarea>
+                    </div>
+
+                    <div class="col-12">
+                      <button id="submitBtn" type="submit" class="btn btn-primary custom-btn w-100">
+                        <i class="bi bi-send me-2"></i>Post Movie
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div><!-- end #postContent -->
+
+              <!-- ─── TOOLS PANEL ─── -->
+              <div id="toolsHeaderCard" class="glass-card d-flex justify-content-between align-items-center mb-3 con-tools border-double-primary d-none">
+                <span class="fw-bold">Tools</span>
+                <button id="toggleSidebarBtn" class="btn btn-sm btn-outline-light custom-outline-btn" type="button">
+                  <i class="bi bi-eye-slash"></i>
+                </button>
+              </div>
+
+              <div id="sidebarContent" class="left-stack d-none">
+
+                <div class="glass-card p-4 mb-4">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h5 fw-bold mb-0">Saved To-Do Watchlists</h3>
+                    <span id="savedTodoCount" class="badge text-bg-light">0 items</span>
+                  </div>
+
+                  <div class="todo-roulette-card mb-3">
+                    <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                      <div class="small fw-semibold">Spin the Wheel</div>
+                      <button id="spinTodoBtn" type="button" class="btn btn-outline-light custom-outline-btn"><i class="bi bi-arrow-repeat"></i></button>
+                    </div>
+
+                    <div class="todo-slot-shell">
+                      <div class="todo-slot-pointer"></div>
+                      <div class="todo-slot-window">
+                        <div id="todoSlotTrack" class="todo-slot-track">
+                          <div class="todo-slot-item is-empty smx-font">No candidates yet.</div>
+                        </div>
                       </div>
+                    </div>
+
+                    <div id="todoRouletteResult" class="todo-roulette-result d-none">
+                      Selected: <span id="todoRouletteResultText"></span>
                     </div>
                   </div>
 
-                  <div class="col-12">
-                    <label for="movieName" class="form-label">Movie Name</label>
-                    <input id="movieName" type="text" class="form-control custom-input smx-font" placeholder="E.g. 'Piranha 3D'" required>
+                  <div class="position-relative mb-3">
+                    <i class="bi bi-search search-icon"></i>
+                    <input
+                      id="savedTodoSearch"
+                      type="search"
+                      class="form-control custom-input search-input mdx-font"
+                      placeholder="Search saved watchlists..."
+                    >
                   </div>
 
-                  <div class="col-md-6">
-                    <label for="rating" class="form-label">Rating</label>
-                    <select id="rating" class="form-select custom-input" required>
-                      <option value="">Select Rating</option>
-                      <option value="1">1 ⭐</option>
-                      <option value="2">2 ⭐⭐</option>
-                      <option value="3">3 ⭐⭐⭐</option>
-                      <option value="4">4 ⭐⭐⭐⭐</option>
-                      <option value="5">5 ⭐⭐⭐⭐⭐</option>
-                    </select>
-                  </div>
-
-                  <div class="col-md-6">
-                    <label for="duration" class="form-label">Duration</label>
-                    <input id="duration" type="text" class="form-control custom-input smx-font" placeholder="E.g. 2h 15m" required>
-                  </div>
-
-                  <div class="col-12">
-                    <label for="dateWatched" class="form-label">Date Watched</label>
-                    <input id="dateWatched" type="date" class="form-control custom-input smx-font" required>
-                  </div>
-
-                  <div class="col-12">
-                    <label for="caption" class="form-label">Caption</label>
-                    <textarea id="caption" class="form-control custom-input smx-font" rows="4" placeholder="Share your thoughts about the movie..."></textarea>
-                  </div>
-
-                  <div class="col-12">
-                    <button id="submitBtn" type="submit" class="btn btn-primary custom-btn w-100">
-                      <i class="bi bi-send me-2"></i>Post Movie
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              <div class="glass-card p-4 mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h3 class="h5 fw-bold mb-0">Saved To-Do Watchlists</h3>
-                  <span id="savedTodoCount" class="badge text-bg-light">0 items</span>
-                </div>
-
-                <div class="todo-roulette-card mb-3">
-                  <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
-                    <div class="small fw-semibold">Spin the Wheel</div>
-                    <button id="spinTodoBtn" type="button" class="btn btn-outline-light custom-outline-btn"><i class="bi bi-arrow-repeat"></i></button>
-                  </div>
-
-                  <div class="todo-slot-shell">
-                    <div class="todo-slot-pointer"></div>
-                    <div class="todo-slot-window">
-                      <div id="todoSlotTrack" class="todo-slot-track">
-                        <div class="todo-slot-item is-empty smx-font">No candidates yet.</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div id="todoRouletteResult" class="todo-roulette-result d-none">
-                    Selected: <span id="todoRouletteResultText"></span>
+                  <div id="savedTodoList" class="todo-saved-list">
+                    <div class="text-secondary-light small">No saved watchlists yet.</div>
                   </div>
                 </div>
 
-                <div class="position-relative mb-3">
-                  <i class="bi bi-search search-icon"></i>
-                  <input
-                    id="savedTodoSearch"
-                    type="search"
-                    class="form-control custom-input search-input mdx-font"
-                    placeholder="Search saved watchlists..."
-                  >
-                </div>
+                <div class="glass-card p-4 mb-4">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h5 fw-bold mb-0">To-Do Watchlists</h3>
+                    <span id="draftTodoCount" class="badge text-bg-light">0 draft</span>
+                  </div>
 
-                <div id="savedTodoList" class="todo-saved-list">
-                  <div class="text-secondary-light small">No saved watchlists yet.</div>
-                </div>
-              </div>
+                  <div class="d-flex gap-2 mb-3">
+                    <input
+                      id="todoInput"
+                      type="text"
+                      class="form-control custom-input smx-font"
+                      placeholder="Add movie title or number..."
+                    >
+                    <button id="addTodoBtn" type="button" class="btn btn-outline-light custom-outline-btn"><i class="bi bi-plus-circle"></i></button>
+                    <button id="saveTodoBtn" type="button" class="btn btn-outline-light custom-outline-btn"><i class="bi bi-bookmark"></i></button>
+                  </div>
 
-              <div class="glass-card p-4 mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h3 class="h5 fw-bold mb-0">To-Do Watchlists</h3>
-                  <span id="draftTodoCount" class="badge text-bg-light">0 draft</span>
+                  <div id="draftTodoList" class="todo-draft-list mb-3">
+                    <div class="text-secondary small text-center">|&nbsp;No draft items yet.</div>
+                  </div>
                 </div>
-
-                <div class="d-flex gap-2 mb-3">
-                  <input
-                    id="todoInput"
-                    type="text"
-                    class="form-control custom-input smx-font"
-                    placeholder="Add movie title or number..."
-                  >
-                  <button id="addTodoBtn" type="button" class="btn btn-outline-light custom-outline-btn"><i class="bi bi-plus-circle"></i></button>
-                  <button id="saveTodoBtn" type="button" class="btn btn-outline-light custom-outline-btn"><i class="bi bi-bookmark"></i></button>
-                </div>
-
-                <div id="draftTodoList" class="todo-draft-list mb-3">
-                  <div class="text-secondary small text-center">|&nbsp;No draft items yet.</div>
-                </div>
-
-              </div>
 
                 <div class="glass-card p-4 mb-4">
                   <div class="d-flex justify-content-between align-items-center mb-3">
@@ -351,7 +382,6 @@
                     <span id="subGenreCount" class="badge text-bg-light">0 items</span>
                   </div>
 
-                  <!-- Search saved sub-genres -->
                   <div class="position-relative mb-3">
                     <i class="bi bi-search search-icon"></i>
                     <input
@@ -362,18 +392,15 @@
                     >
                   </div>
 
-                  <!-- Saved sub-genre pills -->
                   <div id="subGenrePreviewList" class="subgenre-preview-list mb-3">
                     <div class="text-secondary-light small">No sub-genres yet.</div>
                   </div>
 
-                  <!-- Draft count badge row -->
                   <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="small fw-semibold text-secondary-light">Draft Queue</span>
                     <span id="subGenreDraftCount" class="badge text-bg-light">0 drafts</span>
                   </div>
 
-                  <!-- Add input row -->
                   <div class="d-flex gap-2 mb-3">
                     <input
                       id="subGenreInput"
@@ -389,13 +416,12 @@
                     </button>
                   </div>
 
-                  <!-- Draft list -->
                   <div id="subGenreDraftList" class="todo-draft-list">
                     <div class="text-secondary small">No draft items yet.</div>
                   </div>
                 </div>
 
-                </div>  <!-- end #sidebarContent -->
+              </div><!-- end #sidebarContent -->
             </div>
           </div>
 
@@ -412,7 +438,6 @@
 
               <div id="guidelinesContent" class="guidelines-content mt-4">
 
-                <!-- Welcome -->
                 <div class="guide-section mb-4">
                   <div class="guide-section-header">
                     <i class="bi bi-stars"></i>
@@ -426,7 +451,6 @@
 
                 <div class="guide-divider"></div>
 
-                <!-- Getting Started -->
                 <div class="guide-section mb-4">
                   <div class="guide-section-header">
                     <i class="bi bi-rocket-takeoff"></i>
@@ -443,12 +467,19 @@
                     <div class="guide-step">
                       <div class="guide-step-num">2</div>
                       <div>
-                        <div class="guide-step-title">Open Tools</div>
-                        <div class="guide-step-desc">Click <strong>Show Tools</strong> (or toggle it in the menu) to reveal the post form, watchlists, and sub-genre manager on the left sidebar.</div>
+                        <div class="guide-step-title">Open Post</div>
+                        <div class="guide-step-desc">Toggle <strong>Post</strong> in the menu to reveal the Create Post form on the left sidebar.</div>
                       </div>
                     </div>
                     <div class="guide-step">
                       <div class="guide-step-num">3</div>
+                      <div>
+                        <div class="guide-step-title">Open Tools</div>
+                        <div class="guide-step-desc">Toggle <strong>Tools</strong> in the menu to reveal watchlists and the sub-genre manager.</div>
+                      </div>
+                    </div>
+                    <div class="guide-step">
+                      <div class="guide-step-num">4</div>
                       <div>
                         <div class="guide-step-title">Create Your First Post</div>
                         <div class="guide-step-desc">Fill in the movie name, genre, rating, duration, and date watched. Add a caption to share your thoughts, then hit <strong>Post Movie</strong>.</div>
@@ -459,7 +490,6 @@
 
                 <div class="guide-divider"></div>
 
-                <!-- Features -->
                 <div class="guide-section mb-4">
                   <div class="guide-section-header">
                     <i class="bi bi-grid-1x2"></i>
@@ -511,7 +541,6 @@
 
                 <div class="guide-divider"></div>
 
-                <!-- Tips -->
                 <div class="guide-section mb-4">
                   <div class="guide-section-header">
                     <i class="bi bi-lightbulb"></i>
@@ -520,7 +549,7 @@
                   <ul class="guide-tips-list">
                     <li><i class="bi bi-check2-circle"></i> <span>Link a To-Do item to a new post by checking it in the <em>Saved To-Do Watchlists</em> panel before posting — it auto-fills the movie name and removes it from the list after posting.</span></li>
                     <li><i class="bi bi-check2-circle"></i> <span>Use the <strong>Spin the Wheel</strong> roulette to pick a random movie from your watchlist when you can't decide what to watch.</span></li>
-                    <li><i class="bi bi-check2-circle"></i> <span>The Dashboard panels and Tools sidebar visibility are remembered between sessions — set them up once and they stay.</span></li>
+                    <li><i class="bi bi-check2-circle"></i> <span>The Dashboard panels, Post form, and Tools sidebar visibility are remembered between sessions — set them up once and they stay.</span></li>
                     <li><i class="bi bi-check2-circle"></i> <span>Switch between <strong>Count</strong> and <strong>Avg Rating</strong> tabs in the monthly chart to see different views of your watch history.</span></li>
                     <li><i class="bi bi-check2-circle"></i> <span>Search the feed to quickly find posts by a specific user, genre, or sub-genre tag.</span></li>
                     <li><i class="bi bi-check2-circle"></i> <span>Duration format examples: <code>2h 15m</code>, <code>1h</code>, <code>45m</code>. These are used to calculate total hours watched in the Dashboard.</span></li>
@@ -529,7 +558,6 @@
 
                 <div class="guide-divider"></div>
 
-                <!-- Ratings scale -->
                 <div class="guide-section mb-4">
                   <div class="guide-section-header">
                     <i class="bi bi-star-half"></i>
@@ -549,400 +577,102 @@
                 <div class="guide-section mb-2">
                   <div class="guide-section-header">
                     <i class="bi bi-film mdx-font"></i>
-                    <span class="mdx-font">The Complete Guide To Movie & TV Genre</span>
+                    <span class="mdx-font">The Complete Guide To Movie &amp; TV Genre</span>
                   </div>
                     <div class="guide-grid">
                       <div class="guide-card guide-action">
-
-                        <div class="guide-feature-card mb-3">
-                          <span>Action 💥</span>
-                          <div class="guide-feature-desc">Fast-paced stories focused on physical conflict, danger, combat, or survival.</div>
-                        </div>
-
-                        <ul class="guide-subgenres">
-                          <li>Adventure</li>
-                          <li>Martial Arts</li>
-                          <li>Superhero</li>
-                          <li>Military</li>
-                          <li>War</li>
-                          <li>Espionage / Spy</li>
-                          <li>Disaster</li>
-                          <li>Heist</li>
-                          <li>Vigilante</li>
-                          <li>Revenge</li>
-                          <li>Car Chase / Racing</li>
-                          <li>Sci-Fi</li>
-                          <li>Survival</li>
-                          <li>Thriller</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Action 💥</span><div class="guide-feature-desc">Fast-paced stories focused on physical conflict, danger, combat, or survival.</div></div>
+                        <ul class="guide-subgenres"><li>Adventure</li><li>Martial Arts</li><li>Superhero</li><li>Military</li><li>War</li><li>Espionage / Spy</li><li>Disaster</li><li>Heist</li><li>Vigilante</li><li>Revenge</li><li>Car Chase / Racing</li><li>Sci-Fi</li><li>Survival</li><li>Thriller</li></ul>
                       </div>
-
                       <div class="guide-card guide-adventure">
-                        <div class="guide-feature-card mb-3">
-                          <span>Adventure 🧭</span>
-                          <div class="guide-feature-desc">Journey-based stories focused on exploration and discovery.</div>
-                        </div>
-                        <ul class="guide-subgenres">
-                          <li>Treasure Hunt</li>
-                          <li>Jungle</li>
-                          <li>Expedition</li>
-                          <li>Space</li>
-                          <li>Survival</li>
-                          <li>Pirate</li>
-                          <li>Quest</li>
-                          <li>Road Trip</li>
-                          <li>Tresure Map</li>
-                          <li>Sea</li>
-                          <li>Fantasy</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Adventure 🧭</span><div class="guide-feature-desc">Journey-based stories focused on exploration and discovery.</div></div>
+                        <ul class="guide-subgenres"><li>Treasure Hunt</li><li>Jungle</li><li>Expedition</li><li>Space</li><li>Survival</li><li>Pirate</li><li>Quest</li><li>Road Trip</li><li>Treasure Map</li><li>Sea</li><li>Fantasy</li></ul>
                       </div>
-
                       <div class="guide-card guide-comedy">
-                        <div class="guide-feature-card mb-3">
-                          <span>Comedy 😂</span>
-                          <div class="guide-feature-desc">Stories intended primarily to make audiences laugh.</div>
-                        </div>
-                        <ul class="guide-subgenres">
-                          <li>Romantic (RomCom)</li>
-                          <li>Situational (SitCom)</li>
-                          <li>Satire</li>
-                          <li>Parody / Spoof</li>
-                          <li>Buddy</li>
-                          <li>Teen</li>
-                          <li>Dark</li>
-                          <li>Mockumentary</li>
-                          <li>Workplace</li>
-                          <li>Buddy</li>
-                          <li>Family</li>
-                          <li>Cringe</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Comedy 😂</span><div class="guide-feature-desc">Stories intended primarily to make audiences laugh.</div></div>
+                        <ul class="guide-subgenres"><li>Romantic (RomCom)</li><li>Situational (SitCom)</li><li>Satire</li><li>Parody / Spoof</li><li>Buddy</li><li>Teen</li><li>Dark</li><li>Mockumentary</li><li>Workplace</li><li>Family</li><li>Cringe</li></ul>
                       </div>
-
                       <div class="guide-card guide-drama">
-                        <div class="guide-feature-card mb-3">
-                          <span>Drama 🎭</span>
-                          <div class="guide-feature-desc">Emotionally focused stories centered on character development.</div>
-                        </div>
-                        <ul class="guide-subgenres">
-                          <li>Family</li>
-                          <li>Crime</li>
-                          <li>Medical</li>
-                          <li>Melodrama</li>
-                          <li>Political</li>
-                          <li>Legal</li>
-                          <li>Historical</li>
-                          <li>Teen</li>
-                          <li>Tragedy</li>
-                          <li>Romantic</li>
-                          <li>Psychological</li>
-                          <li>Social</li>
-                          <li>Slice of Life</li>
-                          <li>Horror Comedy</li>
-                          <li>Coming-of-Age</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Drama 🎭</span><div class="guide-feature-desc">Emotionally focused stories centered on character development.</div></div>
+                        <ul class="guide-subgenres"><li>Family</li><li>Crime</li><li>Medical</li><li>Melodrama</li><li>Political</li><li>Legal</li><li>Historical</li><li>Teen</li><li>Tragedy</li><li>Romantic</li><li>Psychological</li><li>Social</li><li>Slice of Life</li><li>Coming-of-Age</li></ul>
                       </div>
-
                       <div class="guide-card guide-horror">
-                        <div class="guide-feature-card mb-3">
-                          <span>Horror ☠️</span>
-                          <div class="guide-feature-desc">Stories designed to create fear, tension, or dread.</div>
-                        </div>
-                        <ul class="guide-subgenres">
-                          <li>Supernatural</li>
-                          <li>Found Footage</li>
-                          <li>Psychological</li>
-                          <li>Monster</li>
-                          <li>Zombie</li>
-                          <li>Slasher</li>
-                          <li>Gothic</li>
-                          <li>Folklore</li>
-                          <li>Possession</li>
-                          <li>Creature</li>
-                          <li>Paranormal</li>
-                          <li>Survival</li>
-                          <li>Cosmic</li>
-                          <li>Haunted House</li>
-                          <li>Creature Feature</li>
-                          <li>Horror Comedy</li>
-                          <li>Vampire</li>
-                          <li>Werewolf</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Horror ☠️</span><div class="guide-feature-desc">Stories designed to create fear, tension, or dread.</div></div>
+                        <ul class="guide-subgenres"><li>Supernatural</li><li>Found Footage</li><li>Psychological</li><li>Monster</li><li>Zombie</li><li>Slasher</li><li>Gothic</li><li>Folklore</li><li>Possession</li><li>Creature</li><li>Paranormal</li><li>Survival</li><li>Cosmic</li><li>Haunted House</li><li>Horror Comedy</li><li>Vampire</li><li>Werewolf</li></ul>
                       </div>
-
                       <div class="guide-card guide-thriller">
-                        <div class="guide-feature-card mb-3">
-                          <span>Thriller 🎯</span>
-                          <div class="guide-feature-desc">Suspense-driven stories focused on tension and uncertainty.</div>
-                        </div>
-                        <ul class="guide-subgenres">
-                          <li>Psychological</li>
-                          <li>Crime</li>
-                          <li>Mystery</li>
-                          <li>Political</li>
-                          <li>Conspiracy</li>
-                          <li>Spy</li>
-                          <li>Erotic</li>
-                          <li>Tech</li>
-                          <li>Survival</li>
-                          <li>Action Thriller</li>
-                          <li>Supernatural</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Thriller 🎯</span><div class="guide-feature-desc">Suspense-driven stories focused on tension and uncertainty.</div></div>
+                        <ul class="guide-subgenres"><li>Psychological</li><li>Crime</li><li>Mystery</li><li>Political</li><li>Conspiracy</li><li>Spy</li><li>Erotic</li><li>Tech</li><li>Survival</li><li>Action Thriller</li><li>Supernatural</li></ul>
                       </div>
-
                       <div class="guide-card guide-scifi">
-                        <div class="guide-feature-card mb-3">
-                          <span>Sci-Fi 🪐</span>
-                          <div class="guide-feature-desc">Stories involving advanced science, technology, or futuristic concepts.</div>
-                        </div>
-                        <ul class="guide-subgenres">
-                          <li>Alien</li>
-                          <li>Biopunk</li>
-                          <li>Cyberpunk</li>
-                          <li>Steampunk</li>
-                          <li>Futuristic</li>
-                          <li>AI / Robot</li>
-                          <li>Hard</li>
-                          <li>Soft</li>
-                          <li>Time Travel</li>
-                          <li>Dystopian</li>
-                          <li>Mecha</li>
-                          <li>Military</li>
-                          <li>Parallel Universe</li>
-                          <li>Sci-Fi Horror</li>
-                          <li>Sci-Fi Thriller</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Sci-Fi 🪐</span><div class="guide-feature-desc">Stories involving advanced science, technology, or futuristic concepts.</div></div>
+                        <ul class="guide-subgenres"><li>Alien</li><li>Biopunk</li><li>Cyberpunk</li><li>Steampunk</li><li>Futuristic</li><li>AI / Robot</li><li>Hard</li><li>Soft</li><li>Time Travel</li><li>Dystopian</li><li>Mecha</li><li>Military</li><li>Parallel Universe</li><li>Sci-Fi Horror</li><li>Sci-Fi Thriller</li></ul>
                       </div>
-
                       <div class="guide-card guide-fantasy">
-                        <div class="guide-feature-card mb-3">
-                          <span>Fantasy 🐉</span>
-                          <div class="guide-feature-desc">Stories featuring magical or supernatural worlds/elements.</div>
-                        </div>
-                        <ul class="guide-subgenres">
-                          <li>High-Level Fantasy</li>
-                          <li>Low-Level Fantasy</li>
-                          <li>Dark Fantasy</li>
-                          <li>Urban Fantasy</li>
-                          <li>Adventure</li>
-                          <li>Fairy Tale</li>
-                          <li>Grimdark</li>
-                          <li>Epic</li>
-                          <li>Portal</li>
-                          <li>Mythological</li>
-                          <li>Supernatural</li>
-                          <li>Sword & Sorcery</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Fantasy 🐉</span><div class="guide-feature-desc">Stories featuring magical or supernatural worlds/elements.</div></div>
+                        <ul class="guide-subgenres"><li>High-Level Fantasy</li><li>Low-Level Fantasy</li><li>Dark Fantasy</li><li>Urban Fantasy</li><li>Adventure</li><li>Fairy Tale</li><li>Grimdark</li><li>Epic</li><li>Portal</li><li>Mythological</li><li>Supernatural</li><li>Sword &amp; Sorcery</li></ul>
                       </div>
-
                       <div class="guide-card guide-romance">
-                        <div class="guide-feature-card mb-3">
-                          <span>Romance 💖</span>
-                          <div class="guide-feature-desc">Stories centered on relationships and emotional connection.</div>
-                        </div>
-                        <ul class="guide-subgenres">
-                          <li>Romantic Drama</li>
-                          <li>Romantic Comedy</li>
-                          <li>Tragic</li>
-                          <li>Teen</li>
-                          <li>Historical</li>
-                          <li>Fantasy</li>
-                          <li>Forbidden Love</li>
-                          <li>Love Triangle</li>
-                          <li>Slice of Life</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Romance 💖</span><div class="guide-feature-desc">Stories centered on relationships and emotional connection.</div></div>
+                        <ul class="guide-subgenres"><li>Romantic Drama</li><li>Romantic Comedy</li><li>Tragic</li><li>Teen</li><li>Historical</li><li>Fantasy</li><li>Forbidden Love</li><li>Love Triangle</li><li>Slice of Life</li></ul>
                       </div>
-
                       <div class="guide-card guide-mystery">
-                        <div class="guide-feature-card mb-3">
-                          <span>Mystery 🔎</span>
-                          <div class="guide-feature-desc">Stories focused on solving unknown events or secrets.</div>
-                        </div>
-                        <ul class="guide-subgenres">
-                          <li>Detective</li>
-                          <li>Murder</li>
-                          <li>Noir</li>
-                          <li>Cozy</li>
-                          <li>Whodunit</li>
-                          <li>Crime</li>
-                          <li>Psychological</li>
-                          <li>Supernatural</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Mystery 🔎</span><div class="guide-feature-desc">Stories focused on solving unknown events or secrets.</div></div>
+                        <ul class="guide-subgenres"><li>Detective</li><li>Murder</li><li>Noir</li><li>Cozy</li><li>Whodunit</li><li>Crime</li><li>Psychological</li><li>Supernatural</li></ul>
                       </div>
-
                       <div class="guide-card guide-crime">
-                        <div class="guide-feature-card mb-3">
-                          <span>Crime 🚔</span>
-                          <div class="guide-feature-desc">Stories centered on criminal activity or law enforcement.</div>
-                        </div>
-                        <ul class="guide-subgenres">
-                          <li>Gangster</li>
-                          <li>Mafia</li>
-                          <li>Detective</li>
-                          <li>Police Procedural</li>
-                          <li>Prison</li>
-                          <li>Heist</li>
-                          <li>Neo-Noir</li>
-                          <li>Crime Thriller</li>
-                          <li>Organized Crime</li>
-                          <li>True Crime</li>
-                          <li>Documentary</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Crime 🚔</span><div class="guide-feature-desc">Stories centered on criminal activity or law enforcement.</div></div>
+                        <ul class="guide-subgenres"><li>Gangster</li><li>Mafia</li><li>Detective</li><li>Police Procedural</li><li>Prison</li><li>Heist</li><li>Neo-Noir</li><li>Crime Thriller</li><li>Organized Crime</li><li>True Crime</li><li>Documentary</li></ul>
                       </div>
-
                       <div class="guide-card guide-animation">
-                        <div class="guide-feature-card mb-3">
-                          <span>Animation 🎬</span>
-                          <div class="guide-feature-desc">Animated storytelling format (often combined with genres above).</div>
-                        </div>
-                        <ul class="guide-subgenres">
-                          <li>Adult Animation</li>
-                          <li>Anime</li>
-                          <li>CGI</li>
-                          <li>Stop Motion</li>
-                          <li>Family</li>
-                          <li>Educational</li>
-                          <li>Musical</li>
-                          <li>Metaphysical</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Animation 🎬</span><div class="guide-feature-desc">Animated storytelling format (often combined with genres above).</div></div>
+                        <ul class="guide-subgenres"><li>Adult Animation</li><li>Anime</li><li>CGI</li><li>Stop Motion</li><li>Family</li><li>Educational</li><li>Musical</li><li>Metaphysical</li></ul>
                       </div>
-
                       <div class="guide-card guide-family">
-                        <div class="guide-feature-card mb-3">
-                          <span>Family 👪</span>
-                          <div class="guide-feature-desc">Content suitable for broad age groups.</div>
-                        </div>
-                        <ul class="guide-subgenres">
-                          <li>Family Adventure</li>
-                          <li>Family Comedy</li>
-                          <li>Fantasy Family</li>
-                          <li>Educational</li>
-                          <li>Animal Adventure</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Family 👪</span><div class="guide-feature-desc">Content suitable for broad age groups.</div></div>
+                        <ul class="guide-subgenres"><li>Family Adventure</li><li>Family Comedy</li><li>Fantasy Family</li><li>Educational</li><li>Animal Adventure</li></ul>
                       </div>
-
                       <div class="guide-card guide-musical">
-                        <div class="guide-feature-card mb-3">
-                          <span>Musical 🎼</span>
-                          <div class="guide-feature-desc">Stories incorporating songs/music into storytelling.</div>
-                        </div>
-                        <ul class="guide-subgenres">
-                          <li>Rock</li>
-                          <li>Jukebox</li>
-                          <li>Dance</li>
-                          <li>Musical Drama</li>
-                          <li>Animated Musical</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Musical 🎼</span><div class="guide-feature-desc">Stories incorporating songs/music into storytelling.</div></div>
+                        <ul class="guide-subgenres"><li>Rock</li><li>Jukebox</li><li>Dance</li><li>Musical Drama</li><li>Animated Musical</li></ul>
                       </div>
-                      
                       <div class="guide-card guide-western">
-                        <div class="guide-feature-card mb-3">
-                          <span>Western 🤠</span>
-                          <div class="guide-feature-desc">Stories inspired by frontier/cowboy settings.</div>
-                        </div>
-                        <ul class="guide-subgenres">
-                          <li>Spaghetti Western</li>
-                          <li>Revisionist Western</li>
-                          <li>Neo-Western</li>
-                          <li>Western Action</li>
-                          <li>Western Drama</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Western 🤠</span><div class="guide-feature-desc">Stories inspired by frontier/cowboy settings.</div></div>
+                        <ul class="guide-subgenres"><li>Spaghetti Western</li><li>Revisionist Western</li><li>Neo-Western</li><li>Western Action</li><li>Western Drama</li></ul>
                       </div>
-                      
                       <div class="guide-card guide-historical">
-                        <div class="guide-feature-card mb-3">
-                          <span>Historical 🔬</span>
-                          <div class="guide-feature-desc">Stories set in real historical periods.</div>
-                        </div>
-                        <ul class="guide-subgenres">
-                          <li>Historical Epic</li>
-                          <li>Period Drama</li>
-                          <li>War History</li>
-                          <li>Biographical History</li>
-                          <li>Historical Romance</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Historical 🔬</span><div class="guide-feature-desc">Stories set in real historical periods.</div></div>
+                        <ul class="guide-subgenres"><li>Historical Epic</li><li>Period Drama</li><li>War History</li><li>Biographical History</li><li>Historical Romance</li></ul>
                       </div>
-                      
                       <div class="guide-card guide-documentary">
-                        <div class="guide-feature-card mb-3">
-                          <span>Documentary 📜</span>
-                          <div class="guide-feature-desc">Non-fiction storytelling based on real events.</div>
-                        </div>
-                        <ul class="guide-subgenres">
-                          <li>Nature Documentary</li>
-                          <li>Biography</li>
-                          <li>True Crime</li>
-                          <li>Mockumentary</li>
-                          <li>Investigative Documentary</li>
-                        </ul>
+                        <div class="guide-feature-card mb-3"><span>Documentary 📜</span><div class="guide-feature-desc">Non-fiction storytelling based on real events.</div></div>
+                        <ul class="guide-subgenres"><li>Nature Documentary</li><li>Biography</li><li>True Crime</li><li>Mockumentary</li><li>Investigative Documentary</li></ul>
                       </div>
-
                     </div>
 
                   <aside class="guide-sidebar">
-
                     <div class="guide-side-card">
                       <h3>Popular Tags</h3>
-
                       <div class="guide-tag-list">
-                        <div class="guide-tag">Dark</div>
-                        <div class="guide-tag">Gritty</div>
-                        <div class="guide-tag">Emotional</div>
-                        <div class="guide-tag">Wholesome</div>
-                        <div class="guide-tag">Violent</div>
-                        <div class="guide-tag">Mind-Bending</div>
-                        <div class="guide-tag">Atmospheric</div>
-                        <div class="guide-tag">Slow Burn</div>
-                        <div class="guide-tag">Psychological</div>
-                        <div class="guide-tag">Supernatural</div>
+                        <div class="guide-tag">Dark</div><div class="guide-tag">Gritty</div><div class="guide-tag">Emotional</div><div class="guide-tag">Wholesome</div><div class="guide-tag">Violent</div><div class="guide-tag">Mind-Bending</div><div class="guide-tag">Atmospheric</div><div class="guide-tag">Slow Burn</div><div class="guide-tag">Psychological</div><div class="guide-tag">Supernatural</div>
                       </div>
                     </div>
-
                     <div class="guide-side-card">
                       <h3>Anime Specific</h3>
-
                       <div class="guide-tag-list">
-                        <div class="guide-tag">Shounen</div>
-                        <div class="guide-tag">Seinen</div>
-                        <div class="guide-tag">Isekai</div>
-                        <div class="guide-tag">Mecha</div>
-                        <div class="guide-tag">Ecchi</div>
-                        <div class="guide-tag">Harem</div>
-                        <div class="guide-tag">Slice of Life</div>
-                        <div class="guide-tag">Magical Girl</div>
+                        <div class="guide-tag">Shounen</div><div class="guide-tag">Seinen</div><div class="guide-tag">Isekai</div><div class="guide-tag">Mecha</div><div class="guide-tag">Ecchi</div><div class="guide-tag">Harem</div><div class="guide-tag">Slice of Life</div><div class="guide-tag">Magical Girl</div>
                       </div>
                     </div>
-
                     <div class="guide-side-card">
                       <h3>Audience Ratings</h3>
-
                       <div class="guide-ratings">
-                        <div class="guide-rating">
-                          <span>Kids</span>
-                          <span>Young children</span>
-                        </div>
-
-                        <div class="guide-rating">
-                          <span>Family</span>
-                          <span>All ages</span>
-                        </div>
-
-                        <div class="guide-rating">
-                          <span>Teen</span>
-                          <span>Teenagers</span>
-                        </div>
-
-                        <div class="guide-rating">
-                          <span>Adult</span>
-                          <span>Adults only</span>
-                        </div>
-
-                        <div class="guide-rating">
-                          <span>Mature</span>
-                          <span>18+</span>
-                        </div>
+                        <div class="guide-rating"><span>Kids</span><span>Young children</span></div>
+                        <div class="guide-rating"><span>Family</span><span>All ages</span></div>
+                        <div class="guide-rating"><span>Teen</span><span>Teenagers</span></div>
+                        <div class="guide-rating"><span>Adult</span><span>Adults only</span></div>
+                        <div class="guide-rating"><span>Mature</span><span>18+</span></div>
                       </div>
                     </div>
-
                   </aside>
                 </div>
 
@@ -961,14 +691,11 @@
               </div>
 
               <div class="d-flex align-items-center justify-content-between mt-2">
-                <!-- ★ NEW: scope toggle -->
                 <div class="db-scope-tabs" id="dbScopeTabs">
                   <button class="db-scope-tab active" data-scope="all">All</button>
                   <button class="db-scope-tab" data-scope="mine">Mine</button>
                   <button class="db-scope-tab" data-scope="other">Other</button>
                 </div>
-
-                <!-- ★ NEW: user picker — shown only when "Other" is active -->
                 <div id="dbOtherPicker" class="db-other-picker d-none my-auto">
                   <select id="dbOtherSelect" class="form-select custom-input db-other-select">
                     <option value="">— pick a user —</option>
@@ -977,53 +704,16 @@
               </div>
 
               <div id="dashboardContent" class="dashboard-content">
-
-                <!-- Row 1: At-a-glance metric cards -->
                 <div class="db-metric-row mb-4 mt-4">
-                  <div class="db-metric-card">
-                    <div class="db-metric-label">Total Posts</div>
-                    <div class="db-metric-val" id="dbMetricPosts">—</div>
-                    <div class="db-metric-sub">all users</div>
-                  </div>
-                  <div class="db-metric-card">
-                    <div class="db-metric-label">Hours Watched</div>
-                    <div class="db-metric-val" id="dbMetricHours">—</div>
-                    <div class="db-metric-sub">est. from durations</div>
-                  </div>
-                  <div class="db-metric-card">
-                    <div class="db-metric-label">Avg Rating</div>
-                    <div class="db-metric-val" id="dbMetricAvgRating">—</div>
-                    <div class="db-metric-sub">out of 5 stars</div>
-                  </div>
-                  <div class="db-metric-card">
-                    <div class="db-metric-label">Active Users</div>
-                    <div class="db-metric-val" id="dbMetricUsers">—</div>
-                    <div class="db-metric-sub">with posts</div>
-                  </div>
+                  <div class="db-metric-card"><div class="db-metric-label">Total Posts</div><div class="db-metric-val" id="dbMetricPosts">—</div><div class="db-metric-sub">all users</div></div>
+                  <div class="db-metric-card"><div class="db-metric-label">Hours Watched</div><div class="db-metric-val" id="dbMetricHours">—</div><div class="db-metric-sub">est. from durations</div></div>
+                  <div class="db-metric-card"><div class="db-metric-label">Avg Rating</div><div class="db-metric-val" id="dbMetricAvgRating">—</div><div class="db-metric-sub">out of 5 stars</div></div>
+                  <div class="db-metric-card"><div class="db-metric-label">Active Users</div><div class="db-metric-val" id="dbMetricUsers">—</div><div class="db-metric-sub">with posts</div></div>
                 </div>
-
-                <!-- Row 2: Genre bars + Rating donut -->
                 <div class="dashboard-grid mb-4">
-                  <div class="dashboard-card">
-                    <div class="dashboard-card-title">Genre Overview</div>
-                    <div id="genreStatsList" class="dashboard-list">
-                      <div class="text-secondary-light small">No genre data yet.</div>
-                    </div>
-                  </div>
-                  <div class="dashboard-card">
-                    <div class="dashboard-card-title">Rating Distribution</div>
-                    <div id="ratingLegend" class="db-chart-legend mb-2"></div>
-                    <div class="db-chart-wrap" style="height:160px;">
-                      <canvas id="dbRatingChart"
-                        role="img"
-                        aria-label="Donut chart showing how many posts fall into each star rating from 1 to 5">
-                        Rating data will appear here.
-                      </canvas>
-                    </div>
-                  </div>
+                  <div class="dashboard-card"><div class="dashboard-card-title">Genre Overview</div><div id="genreStatsList" class="dashboard-list"><div class="text-secondary-light small">No genre data yet.</div></div></div>
+                  <div class="dashboard-card"><div class="dashboard-card-title">Rating Distribution</div><div id="ratingLegend" class="db-chart-legend mb-2"></div><div class="db-chart-wrap" style="height:160px;"><canvas id="dbRatingChart" role="img" aria-label="Donut chart showing how many posts fall into each star rating from 1 to 5">Rating data will appear here.</canvas></div></div>
                 </div>
-
-                <!-- Row 3: Monthly watch chart (full width) -->
                 <div class="dashboard-card mb-4">
                   <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                     <div class="dashboard-card-title mb-0">Movies Watched by Month</div>
@@ -1032,69 +722,20 @@
                       <button class="db-tab"        id="tabRating" onclick="switchDashboardTab('rating')">Avg Rating</button>
                     </div>
                   </div>
-                  <div class="db-chart-wrap" style="height:160px;">
-                    <canvas id="dbMonthChart"
-                      role="img"
-                      aria-label="Bar chart showing number of movies watched each month">
-                      Monthly watch data will appear here.
-                    </canvas>
-                  </div>
+                  <div class="db-chart-wrap" style="height:160px;"><canvas id="dbMonthChart" role="img" aria-label="Bar chart showing number of movies watched each month">Monthly watch data will appear here.</canvas></div>
                 </div>
-
-                <!-- Row 4: User posts + Streaks -->
                 <div class="dashboard-grid mb-4">
-                  <div class="dashboard-card">
-                    <div class="dashboard-card-title">User Total Posts</div>
-                    <div id="userTotalsList" class="dashboard-list">
-                      <div class="text-secondary-light small">No user post data yet.</div>
-                    </div>
-                  </div>
-                  <div class="dashboard-card">
-                    <div class="dashboard-card-title">Watching Streaks &amp; Gaps</div>
-                    <div id="dbStreakList" class="dashboard-list">
-                      <div class="text-secondary-light small">No streak data yet.</div>
-                    </div>
-                  </div>
+                  <div class="dashboard-card"><div class="dashboard-card-title">User Total Posts</div><div id="userTotalsList" class="dashboard-list"><div class="text-secondary-light small">No user post data yet.</div></div></div>
+                  <div class="dashboard-card"><div class="dashboard-card-title">Watching Streaks &amp; Gaps</div><div id="dbStreakList" class="dashboard-list"><div class="text-secondary-light small">No streak data yet.</div></div></div>
                 </div>
-
-                <!-- Row 5: Top rated accordion (unchanged) -->
                 <div class="dashboard-grid mb-4">
-                  <div class="dashboard-card">
-                    <div class="dashboard-card-title">Top Rated by Stars</div>
-                    <div id="topRatedList" class="dashboard-list">
-                      <div class="text-secondary-light small">No rating data yet.</div>
-                    </div>
-                  </div>
-
-                  <!-- Row 5b: Rating trend line -->
-                  <div class="dashboard-card">
-                    <div class="dashboard-card-title">Avg Rating Trend</div>
-                    <div class="db-chart-wrap db-chart-160">
-                      <canvas id="dbTrendChart"
-                        role="img"
-                        aria-label="Line chart showing average rating per month over time">
-                        Trend data will appear here.
-                      </canvas>
-                    </div>
-                  </div>
+                  <div class="dashboard-card"><div class="dashboard-card-title">Top Rated by Stars</div><div id="topRatedList" class="dashboard-list"><div class="text-secondary-light small">No rating data yet.</div></div></div>
+                  <div class="dashboard-card"><div class="dashboard-card-title">Avg Rating Trend</div><div class="db-chart-wrap db-chart-160"><canvas id="dbTrendChart" role="img" aria-label="Line chart showing average rating per month over time">Trend data will appear here.</canvas></div></div>
                 </div>
-
-                <!-- Row 6: Watched by month accordion + Sub-genre cloud -->
                 <div class="dashboard-grid mb-2">
-                  <div class="dashboard-card">
-                    <div class="dashboard-card-title">Watched by Month (Detail)</div>
-                    <div id="watchedStatsList" class="dashboard-year-groups">
-                      <div class="text-secondary-light small">No monthly watched data yet.</div>
-                    </div>
-                  </div>
-                  <div class="dashboard-card">
-                    <div class="dashboard-card-title">Sub-Genre Cloud</div>
-                    <div id="dbSubGenreCloud" class="db-sg-cloud">
-                      <div class="text-secondary-light small">No sub-genre data yet.</div>
-                    </div>
-                  </div>
+                  <div class="dashboard-card"><div class="dashboard-card-title">Watched by Month (Detail)</div><div id="watchedStatsList" class="dashboard-year-groups"><div class="text-secondary-light small">No monthly watched data yet.</div></div></div>
+                  <div class="dashboard-card"><div class="dashboard-card-title">Sub-Genre Cloud</div><div id="dbSubGenreCloud" class="db-sg-cloud"><div class="text-secondary-light small">No sub-genre data yet.</div></div></div>
                 </div>
-
               </div><!-- /dashboardContent -->
             </div><!-- /dashboard glass-card -->
 
@@ -1104,18 +745,10 @@
                 <span class="fw-bold">Movie Feed</span>
                 <span id="feedCountBadge" class="badge text-bg-light">0 posts</span>
               </div>
-
               <div class="position-relative mb-3">
                 <i class="bi bi-search search-icon"></i>
-                <input
-                  id="feedSearch"
-                  type="search"
-                  class="form-control custom-input search-input"
-                  placeholder="Search by movie, genre, or user"
-                >
+                <input id="feedSearch" type="search" class="form-control custom-input search-input" placeholder="Search by movie, genre, or user">
               </div>
-
-              <!-- ★ NEW: filter + sort toolbar -->
               <div class="feed-toolbar">
                 <div class="feed-filter-tabs" id="feedFilterTabs">
                   <button class="feed-tab active" data-filter="all">All Posts</button>
@@ -1130,19 +763,16 @@
                   </select>
                 </div>
               </div>
-              <!-- end toolbar -->
             </div>
 
-        <div id="feedList" class="feed-list"></div>
-        <!-- ★ NEW: infinite scroll sentinel -->
-        <div id="feedSentinel" class="feed-sentinel"></div>
+            <div id="feedList" class="feed-list"></div>
+            <div id="feedSentinel" class="feed-sentinel"></div>
 
             <div id="emptyFeed" class="glass-card p-5 text-center d-none">
               <i class="bi bi-camera-reels empty-icon"></i>
               <p class="mb-0 text-secondary-light">No posts yet. Be the first to share a movie.</p>
             </div>
 
-            <!-- ★ NEW: feed error + retry -->
             <div id="feedError" class="glass-card p-5 text-center d-none feed-error-card">
               <i class="bi bi-wifi-off feed-error-icon"></i>
               <p class="feed-error-title">Couldn't load posts</p>
@@ -1152,13 +782,11 @@
               </button>
             </div>
 
-            <div id="feedList" class="feed-list"></div>
           </div>
         </section>
       </main>
     </div>
 
-    <!-- Chart.js — loaded before app.js so the global is available -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="./app.js"></script>
   </body>
